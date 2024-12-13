@@ -1,14 +1,23 @@
 [package]
 name = "seaside-v2"
 version = "0.1.0"
+authors = ["RosieTheGhostie"]
 edition = "2021"
+
+[lib]
+path = "src/lib.rs"
 
 [dependencies]
 bitflags = "2.6"
-clap = { version = "4.5.20", features = ["derive"] }
 convert_case = "0.6"
-num-derive = "0.4.2"
-num-traits = "0.2.19"
-serde = { version = "1.0", features = ["derive"] }
-toml = { version = "0.8.19" }
+num-traits = "0.2"
+toml = "0.8"
 walkdir = "2.5"
+
+[dependencies.clap]
+version = "4.5"
+features = ["derive"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["derive"]
