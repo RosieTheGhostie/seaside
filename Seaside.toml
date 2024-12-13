@@ -1,0 +1,75 @@
+[features]
+kernel_space_accessible = true
+self_modifying_code = false
+delay_slot = false
+
+[features.assembler]
+pseudo_instructions = false
+on_spot_register_at = "allow"
+directives = "recommended"
+
+[features.syscalls]
+print = "all"
+read = "all"
+file = "recommended"
+system = "recommended"
+random = "all"
+dialog = "none"
+
+[memory_map]
+exception_handler = 0x80000180
+
+[memory_map.user_space]
+base = 0x00000000
+limit = 0x7fffffff
+
+[memory_map.kernel_space]
+base = 0x80000000
+limit = 0xffffffff
+
+[memory_map.segments]
+
+[memory_map.segments.text]
+base = 0x00400000
+limit = 0x0ffffffc
+allocate = 0x800000 # 8 MiB
+
+[memory_map.segments.extern]
+base = 0x10000000
+limit = 0x1000ffff
+allocate = 0x10000 # 64 KiB
+
+[memory_map.segments.data]
+base = 0x10010000
+limit = 0x1003ffff
+allocate = 0x30000 # 192 KiB
+
+[memory_map.segments.heap]
+base = 0x10040000
+allocate = 0x20000 # 128 KiB
+
+[memory_map.segments.stack]
+base = 0x7fffeffc
+allocate = 0x400000 # 4 MiB
+
+[memory_map.segments.ktext]
+base = 0x80000000
+limit = 0x8ffffffc
+allocate = 0x100000 # 1 MiB
+
+[memory_map.segments.kdata]
+base = 0x90000000
+limit = 0xfffeffff
+allocate = 0x100000 # 1 MiB
+
+[memory_map.segments.mmio]
+base = 0xffff0000
+limit = 0xffffffff
+allocate = 0x1000  # 4 KiB
+
+[register_defaults.general_purpose]
+gp = 0x10008000
+sp = 0x7fffeffc
+
+[register_defaults.coprocessor_0]
+status = 0x0000ff11

@@ -1,0 +1,14 @@
+[package]
+name = "seaside-v2"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bitflags = "2.6"
+clap = { version = "4.5.20", features = ["derive"] }
+convert_case = "0.6"
+num-derive = "0.4.2"
+num-traits = "0.2.19"
+serde = { version = "1.0", features = ["derive"] }
+toml = { version = "0.8.19" }
+walkdir = "2.5"
