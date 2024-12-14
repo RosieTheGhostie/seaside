@@ -1,12 +1,9 @@
-use serde::{self, Deserialize, Serialize};
+pub mod address;
+pub mod segment;
 
-pub type Address = u32;
-
-#[derive(Serialize, Deserialize)]
-pub struct AddressRange {
-    pub base: Address,
-    pub limit: Option<Address>,
-}
+pub use address::{Address, AddressRange};
+pub use segment::Segment;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct MemoryMap {
@@ -26,13 +23,4 @@ pub struct Segments {
     pub ktext: Segment,
     pub kdata: Segment,
     pub mmio: Segment,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct Segment {
-    /// The range of addresses within this segment.
-    #[serde(flatten)]
-    pub address_range: AddressRange,
-    /// How many bytes to allocate for this segment.
-    pub allocate: u32,
 }
