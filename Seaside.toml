@@ -1,3 +1,5 @@
+seaside_version = "0.1.0"
+
 [features]
 kernel_space_accessible = true
 self_modifying_code = false
