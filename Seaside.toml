@@ -69,6 +69,8 @@ base = 0xffff0000
 limit = 0xffffffff
 allocate = 0x1000  # 4 KiB
 
+[register_defaults]
+
 [register_defaults.general_purpose]
 gp = 0x10008000
 sp = 0x7fffeffc
