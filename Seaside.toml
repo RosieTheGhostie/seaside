@@ -1,4 +1,5 @@
 seaside_version = "0.1.0"
+endian = "little"
 
 [features]
 kernel_space_accessible = true
