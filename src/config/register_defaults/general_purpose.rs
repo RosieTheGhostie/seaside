@@ -1,9 +1,4 @@
-use super::{
-    register_set::{
-        make_register_set_deserialize_fn, make_register_set_serialize_fn, make_register_set_visitor,
-    },
-    RegisterSet,
-};
+use super::{register_set::make_registers_format, RegisterSet};
 use num_traits::{FromPrimitive, ToPrimitive};
 use std::{
     io::{Error, ErrorKind},
@@ -141,10 +136,4 @@ impl RegisterSet for GeneralPurposeRegister {
     ];
 }
 
-make_register_set_visitor!(GeneralPurposeRegister, GeneralPurposeRegisterSetVisitor);
-make_register_set_serialize_fn!(GeneralPurposeRegister, serialize_general_purpose_registers);
-make_register_set_deserialize_fn!(
-    GeneralPurposeRegister,
-    GeneralPurposeRegisterSetVisitor,
-    deserialize_general_purpose_registers
-);
+make_registers_format!(GeneralPurposeRegister);

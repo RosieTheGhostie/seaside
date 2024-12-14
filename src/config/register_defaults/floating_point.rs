@@ -1,9 +1,4 @@
-use super::{
-    register_set::{
-        make_register_set_deserialize_fn, make_register_set_serialize_fn, make_register_set_visitor,
-    },
-    RegisterSet,
-};
+use super::{register_set::make_registers_format, RegisterSet};
 use num_traits::{FromPrimitive, ToPrimitive};
 use std::{
     io::{Error, ErrorKind},
@@ -77,10 +72,4 @@ impl RegisterSet for FloatingPointRegister {
     ];
 }
 
-make_register_set_visitor!(FloatingPointRegister, FloatingPointRegisterSetVisitor);
-make_register_set_serialize_fn!(FloatingPointRegister, serialize_floating_point_registers);
-make_register_set_deserialize_fn!(
-    FloatingPointRegister,
-    FloatingPointRegisterSetVisitor,
-    deserialize_floating_point_registers
-);
+make_registers_format!(FloatingPointRegister);

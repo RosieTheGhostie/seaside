@@ -2,13 +2,13 @@
 mod bitflags_addons;
 pub mod features;
 pub mod memory_map;
-pub mod presets;
-pub mod red_flag_behavior;
-pub mod registers;
+mod presets;
+mod red_flag_behavior;
+pub mod register_defaults;
 
-use features::Features;
-use memory_map::MemoryMap;
-use registers::RegisterDefaults;
+pub use features::Features;
+pub use memory_map::MemoryMap;
+pub use register_defaults::RegisterDefaults;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]

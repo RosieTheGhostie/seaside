@@ -102,5 +102,4 @@ macro_rules! impl_bitflags_has_basic_presets {
         impl crate::config::presets::HasBasicPresets for $flag {}
     };
 }
-
 pub(super) use impl_bitflags_has_basic_presets;
