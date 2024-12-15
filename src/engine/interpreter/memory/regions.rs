@@ -1,5 +1,5 @@
 use crate::{
-    config::memory_map::{address::is_aligned, segment::SegmentAllocationInfo, Address, Segment},
+    config::memory_map::{address::is_aligned, Address},
     engine::interpreter::exception::Exception,
 };
 use std::ops::Range;
@@ -79,23 +79,13 @@ impl Region for TextRegion {
     }
 }
 
-impl From<SegmentAllocationInfo> for TextRegion {
-    fn from(value: SegmentAllocationInfo) -> Self {
-        Self::new(value.low_address, value.bytes_to_allocate)
-    }
-}
-
 impl TextRegion {
-    pub fn new(low_address: Address, bytes_to_allocate: u32) -> Self {
-        let words_to_allocate = (bytes_to_allocate >> 2) as usize;
+    fn new(low_address: Address, bytes_to_allocate: usize) -> Self {
+        let words_to_allocate = bytes_to_allocate >> 2;
         Self {
-            addresses: low_address..(low_address + bytes_to_allocate),
+            addresses: low_address..(low_address + bytes_to_allocate as u32),
             instructions: vec![0u32; words_to_allocate].into_boxed_slice(),
         }
-    }
-
-    pub fn from_segment(segment: Segment, base_is_low_address: bool) -> Self {
-        segment.get_allocation_info(base_is_low_address).into()
     }
 
     fn calculate_index(&self, address: Address, assert_aligned: bool) -> Option<usize> {
@@ -189,22 +179,12 @@ impl Region for DataRegion {
     }
 }
 
-impl From<SegmentAllocationInfo> for DataRegion {
-    fn from(value: SegmentAllocationInfo) -> Self {
-        Self::new(value.low_address, value.bytes_to_allocate)
-    }
-}
-
 impl DataRegion {
-    pub fn new(low_address: Address, bytes_to_allocate: u32) -> Self {
+    fn new(low_address: Address, bytes_to_allocate: usize) -> Self {
         Self {
-            addresses: low_address..(low_address + bytes_to_allocate),
-            data: vec![0u8; bytes_to_allocate as usize].into_boxed_slice(),
+            addresses: low_address..(low_address + bytes_to_allocate as u32),
+            data: vec![0u8; bytes_to_allocate].into_boxed_slice(),
         }
-    }
-
-    pub fn from_segment(segment: Segment, base_is_low_address: bool) -> Self {
-        segment.get_allocation_info(base_is_low_address).into()
     }
 
     fn calculate_index(&self, address: Address, alignment: u32) -> Option<usize> {

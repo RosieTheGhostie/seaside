@@ -47,17 +47,15 @@ base = 0x10010000
 limit = 0x1003ffff
 allocate = 0x30000 # 192 KiB
 
-[memory_map.segments.heap]
+[memory_map.segments.runtime_data]
 base = 0x10040000
-allocate = 0x20000 # 128 KiB
-
-[memory_map.segments.stack]
-base = 0x7fffeffc
-allocate = 0x400000 # 4 MiB
+limit = 0x7fffffff
+heap_size = 0x20000   # 128 KiB
+stack_size = 0x400000 # 4 MiB
 
 [memory_map.segments.ktext]
 base = 0x80000000
-limit = 0x8ffffffc
+limit = 0x8fffffff
 allocate = 0x100000 # 1 MiB
 
 [memory_map.segments.kdata]

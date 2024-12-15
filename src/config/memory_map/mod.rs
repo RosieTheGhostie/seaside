@@ -1,7 +1,9 @@
 pub mod address;
+pub mod runtime_data;
 pub mod segment;
 
 pub use address::{Address, AddressRange};
+pub use runtime_data::RuntimeData;
 pub use segment::Segment;
 use serde::{Deserialize, Serialize};
 
@@ -18,8 +20,7 @@ pub struct Segments {
     pub text: Segment,
     pub r#extern: Segment,
     pub data: Segment,
-    pub heap: Segment,
-    pub stack: Segment,
+    pub runtime_data: RuntimeData,
     pub ktext: Segment,
     pub kdata: Segment,
     pub mmio: Segment,
