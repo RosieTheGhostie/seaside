@@ -1,0 +1,39 @@
+// CPU Registers (not including `hi` and `lo`)
+pub const ZERO: u8 = 0;
+pub const AT: u8 = 1;
+pub const V0: u8 = 2;
+pub const V1: u8 = 3;
+pub const A0: u8 = 4;
+pub const A1: u8 = 5;
+pub const A2: u8 = 6;
+pub const A3: u8 = 7;
+pub const T0: u8 = 8;
+pub const T1: u8 = 9;
+pub const T2: u8 = 10;
+pub const T3: u8 = 11;
+pub const T4: u8 = 12;
+pub const T5: u8 = 13;
+pub const T6: u8 = 14;
+pub const T7: u8 = 15;
+pub const S0: u8 = 16;
+pub const S1: u8 = 17;
+pub const S2: u8 = 18;
+pub const S3: u8 = 19;
+pub const S4: u8 = 20;
+pub const S5: u8 = 21;
+pub const S6: u8 = 22;
+pub const S7: u8 = 23;
+pub const T8: u8 = 24;
+pub const T9: u8 = 25;
+pub const K0: u8 = 26;
+pub const K1: u8 = 27;
+pub const GP: u8 = 28;
+pub const SP: u8 = 29;
+pub const FP: u8 = 30;
+pub const RA: u8 = 31;
+
+// Coprocessor 0 Registers
+pub const VADDR: u8 = 8;
+pub const STATUS: u8 = 12;
+pub const CAUSE: u8 = 13;
+pub const EPC: u8 = 14;

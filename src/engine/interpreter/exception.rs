@@ -9,4 +9,5 @@ pub enum Exception {
     DivideByZero = 15,
     FloatOverflow = 16,
     FloatUnderflow = 17,
+    InterpreterFailure = 21, // hopefully you never see this one
 }

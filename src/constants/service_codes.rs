@@ -1,0 +1,42 @@
+pub const PRINT_INT: u8 = 1;
+pub const PRINT_FLOAT: u8 = 2;
+pub const PRINT_DOUBLE: u8 = 3;
+pub const PRINT_STRING: u8 = 4;
+pub const READ_INT: u8 = 5;
+pub const READ_FLOAT: u8 = 6;
+pub const READ_DOUBLE: u8 = 7;
+pub const READ_STRING: u8 = 8;
+pub const SBRK: u8 = 9;
+pub const EXIT: u8 = 10;
+pub const PRINT_CHAR: u8 = 11;
+pub const READ_CHAR: u8 = 12;
+pub const OPEN_FILE: u8 = 13;
+pub const READ_FILE: u8 = 14;
+pub const WRITE_FILE: u8 = 15;
+pub const CLOSE_FILE: u8 = 16;
+pub const EXIT_2: u8 = 17;
+
+pub const TIME: u8 = 30;
+pub const MIDI_OUT: u8 = 31;
+pub const SLEEP: u8 = 32;
+pub const MIDI_OUT_SYNC: u8 = 33;
+pub const PRINT_HEX: u8 = 34;
+pub const PRINT_BIN: u8 = 35;
+pub const PRINT_UINT: u8 = 36;
+
+pub const SET_SEED: u8 = 40;
+pub const RAND_INT: u8 = 41;
+pub const RAND_INT_RANGE: u8 = 42;
+pub const RAND_FLOAT: u8 = 43;
+pub const RAND_DOUBLE: u8 = 44;
+
+pub const CONFIRM_DIALOG: u8 = 50;
+pub const INPUT_DIALOG_INT: u8 = 51;
+pub const INPUT_DIALOG_FLOAT: u8 = 52;
+pub const INPUT_DIALOG_DOUBLE: u8 = 53;
+pub const INPUT_DIALOG_STRING: u8 = 54;
+pub const MESSAGE_DIALOG: u8 = 55;
+pub const MESSAGE_DIALOG_INT: u8 = 56;
+pub const MESSAGE_DIALOG_FLOAT: u8 = 57;
+pub const MESSAGE_DIALOG_DOUBLE: u8 = 58;
+pub const MESSAGE_DIALOG_STRING: u8 = 59;
