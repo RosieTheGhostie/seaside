@@ -1,14 +1,15 @@
-use std::{
-    io::{stdin, Read},
-    mem::transmute,
-};
-
 use super::{exception::Exception, Interpreter};
 use crate::{
     config::memory_map::Address,
     constants::{register, service_codes},
 };
 use bitflags::bitflags;
+use std::{
+    io::{stdin, Read},
+    mem::transmute,
+    thread::sleep,
+    time::{Duration, SystemTime},
+};
 
 bitflags! {
     pub struct Syscalls: u64 {
@@ -29,6 +30,31 @@ bitflags! {
         const WriteFile = 1 << service_codes::WRITE_FILE;
         const CloseFile = 1 << service_codes::CLOSE_FILE;
         const Exit2 = 1 << service_codes::EXIT_2;
+
+        const Time = 1 << service_codes::TIME;
+        const MidiOut = 1 << service_codes::MIDI_OUT;
+        const Sleep = 1 << service_codes::SLEEP;
+        const MidiOutSync = 1 << service_codes::MIDI_OUT_SYNC;
+        const PrintHex = 1 << service_codes::PRINT_HEX;
+        const PrintBin = 1 << service_codes::PRINT_BIN;
+        const PrintUint = 1 << service_codes::PRINT_UINT;
+
+        const SetSeed = 1 << service_codes::SET_SEED;
+        const RandInt = 1 << service_codes::RAND_INT;
+        const RandIntRange = 1 << service_codes::RAND_INT_RANGE;
+        const RandFloat = 1 << service_codes::RAND_FLOAT;
+        const RandDouble = 1 << service_codes::RAND_DOUBLE;
+
+        const ConfirmDialog = 1 << service_codes::CONFIRM_DIALOG;
+        const InputDialogInt = 1 << service_codes::INPUT_DIALOG_INT;
+        const InputDialogFloat = 1 << service_codes::INPUT_DIALOG_FLOAT;
+        const InputDialogDouble = 1 << service_codes::INPUT_DIALOG_DOUBLE;
+        const InputDialogString = 1 << service_codes::INPUT_DIALOG_STRING;
+        const MessageDialog = 1 << service_codes::MESSAGE_DIALOG;
+        const MessageDialogInt = 1 << service_codes::MESSAGE_DIALOG_INT;
+        const MessageDialogFloat = 1 << service_codes::MESSAGE_DIALOG_FLOAT;
+        const MessageDialogDouble = 1 << service_codes::MESSAGE_DIALOG_DOUBLE;
+        const MessageDialogString = 1 << service_codes::MESSAGE_DIALOG_STRING;
     }
 }
 
@@ -158,5 +184,56 @@ impl Interpreter {
     fn exit_2(&mut self) -> Result<(), Exception> {
         let _exit_code = self.registers.read_u32_from_cpu(register::A0)?;
         todo!("call a method to shut down the interpreter (include the exit code)");
+    }
+
+    fn time(&mut self) -> Result<(), Exception> {
+        // NOTE: Byte order shenanigans will probably mess things up.
+        let system_time: u64 = match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
+            Ok(duration) => duration.as_millis() as u64,
+            Err(_) => return Err(Exception::SyscallFailure),
+        };
+        let halves: [u32; 2] = unsafe { transmute::<u64, [u32; 2]>(system_time) };
+        self.registers.write_u32_to_cpu(register::A0, halves[0])?;
+        self.registers.write_u32_to_cpu(register::A1, halves[1])
+    }
+
+    fn midi_out(&self) -> Result<(), Exception> {
+        let _pitch = self.registers.read_u32_from_cpu(register::A0)?;
+        let _millis = self.registers.read_u32_from_cpu(register::A1)?;
+        let _instrument = self.registers.read_u32_from_cpu(register::A2)?;
+        let _volume = self.registers.read_u32_from_cpu(register::A3)?;
+        todo!("generate a sound");
+    }
+
+    fn sleep(&self) -> Result<(), Exception> {
+        let millis: u32 = self.registers.read_u32_from_cpu(register::A0)?;
+        sleep(Duration::from_millis(millis as u64));
+        Ok(())
+    }
+
+    fn midi_out_sync(&self) -> Result<(), Exception> {
+        let _pitch = self.registers.read_u32_from_cpu(register::A0)?;
+        let _millis = self.registers.read_u32_from_cpu(register::A1)?;
+        let _instrument = self.registers.read_u32_from_cpu(register::A2)?;
+        let _volume = self.registers.read_u32_from_cpu(register::A3)?;
+        todo!("generate a sound");
+    }
+
+    fn print_hex(&self) -> Result<(), Exception> {
+        let x: u32 = self.registers.read_u32_from_cpu(register::A0)?;
+        print!("0x{x:08x}");
+        Ok(())
+    }
+
+    fn print_bin(&self) -> Result<(), Exception> {
+        let x: u32 = self.registers.read_u32_from_cpu(register::A0)?;
+        print!("0b{x:032b}");
+        Ok(())
+    }
+
+    fn print_uint(&self) -> Result<(), Exception> {
+        let x: u32 = self.registers.read_u32_from_cpu(register::A0)?;
+        print!("{x}");
+        Ok(())
     }
 }
