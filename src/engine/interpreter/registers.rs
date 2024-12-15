@@ -7,6 +7,7 @@ pub struct Registers {
     pub hi: u32,
     pub lo: u32,
     fpu: [f32; 32],
+    fpu_flags: u8,
     pub vaddr: u32,
     pub status: u32,
     pub cause: u32,
@@ -39,6 +40,14 @@ impl Registers {
         }
     }
 
+    pub fn read_flag_from_fpu(&self, index: u8) -> Result<bool, Error> {
+        if index < 8 {
+            Ok((self.fpu_flags >> index) & 1 == 1)
+        } else {
+            Err(Error::from(ErrorKind::InternalLogicIssue))
+        }
+    }
+
     pub fn write_to_cpu(&mut self, index: u8, value: u32) -> Result<(), Error> {
         if index < 32 {
             self.cpu[index as usize] = value;
@@ -63,6 +72,18 @@ impl Registers {
             let halves: [f32; 2] = unsafe { transmute::<f64, [f32; 2]>(value) };
             self.fpu[index] = halves[0];
             self.fpu[index + 1] = halves[1];
+            Ok(())
+        } else {
+            Err(Error::from(ErrorKind::InternalLogicIssue))
+        }
+    }
+
+    pub fn write_flag_to_fpu(&mut self, index: u8, value: bool) -> Result<(), Error> {
+        if index < 8 {
+            let mask: u8 = 1u8 << index;
+            let value = if value { mask } else { 0 };
+            self.fpu_flags &= !(1u8 << index);
+            self.fpu_flags |= value;
             Ok(())
         } else {
             Err(Error::from(ErrorKind::InternalLogicIssue))
