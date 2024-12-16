@@ -2,8 +2,10 @@
 pub mod assembler;
 pub mod syscalls;
 
-use crate::config::features::{assembler::AssemblerOptions, syscalls::Syscalls};
+use super::validate::Validate;
+use assembler::AssemblerOptions;
 use serde::{Deserialize, Serialize};
+use syscalls::Syscalls;
 
 #[derive(Serialize, Deserialize)]
 pub struct Features {
@@ -17,4 +19,10 @@ pub struct Features {
     pub assembler: AssemblerOptions,
     /// Set syscalls available to interpreter.
     pub syscalls: Syscalls,
+}
+
+impl Validate for Features {
+    fn validate(&self) -> Result<(), crate::engine::Error> {
+        self.syscalls.validate()
+    }
 }

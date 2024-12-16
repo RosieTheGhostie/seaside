@@ -1,10 +1,12 @@
-use crate::config::{
+use super::super::{
     bitflags_addons::{impl_deserialize, impl_serialize},
     presets::{
         impl_bitflags_has_basic_presets, maybe_using_preset, BasicPresets, HasBasicPresets,
         HasPresets,
     },
+    Validate,
 };
+use crate::engine::{Error, ErrorKind};
 use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
 
@@ -134,3 +136,16 @@ impl HasPresets for Dialog {
     }
 }
 impl HasBasicPresets for Dialog {}
+
+impl Validate for Syscalls {
+    fn validate(&self) -> Result<(), Error> {
+        if self.system.intersects(System::Exit | System::Exit2) {
+            Ok(())
+        } else {
+            Err(Error::new(
+                ErrorKind::InvalidConfig,
+                "missing a syscall to exit program",
+            ))
+        }
+    }
+}
