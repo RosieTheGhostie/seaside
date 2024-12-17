@@ -58,6 +58,43 @@ bitflags! {
     }
 }
 
+pub trait SyscallExecutor {
+    fn syscall(&mut self) -> Result<(), Exception>;
+}
+
+impl SyscallExecutor for Interpreter {
+    fn syscall(&mut self) -> Result<(), Exception> {
+        use service_codes::*;
+        let service_code = self.registers.read_u32_from_cpu(register::V0)? as u8;
+        match service_code {
+            PRINT_INT => self.print_int(),
+            PRINT_FLOAT => self.print_float(),
+            PRINT_DOUBLE => self.print_double(),
+            PRINT_STRING => self.print_string(),
+            READ_INT => self.read_int(),
+            READ_FLOAT => self.read_float(),
+            READ_DOUBLE => self.read_double(),
+            SBRK => self.sbrk(),
+            EXIT => self.exit(),
+            PRINT_CHAR => self.print_char(),
+            READ_CHAR => self.read_char(),
+            OPEN_FILE => self.open_file(),
+            READ_FILE => self.read_file(),
+            WRITE_FILE => self.write_file(),
+            CLOSE_FILE => self.close_file(),
+            EXIT_2 => self.exit_2(),
+            TIME => self.time(),
+            MIDI_OUT => self.midi_out(),
+            SLEEP => self.sleep(),
+            MIDI_OUT_SYNC => self.midi_out_sync(),
+            PRINT_HEX => self.print_hex(),
+            PRINT_BIN => self.print_bin(),
+            PRINT_UINT => self.print_uint(),
+            _ => Err(Exception::SyscallFailure),
+        }
+    }
+}
+
 impl Interpreter {
     fn print_int(&self) -> Result<(), Exception> {
         let x: i32 = self.registers.read_i32_from_cpu(register::A0)?;

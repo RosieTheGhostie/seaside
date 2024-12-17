@@ -196,6 +196,17 @@ version = "0.2.0"
 source = "git+https://github.com/RosieTheGhostie/minimal-logging.git#def2481e22e0aa9c4cf735c842f650494e226690"
 
 [[package]]
+name = "num-derive"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ed3955f1a9c7c0c15e092f9c887db08b1fc683305fdf6eb6684f22555355e202"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "num-traits"
 version = "0.2.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -239,6 +250,7 @@ dependencies = [
  "clap",
  "convert_case",
  "minimal-logging",
+ "num-derive",
  "num-traits",
  "semver",
  "serde",

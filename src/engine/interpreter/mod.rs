@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 pub mod exception;
+mod execute;
+mod instruction;
 pub mod memory;
 pub mod register_file;
 mod syscalls;
