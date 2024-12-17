@@ -5,7 +5,7 @@ mod engine;
 
 use clap::Parser;
 use cmd_args::{CmdArgs, Commands};
-use config::Config;
+use config::{Config, Validate};
 use engine::{Error as EngineError, ErrorKind as EngineErrorKind};
 use minimal_logging::{
     attributes::to_be_implemented,
@@ -66,6 +66,7 @@ fn experimental_code(args: CmdArgs) -> Result<(), EngineError> {
         Ok(config) => config,
         Err(error) => return Err(EngineError::new(EngineErrorKind::InvalidConfig, error)),
     };
+    config.validate()?;
     let debug_config_view = match toml::to_string_pretty(&config) {
         Ok(string) => string,
         Err(error) => return Err(EngineError::new(EngineErrorKind::InternalLogicIssue, error)),
