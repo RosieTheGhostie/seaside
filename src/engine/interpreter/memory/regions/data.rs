@@ -87,10 +87,16 @@ impl Region for DataRegion {
 }
 
 impl DataRegion {
-    fn new(low_address: Address, bytes_to_allocate: usize) -> Self {
+    pub fn new(low_address: Address, bytes_to_allocate: usize) -> Self {
         Self {
             addresses: low_address..(low_address + bytes_to_allocate as u32),
             data: vec![0u8; bytes_to_allocate].into_boxed_slice(),
+        }
+    }
+
+    pub fn populate(&mut self, bytes: Vec<u8>) {
+        for (i, &byte) in bytes.iter().enumerate() {
+            self.data[i] = byte;
         }
     }
 

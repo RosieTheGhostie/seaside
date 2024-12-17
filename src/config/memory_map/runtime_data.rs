@@ -7,9 +7,9 @@ pub struct RuntimeData {
     #[serde(flatten)]
     pub address_range: AddressRange,
     /// The number of bytes to allocate for the heap.
-    heap_size: u32,
+    pub heap_size: u32,
     /// The number of bytes to allocate for the stack.
-    stack_size: u32,
+    pub stack_size: u32,
 }
 
 impl Contains<RuntimeData> for AddressRange {

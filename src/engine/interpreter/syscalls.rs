@@ -1,6 +1,6 @@
 use super::{exception::Exception, Interpreter};
 use crate::{
-    config::memory_map::Address,
+    config::{features::syscalls, memory_map::Address},
     constants::{register, service_codes},
 };
 use bitflags::bitflags;
@@ -58,12 +58,195 @@ bitflags! {
     }
 }
 
-pub trait SyscallExecutor {
-    fn syscall(&mut self) -> Result<(), Exception>;
+impl From<&syscalls::Syscalls> for Syscalls {
+    fn from(value: &syscalls::Syscalls) -> Self {
+        let mut output = Self::empty();
+        output |= Self::from(&value.print);
+        output |= Self::from(&value.read);
+        output |= Self::from(&value.file);
+        output |= Self::from(&value.system);
+        output |= Self::from(&value.random);
+        output |= Self::from(&value.dialog.input);
+        output |= Self::from(&value.dialog.message);
+        output
+    }
 }
 
-impl SyscallExecutor for Interpreter {
-    fn syscall(&mut self) -> Result<(), Exception> {
+impl From<&syscalls::Print> for Syscalls {
+    fn from(value: &syscalls::Print) -> Self {
+        use syscalls::Print;
+        let mut output = Self::empty();
+        if value.intersects(Print::Int) {
+            output |= Self::PrintInt;
+        }
+        if value.intersects(Print::Float) {
+            output |= Self::PrintFloat;
+        }
+        if value.intersects(Print::Double) {
+            output |= Self::PrintDouble;
+        }
+        if value.intersects(Print::String) {
+            output |= Self::PrintString;
+        }
+        if value.intersects(Print::Char) {
+            output |= Self::PrintChar;
+        }
+        if value.intersects(Print::Hex) {
+            output |= Self::PrintHex;
+        }
+        if value.intersects(Print::Bin) {
+            output |= Self::PrintBin;
+        }
+        if value.intersects(Print::Uint) {
+            output |= Self::PrintUint;
+        }
+        output
+    }
+}
+
+impl From<&syscalls::Read> for Syscalls {
+    fn from(value: &syscalls::Read) -> Self {
+        use syscalls::Read;
+        let mut output = Self::empty();
+        if value.intersects(Read::Int) {
+            output |= Self::ReadInt;
+        }
+        if value.intersects(Read::Float) {
+            output |= Self::ReadFloat;
+        }
+        if value.intersects(Read::Double) {
+            output |= Self::ReadDouble;
+        }
+        if value.intersects(Read::String) {
+            output |= Self::ReadString;
+        }
+        if value.intersects(Read::Char) {
+            output |= Self::ReadChar;
+        }
+        output
+    }
+}
+
+impl From<&syscalls::File> for Syscalls {
+    fn from(value: &syscalls::File) -> Self {
+        use syscalls::File;
+        let mut output = Self::empty();
+        if value.intersects(File::Open) {
+            output |= Self::OpenFile;
+        }
+        if value.intersects(File::Read) {
+            output |= Self::ReadFile;
+        }
+        if value.intersects(File::Write) {
+            output |= Self::WriteFile;
+        }
+        if value.intersects(File::Close) {
+            output |= Self::CloseFile;
+        }
+        output
+    }
+}
+
+impl From<&syscalls::System> for Syscalls {
+    fn from(value: &syscalls::System) -> Self {
+        use syscalls::System;
+        let mut output = Self::empty();
+        if value.intersects(System::Sbrk) {
+            output |= Self::Sbrk;
+        }
+        if value.intersects(System::Exit) {
+            output |= Self::Exit;
+        }
+        if value.intersects(System::Exit2) {
+            output |= Self::Exit2;
+        }
+        if value.intersects(System::Time) {
+            output |= Self::Time;
+        }
+        if value.intersects(System::Midi) {
+            output |= Self::MidiOut;
+        }
+        if value.intersects(System::Sleep) {
+            output |= Self::Sleep;
+        }
+        if value.intersects(System::MidiSync) {
+            output |= Self::MidiOutSync;
+        }
+        output
+    }
+}
+
+impl From<&syscalls::Random> for Syscalls {
+    fn from(value: &syscalls::Random) -> Self {
+        use syscalls::Random;
+        let mut output = Self::empty();
+        if value.intersects(Random::SetSeed) {
+            output |= Self::SetSeed;
+        }
+        if value.intersects(Random::RandInt) {
+            output |= Self::RandInt;
+        }
+        if value.intersects(Random::RandIntRange) {
+            output |= Self::RandIntRange;
+        }
+        if value.intersects(Random::RandFloat) {
+            output |= Self::RandFloat;
+        }
+        if value.intersects(Random::RandDouble) {
+            output |= Self::RandDouble;
+        }
+        output
+    }
+}
+
+impl From<&syscalls::Input> for Syscalls {
+    fn from(value: &syscalls::Input) -> Self {
+        use syscalls::Input;
+        let mut output = Self::empty();
+        if value.intersects(Input::Confirm) {
+            output |= Self::ConfirmDialog;
+        }
+        if value.intersects(Input::Int) {
+            output |= Self::InputDialogInt;
+        }
+        if value.intersects(Input::Float) {
+            output |= Self::InputDialogFloat;
+        }
+        if value.intersects(Input::Double) {
+            output |= Self::InputDialogDouble;
+        }
+        if value.intersects(Input::String) {
+            output |= Self::InputDialogString;
+        }
+        output
+    }
+}
+
+impl From<&syscalls::Message> for Syscalls {
+    fn from(value: &syscalls::Message) -> Self {
+        use syscalls::Message;
+        let mut output = Self::empty();
+        if value.intersects(Message::General) {
+            output |= Self::MessageDialog;
+        }
+        if value.intersects(Message::Int) {
+            output |= Self::MessageDialogInt;
+        }
+        if value.intersects(Message::Float) {
+            output |= Self::MessageDialogFloat;
+        }
+        if value.intersects(Message::Double) {
+            output |= Self::MessageDialogDouble;
+        }
+        if value.intersects(Message::String) {
+            output |= Self::MessageDialogString;
+        }
+        output
+    }
+}
+
+impl Interpreter {
+    pub fn syscall(&mut self) -> Result<(), Exception> {
         use service_codes::*;
         let service_code = self.registers.read_u32_from_cpu(register::V0)? as u8;
         match service_code {

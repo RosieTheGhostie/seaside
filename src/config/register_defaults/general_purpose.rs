@@ -17,8 +17,6 @@ pub enum GeneralPurposeRegister {
     StackPointer,
     FramePointer,
     ReturnAddress,
-    High,
-    Low,
 }
 
 impl FromStr for GeneralPurposeRegister {
@@ -37,8 +35,6 @@ impl FromStr for GeneralPurposeRegister {
             "sp" => return Ok(Self::StackPointer),
             "fp" => return Ok(Self::FramePointer),
             "ra" => return Ok(Self::ReturnAddress),
-            "hi" => return Ok(Self::High),
-            "lo" => return Ok(Self::Low),
             _ => {}
         }
         let (prefix, n) = {
@@ -76,9 +72,7 @@ impl FromPrimitive for GeneralPurposeRegister {
             29 => Some(Self::StackPointer),
             30 => Some(Self::FramePointer),
             31 => Some(Self::ReturnAddress),
-            32 => Some(Self::High),
-            33 => Some(Self::Low),
-            34.. => None,
+            32.. => None,
         }
     }
 
@@ -113,8 +107,6 @@ impl ToPrimitive for GeneralPurposeRegister {
             Self::StackPointer => Some(29),
             Self::FramePointer => Some(30),
             Self::ReturnAddress => Some(31),
-            Self::High => Some(32),
-            Self::Low => Some(33),
         }
     }
 
@@ -128,7 +120,7 @@ impl ToPrimitive for GeneralPurposeRegister {
 }
 
 impl RegisterSet for GeneralPurposeRegister {
-    const NUM_REGISTERS: usize = 34;
+    const NUM_REGISTERS: usize = 32;
     const REGISTER_NAMES: &'static [&'static str] = &[
         "zero", "at", "v0", "v1", "a0", "a1", "a2", "a3", "t0", "t1", "t2", "t3", "t4", "t5", "t6",
         "t7", "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "t8", "t9", "k0", "k1", "gp", "sp",

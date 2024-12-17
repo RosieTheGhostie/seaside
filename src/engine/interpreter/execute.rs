@@ -1,7 +1,6 @@
 use super::{
     exception::Exception,
     instruction::{fields, Instruction},
-    syscalls::SyscallExecutor,
     Interpreter,
 };
 use crate::{
@@ -84,16 +83,16 @@ impl Interpreter {
 
     fn execute_immediate_format(
         &mut self,
-        opcode: Opcode,
-        instruction: Instruction,
+        _opcode: Opcode,
+        _instruction: Instruction,
     ) -> Result<(), Exception> {
         todo!()
     }
 
     fn execute_jump_format(
         &mut self,
-        opcode: Opcode,
-        instruction: Instruction,
+        _opcode: Opcode,
+        _instruction: Instruction,
     ) -> Result<(), Exception> {
         todo!()
     }

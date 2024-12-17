@@ -7,7 +7,7 @@ pub struct Segment {
     #[serde(flatten)]
     pub address_range: AddressRange,
     /// The maximum number of bytes to allocate for this segment.
-    allocate: u32,
+    pub allocate: u32,
 }
 
 impl Contains<Segment> for AddressRange {

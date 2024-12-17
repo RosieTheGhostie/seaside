@@ -6,31 +6,42 @@ mod engine;
 use clap::Parser;
 use cmd_args::{CmdArgs, Commands};
 use config::{Config, Validate};
-use engine::{Error as EngineError, ErrorKind as EngineErrorKind};
+use engine::{interpreter::Interpreter, Error as EngineError, ErrorKind as EngineErrorKind};
 use minimal_logging::{
     attributes::to_be_implemented,
-    macros::{debugln, fatalln},
+    macros::{fatalln, warnln},
 };
 use std::{fs::read_to_string, path::PathBuf};
 use walkdir::WalkDir;
 
 fn main() {
     let args: CmdArgs = CmdArgs::parse();
+    let config: Config = match get_config(&args) {
+        Ok(config) => config,
+        Err(error) => {
+            fatalln!("{error}");
+            return;
+        }
+    };
     if let Err(error) = match args.command {
         Commands::Run {
-            text: _,
-            data: _,
-            ktext: _,
-            kdata: _,
-        } => run(args),
-        Commands::Experiment => experimental_code(args),
+            text,
+            r#extern,
+            data,
+            ktext,
+            kdata,
+        } => match engine::init::init(config, text, r#extern, data, ktext, kdata) {
+            Ok(interpreter) => run(interpreter),
+            Err(error) => Err(error),
+        },
+        Commands::Experiment => experimental_code(),
     } {
         fatalln!("{error}");
     }
 }
 
 #[to_be_implemented(Ok(()))]
-fn run(_args: CmdArgs) -> Result<(), EngineError>;
+fn run(_interpreter: Interpreter) -> Result<(), EngineError>;
 
 fn find_seaside_toml() -> Result<PathBuf, EngineError> {
     for entry in WalkDir::new(".")
@@ -48,10 +59,10 @@ fn find_seaside_toml() -> Result<PathBuf, EngineError> {
     ))
 }
 
-fn experimental_code(args: CmdArgs) -> Result<(), EngineError> {
-    let config_path = match args.config {
+fn get_config(args: &CmdArgs) -> Result<Config, EngineError> {
+    let config_path = match &args.config {
         Some(path) => path,
-        None => find_seaside_toml()?,
+        None => &find_seaside_toml()?,
     };
     let file_contents = match read_to_string(config_path) {
         Ok(contents) => contents,
@@ -66,11 +77,10 @@ fn experimental_code(args: CmdArgs) -> Result<(), EngineError> {
         Ok(config) => config,
         Err(error) => return Err(EngineError::new(EngineErrorKind::InvalidConfig, error)),
     };
-    config.validate()?;
-    let debug_config_view = match toml::to_string_pretty(&config) {
-        Ok(string) => string,
-        Err(error) => return Err(EngineError::new(EngineErrorKind::InternalLogicIssue, error)),
-    };
-    debugln!("Parsed Config:\n{debug_config_view}");
+    config.validate().map(|_| config)
+}
+
+fn experimental_code() -> Result<(), EngineError> {
+    warnln!("no experimental code to run");
     Ok(())
 }

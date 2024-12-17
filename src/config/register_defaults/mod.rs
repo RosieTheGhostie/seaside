@@ -10,18 +10,22 @@ pub use general_purpose::GeneralPurposeRegister;
 pub use register_set::RegisterSet;
 pub use registers::Registers;
 
-use num_traits::ToPrimitive;
+use num_traits::{ToPrimitive, Zero};
 use serde::{Deserialize, Serialize};
 use std::ops::Index;
 
 #[derive(Default, Deserialize, Serialize)]
 pub struct RegisterDefaults {
+    #[serde(default = "u32::default", skip_serializing_if = "u32::is_zero")]
+    pub hi: u32,
+    #[serde(default = "u32::default", skip_serializing_if = "u32::is_zero")]
+    pub lo: u32,
     #[serde(
         with = "general_purpose::registers_format",
-        default = "Registers::<34>::default",
-        skip_serializing_if = "Registers::<34>::is_default"
+        default = "Registers::<32>::default",
+        skip_serializing_if = "Registers::<32>::is_default"
     )]
-    pub general_purpose: Registers<34>,
+    pub general_purpose: Registers<32>,
     #[serde(
         with = "floating_point::registers_format",
         default = "Registers::<32>::default",
