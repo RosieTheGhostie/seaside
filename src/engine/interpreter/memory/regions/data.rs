@@ -1,7 +1,5 @@
-use crate::{
-    engine::interpreter::{exception::Exception, memory::regions::Region},
-    type_aliases::address::{is_aligned, Address},
-};
+use super::{super::super::Exception, Region};
+use crate::type_aliases::address::{is_aligned, Address};
 use std::ops::Range;
 
 pub struct DataRegion {

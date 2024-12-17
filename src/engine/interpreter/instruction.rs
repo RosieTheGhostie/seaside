@@ -1,5 +1,6 @@
-use crate::constants::opcodes::Opcode;
 pub use crate::type_aliases::instruction::Instruction;
+
+use crate::constants::opcodes::Opcode;
 
 pub enum InstructionFormat {
     Register,

@@ -1,16 +1,19 @@
 #![allow(dead_code)]
 pub mod exception;
-mod execute;
 pub mod init;
-mod instruction;
 pub mod memory;
 pub mod register_file;
+
+mod execute;
+mod instruction;
 mod syscalls;
 
+pub use exception::Exception;
+pub use memory::Memory;
+pub use register_file::RegisterFile;
+pub use syscalls::Syscalls;
+
 use crate::type_aliases::address::Address;
-use memory::Memory;
-use register_file::RegisterFile;
-use syscalls::Syscalls;
 
 pub struct Interpreter {
     memory: Memory,

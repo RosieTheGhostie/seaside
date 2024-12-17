@@ -3,14 +3,15 @@ pub mod runtime_data;
 pub mod segment;
 pub mod traits;
 
+pub use address_range::AddressRange;
+pub use runtime_data::RuntimeData;
+pub use segment::Segment;
+
 use super::validate::Validate;
 use crate::{
     engine::{Error, ErrorKind},
     type_aliases::address::Address,
 };
-pub use address_range::AddressRange;
-pub use runtime_data::RuntimeData;
-pub use segment::Segment;
 use serde::{Deserialize, Serialize};
 use traits::{Contains, Overlapping};
 

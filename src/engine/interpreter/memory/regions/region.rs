@@ -1,4 +1,4 @@
-use super::super::super::exception::Exception;
+use super::super::super::Exception;
 use crate::type_aliases::address::Address;
 
 pub trait Region {

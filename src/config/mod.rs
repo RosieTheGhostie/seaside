@@ -1,25 +1,27 @@
 #![allow(dead_code)]
-mod bitflags_addons;
 pub mod endian;
 pub mod features;
 pub mod memory_map;
-mod presets;
-mod red_flag_behavior;
 pub mod register_defaults;
 pub mod validate;
+
+mod bitflags_addons;
+mod presets;
+mod red_flag_behavior;
 mod version;
 
-use crate::engine::{Error, ErrorKind};
-use clap::crate_version;
 pub use endian::Endian;
 pub use features::Features;
 pub use memory_map::MemoryMap;
-use minimal_logging::attributes::wip;
 pub use register_defaults::RegisterDefaults;
+pub use validate::Validate;
+
+use crate::engine::{Error, ErrorKind};
+use clap::crate_version;
+use minimal_logging::attributes::wip;
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
-pub use validate::Validate;
 use version::VersionComparison;
 
 #[derive(Deserialize, Serialize)]

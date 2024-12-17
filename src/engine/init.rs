@@ -1,4 +1,4 @@
-use super::{interpreter::Interpreter, Error};
+use super::{Error, Interpreter};
 use crate::config::Config;
 use std::path::PathBuf;
 

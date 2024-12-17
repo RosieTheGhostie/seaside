@@ -1,12 +1,8 @@
 use super::{
-    exception::Exception,
-    instruction::{fields, Instruction},
-    Interpreter,
+    instruction::{fields, Instruction, InstructionFormat},
+    Exception, Interpreter,
 };
-use crate::{
-    constants::{fn_codes::SpecialFn, opcodes::Opcode},
-    engine::interpreter::instruction::InstructionFormat,
-};
+use crate::constants::{fn_codes::SpecialFn, opcodes::Opcode};
 use num_traits::FromPrimitive;
 use std::mem::transmute;
 

@@ -1,4 +1,4 @@
-use super::{exception::Exception, Interpreter};
+use super::{Exception, Interpreter};
 use crate::{
     config::features::syscalls,
     constants::{register, service_codes},

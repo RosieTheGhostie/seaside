@@ -1,8 +1,7 @@
-use super::{memory::Memory, register_file::RegisterFile, syscalls::Syscalls, Interpreter};
-use crate::{
-    config::{Config, RegisterDefaults},
-    engine::Error,
+use super::{
+    super::Error, memory::Memory, register_file::RegisterFile, syscalls::Syscalls, Interpreter,
 };
+use crate::config::{Config, RegisterDefaults};
 use std::path::PathBuf;
 
 impl Interpreter {

@@ -1,6 +1,6 @@
+use super::{super::super::Exception, Region};
 use crate::{
     config::Endian,
-    engine::interpreter::{exception::Exception, memory::regions::Region},
     type_aliases::address::{is_aligned, Address},
 };
 use std::ops::Range;

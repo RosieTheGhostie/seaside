@@ -1,4 +1,5 @@
-use crate::{engine::interpreter::exception::Exception, type_aliases::address::Address};
+use super::Exception;
+use crate::type_aliases::address::Address;
 use std::mem::transmute;
 
 #[derive(Default)]

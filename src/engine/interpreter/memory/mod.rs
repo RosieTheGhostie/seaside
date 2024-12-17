@@ -1,5 +1,5 @@
 pub mod init;
-mod regions;
+pub mod regions;
 
 use crate::{config::Endian, type_aliases::address::Address};
 use regions::{DataRegion, TextRegion};
