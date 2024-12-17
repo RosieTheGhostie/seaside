@@ -9,8 +9,6 @@ pub mod register_defaults;
 pub mod validate;
 mod version;
 
-use std::str::FromStr;
-
 use crate::engine::{Error, ErrorKind};
 use clap::crate_version;
 pub use endian::Endian;
@@ -20,12 +18,14 @@ use minimal_logging::attributes::wip;
 pub use register_defaults::RegisterDefaults;
 use semver::Version;
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 pub use validate::Validate;
+use version::VersionComparison;
 
 #[derive(Deserialize, Serialize)]
 pub struct Config {
     #[serde(with = "version")]
-    pub seaside_version: Version,
+    pub version: Version,
     #[serde(alias = "byte_order")]
     pub endian: Endian,
     pub features: Features,
@@ -36,25 +36,28 @@ pub struct Config {
 impl Validate for Config {
     #[wip]
     fn validate(&self) -> Result<(), Error> {
-        match Version::from_str(crate_version!()) {
-            Ok(version) if self.seaside_version > version => Err(Error::new(
-                ErrorKind::OutdatedVersion,
-                format!(
-                    "consider upgrading seaside (v{version}) to match config (v{})",
-                    self.seaside_version
-                ),
-            )),
-            Ok(version) if self.seaside_version < version => Err(Error::new(
-                ErrorKind::OutdatedVersion,
-                format!(
-                    "consider upgrade config (v{}) to match seaside (v{version})",
-                    self.seaside_version
-                ),
-            )),
-            Ok(_) => Ok(()),
-            Err(_) => Err(Error::new(
+        use VersionComparison::*;
+        let seaside_version = Version::from_str(crate_version!()).map_err(|_| {
+            Error::new(
                 ErrorKind::InternalLogicIssue,
                 "failed to fetch version of seaside",
+            )
+        })?;
+        match VersionComparison::compare(&seaside_version, &self.version) {
+            Compatible { patch_available: _ } => Ok(()),
+            AIsAheadOfB => Err(Error::new(
+                ErrorKind::OutdatedVersion,
+                format!(
+                    "consider updating config (v{}) to match seaside (v{seaside_version})",
+                    self.version
+                ),
+            )),
+            BIsAheadOfA => Err(Error::new(
+                ErrorKind::OutdatedVersion,
+                format!(
+                    "consider updating seaside (v{seaside_version}) to match config (v{})",
+                    self.version,
+                ),
             )),
         }?;
         self.features.syscalls.validate()?;
