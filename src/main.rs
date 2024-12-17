@@ -25,13 +25,7 @@ fn main() {
         }
     };
     if let Err(error) = match args.command {
-        Commands::Run {
-            text,
-            r#extern,
-            data,
-            ktext,
-            kdata,
-        } => match engine::init::init(config, text, r#extern, data, ktext, kdata) {
+        Commands::Run { directory } => match engine::init::init(config, directory) {
             Ok(interpreter) => run(interpreter),
             Err(error) => Err(error),
         },

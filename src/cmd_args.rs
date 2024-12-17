@@ -15,14 +15,8 @@ pub struct CmdArgs {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Runs `text` as machine code. The other segments are optional.
-    Run {
-        text: PathBuf,
-        r#extern: Option<PathBuf>,
-        data: Option<PathBuf>,
-        ktext: Option<PathBuf>,
-        kdata: Option<PathBuf>,
-    },
+    /// Runs an assembled MIPS program in the specified project directory.
+    Run { directory: PathBuf },
     /// Runs experimental code.
     Experiment,
 }
