@@ -1,7 +1,7 @@
 pub mod init;
 mod regions;
 
-use crate::config::{memory_map::Address, Endian};
+use crate::{config::Endian, type_aliases::address::Address};
 use regions::{DataRegion, TextRegion};
 
 pub struct Memory {

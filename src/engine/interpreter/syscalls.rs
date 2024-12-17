@@ -1,7 +1,8 @@
 use super::{exception::Exception, Interpreter};
 use crate::{
-    config::{features::syscalls, memory_map::Address},
+    config::features::syscalls,
     constants::{register, service_codes},
+    type_aliases::address::Address,
 };
 use bitflags::bitflags;
 use std::{

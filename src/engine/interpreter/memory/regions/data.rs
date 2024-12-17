@@ -1,6 +1,6 @@
 use crate::{
-    config::memory_map::{address::is_aligned, Address},
     engine::interpreter::{exception::Exception, memory::regions::Region},
+    type_aliases::address::{is_aligned, Address},
 };
 use std::ops::Range;
 

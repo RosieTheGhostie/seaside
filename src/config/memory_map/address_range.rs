@@ -1,7 +1,6 @@
 use super::{Contains, Overlapping};
+use crate::type_aliases::address::Address;
 use serde::{Deserialize, Serialize};
-
-pub type Address = u32;
 
 #[derive(Deserialize, Serialize)]
 pub struct AddressRange {
@@ -25,8 +24,4 @@ impl Contains<AddressRange> for AddressRange {
     fn contains(&self, other: &AddressRange) -> bool {
         self.base <= other.base && other.limit <= self.limit
     }
-}
-
-pub const fn is_aligned(address: Address, n_bytes: u32) -> bool {
-    address.trailing_zeros() >= n_bytes
 }

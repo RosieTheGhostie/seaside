@@ -1,4 +1,4 @@
-use crate::{config::memory_map::Address, engine::interpreter::exception::Exception};
+use crate::{engine::interpreter::exception::Exception, type_aliases::address::Address};
 use std::mem::transmute;
 
 #[derive(Default)]

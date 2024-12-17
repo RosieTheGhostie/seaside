@@ -7,7 +7,7 @@ pub mod memory;
 pub mod register_file;
 mod syscalls;
 
-use crate::config::memory_map::Address;
+use crate::type_aliases::address::Address;
 use memory::Memory;
 use register_file::RegisterFile;
 use syscalls::Syscalls;

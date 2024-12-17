@@ -1,5 +1,5 @@
 use super::super::super::exception::Exception;
-use crate::config::memory_map::Address;
+use crate::type_aliases::address::Address;
 
 pub trait Region {
     fn contains(&self, address: Address) -> bool;

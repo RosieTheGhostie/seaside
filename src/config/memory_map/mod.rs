@@ -1,11 +1,14 @@
-pub mod address;
+pub mod address_range;
 pub mod runtime_data;
 pub mod segment;
 pub mod traits;
 
 use super::validate::Validate;
-use crate::engine::{Error, ErrorKind};
-pub use address::{Address, AddressRange};
+use crate::{
+    engine::{Error, ErrorKind},
+    type_aliases::address::Address,
+};
+pub use address_range::AddressRange;
 pub use runtime_data::RuntimeData;
 pub use segment::Segment;
 use serde::{Deserialize, Serialize};

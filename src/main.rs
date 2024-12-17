@@ -2,6 +2,7 @@ mod cmd_args;
 mod config;
 mod constants;
 mod engine;
+mod type_aliases;
 
 use clap::Parser;
 use cmd_args::{CmdArgs, Commands};
