@@ -1,5 +1,9 @@
-use std::fmt::{Display, Formatter, Result as FmtResult};
+use std::{
+    error::Error as ErrorTrait,
+    fmt::{Display, Formatter, Result as FmtResult},
+};
 
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum Exception {
     InvalidLoad = 4,
     InvalidStore = 5,
@@ -14,21 +18,29 @@ pub enum Exception {
     InterpreterFailure = 21, // hopefully you never see this one
 }
 
-impl Display for Exception {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+impl Exception {
+    pub const fn as_str(&self) -> &'static str {
         use Exception::*;
         match *self {
-            InvalidLoad => write!(f, "invalid load"),
-            InvalidStore => write!(f, "invalid store"),
-            SyscallFailure => write!(f, "syscall failed to execute"),
-            Breakpoint => write!(f, "hit breakpoint"),
-            ReservedInstruction => write!(f, "encountered a reserved instruction"),
-            IntegerOverflowOrUndeflow => write!(f, "integer overflow/underflow"),
-            Trap => write!(f, "trapped"),
-            DivideByZero => write!(f, "tried to divide by zero"),
-            FloatOverflow => write!(f, "floating-point operation overflowed"),
-            FloatUnderflow => write!(f, "floating-point operation underflowed"),
-            InterpreterFailure => write!(f, "the interpreter did a goof (pls contact rose)"),
+            InvalidLoad => "invalid load",
+            InvalidStore => "invalid store",
+            SyscallFailure => "syscall failed to execute",
+            Breakpoint => "hit breakpoint",
+            ReservedInstruction => "encountered a reserved instruction",
+            IntegerOverflowOrUndeflow => "integer overflow/underflow",
+            Trap => "trapped",
+            DivideByZero => "tried to divide by zero",
+            FloatOverflow => "floating-point operation overflowed",
+            FloatUnderflow => "floating-point operation underflowed",
+            InterpreterFailure => "the interpreter did a goof (pls contact rose)",
         }
     }
 }
+
+impl Display for Exception {
+    fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
+        fmt.write_str(self.as_str())
+    }
+}
+
+impl ErrorTrait for Exception {}
