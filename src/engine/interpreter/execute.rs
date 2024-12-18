@@ -2,9 +2,11 @@ use super::{
     instruction::{fields, Instruction, InstructionFormat},
     Exception, Interpreter,
 };
-use crate::constants::{fn_codes::SpecialFn, opcodes::Opcode};
+use crate::{
+    constants::{fn_codes::SpecialFn, opcodes::Opcode},
+    sign_extend::SignExtend,
+};
 use num_traits::FromPrimitive;
-use std::mem::transmute;
 
 impl Interpreter {
     pub fn execute(&mut self, instruction: Instruction) -> Result<(), Exception> {
@@ -87,19 +89,19 @@ impl Interpreter {
         let rt = fields::rt(instruction);
         let imm = fields::imm(instruction);
         let rs_value = self.registers.read_u32_from_cpu(rs)?;
-        let _rt_value = self.registers.read_u32_from_cpu(rt)?;
+        let rt_value = self.registers.read_u32_from_cpu(rt)?;
         match opcode {
             RegisterImmediate => todo!("regimm"),
-            BranchEqual => todo!("beq"),
-            BranchNotEqual => todo!("bne"),
-            BranchGreaterThanZero => todo!("bgtz"),
+            BranchEqual => self.beq(rs_value, rt_value, imm),
+            BranchNotEqual => self.bne(rs_value, rt_value, imm),
+            BranchGreaterThanZero => self.bgtz(rs_value, imm),
             AddImmediate => self.addi(rt, rs_value, imm),
             AddImmediateUnsigned => self.addiu(rt, rs_value, imm),
-            SetLessThanImmediate => todo!("slti"),
-            SetLessThanImmediateUnsigned => todo!("sltiu"),
-            AndImmediate => todo!("andi"),
-            OrImmediate => todo!("ori"),
-            XorImmediate => todo!("xori"),
+            SetLessThanImmediate => self.slti(rt, rs_value, imm),
+            SetLessThanImmediateUnsigned => self.sltiu(rt, rs_value, imm),
+            AndImmediate => self.andi(rt, rs_value, imm),
+            OrImmediate => self.ori(rt, rs_value, imm),
+            XorImmediate => self.xori(rt, rs_value, imm),
             LoadUpperImmediate => self.lui(rt, imm),
             LoadByte => todo!("lb"),
             LoadHalf => todo!("lh"),
@@ -141,7 +143,7 @@ impl Interpreter {
     }
 
     fn sra(&mut self, rd: u8, rt_value: u32, shamt: u8) -> Result<(), Exception> {
-        let rt_value = unsafe { transmute::<u32, i32>(rt_value) };
+        let rt_value = rt_value as i32;
         self.registers.write_i32_to_cpu(rd, rt_value >> shamt)
     }
 
@@ -154,7 +156,7 @@ impl Interpreter {
     }
 
     fn srav(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        let rt_value = unsafe { transmute::<u32, i32>(rt_value) };
+        let rt_value = rt_value as i32;
         self.registers.write_i32_to_cpu(rd, rt_value >> rs_value)
     }
 
@@ -193,10 +195,9 @@ impl Interpreter {
     }
 
     fn mult(&mut self, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        let rs_value = rs_value as i64;
-        let rt_value = rt_value as i64;
-        let product = i64::wrapping_mul(rs_value, rt_value);
-        let product = unsafe { transmute::<i64, u64>(product) };
+        let rs_value: i64 = rs_value.sign_extend();
+        let rt_value: i64 = rt_value.sign_extend();
+        let product = i64::wrapping_mul(rs_value, rt_value) as u64;
         self.registers.hi = (product >> 32) as u32;
         self.registers.lo = (product & 0xFFFFFFFF) as u32;
         Ok(())
@@ -212,13 +213,13 @@ impl Interpreter {
     }
 
     fn div(&mut self, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        let rs_value = unsafe { transmute::<u32, i32>(rs_value) };
-        let rt_value = unsafe { transmute::<u32, i32>(rt_value) };
+        let rs_value = rs_value as i32;
+        let rt_value = rt_value as i32;
         if rt_value != 0 {
-            let quotient = i32::wrapping_div(rs_value, rt_value);
-            let remainder = i32::wrapping_rem(rs_value, rt_value);
-            self.registers.hi = unsafe { transmute::<i32, u32>(remainder) };
-            self.registers.lo = unsafe { transmute::<i32, u32>(quotient) };
+            let quotient = i32::wrapping_div(rs_value, rt_value) as u32;
+            let remainder = i32::wrapping_rem(rs_value, rt_value) as u32;
+            self.registers.hi = remainder;
+            self.registers.lo = quotient;
         }
         Ok(())
     }
@@ -232,8 +233,8 @@ impl Interpreter {
     }
 
     fn add(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        let rs_value = unsafe { transmute::<u32, i32>(rs_value) };
-        let rt_value = unsafe { transmute::<u32, i32>(rt_value) };
+        let rs_value = rs_value as i32;
+        let rt_value = rt_value as i32;
         match i32::checked_add(rs_value, rt_value) {
             Some(sum) => self.registers.write_i32_to_cpu(rd, sum),
             None => Err(Exception::IntegerOverflowOrUndeflow),
@@ -246,8 +247,8 @@ impl Interpreter {
     }
 
     fn sub(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        let rs_value = unsafe { transmute::<u32, i32>(rs_value) };
-        let rt_value = unsafe { transmute::<u32, i32>(rt_value) };
+        let rs_value = rs_value as i32;
+        let rt_value = rt_value as i32;
         match i32::checked_sub(rs_value, rt_value) {
             Some(difference) => self.registers.write_i32_to_cpu(rd, difference),
             None => Err(Exception::IntegerOverflowOrUndeflow),
@@ -276,8 +277,8 @@ impl Interpreter {
     }
 
     fn slt(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        let rs_value = unsafe { transmute::<u32, i32>(rs_value) };
-        let rt_value = unsafe { transmute::<u32, i32>(rt_value) };
+        let rs_value = rs_value as i32;
+        let rt_value = rt_value as i32;
         self.registers
             .write_u32_to_cpu(rd, if rs_value < rt_value { 1 } else { 0 })
     }
@@ -288,21 +289,71 @@ impl Interpreter {
     }
 }
 
+// immediate format instructions
 impl Interpreter {
+    fn branch(&mut self, offset: u16) {
+        let offset = <u16 as SignExtend<i32>>::sign_extend(&offset) << 2;
+        self.pc = u32::wrapping_add_signed(self.pc, offset);
+    }
+
+    fn beq(&mut self, rs_value: u32, rt_value: u32, imm: u16) -> Result<(), Exception> {
+        if rs_value == rt_value {
+            self.branch(imm);
+        }
+        Ok(())
+    }
+
+    fn bne(&mut self, rs_value: u32, rt_value: u32, imm: u16) -> Result<(), Exception> {
+        if rs_value != rt_value {
+            self.branch(imm);
+        }
+        Ok(())
+    }
+
+    fn bgtz(&mut self, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        if rs_value as i32 > 0 {
+            self.branch(imm);
+        }
+        Ok(())
+    }
+
     fn addi(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
-        let rs_value = unsafe { transmute::<u32, i32>(rs_value) };
-        let imm = imm as i32;
-        match i32::checked_add(rs_value, imm) {
-            Some(sum) => self.registers.write_i32_to_cpu(rt, sum),
+        let imm: i32 = imm.sign_extend();
+        match u32::checked_add_signed(rs_value, imm) {
+            Some(sum) => self.registers.write_u32_to_cpu(rt, sum),
             None => Err(Exception::IntegerOverflowOrUndeflow),
         }
     }
 
     fn addiu(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
-        let rs_value = unsafe { transmute::<u32, i32>(rs_value) };
-        let imm = imm as i32;
+        let imm: i32 = imm.sign_extend();
         self.registers
-            .write_i32_to_cpu(rt, i32::wrapping_add(rs_value, imm))
+            .write_u32_to_cpu(rt, u32::wrapping_add_signed(rs_value, imm))
+    }
+
+    fn slti(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        let rs_value = rs_value as i32;
+        let imm: i32 = imm.sign_extend();
+        self.registers
+            .write_u32_to_cpu(rt, if rs_value < imm { 1 } else { 0 })
+    }
+
+    fn sltiu(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        let imm = <u16 as SignExtend<i32>>::sign_extend(&imm) as u32;
+        self.registers
+            .write_u32_to_cpu(rt, if rs_value < imm { 1 } else { 0 })
+    }
+
+    fn andi(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        self.registers.write_u32_to_cpu(rt, rs_value & imm as u32)
+    }
+
+    fn ori(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        self.registers.write_u32_to_cpu(rt, rs_value | imm as u32)
+    }
+
+    fn xori(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        self.registers.write_u32_to_cpu(rt, rs_value ^ imm as u32)
     }
 
     fn lui(&mut self, rt: u8, imm: u16) -> Result<(), Exception> {
