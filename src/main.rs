@@ -23,7 +23,7 @@ fn main() {
         }
     };
     if let Err(error) = match args.command {
-        Commands::Run { directory } => match engine::init::init(config, directory) {
+        Commands::Run { directory } => match engine::init(config, directory) {
             Ok(interpreter) => run(interpreter).map(|exit_code| {
                 if let Some(exit_code) = exit_code {
                     println!("program terminated with exit code {exit_code}")

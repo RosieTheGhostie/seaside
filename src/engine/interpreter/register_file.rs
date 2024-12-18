@@ -1,5 +1,5 @@
 use super::Exception;
-use crate::type_aliases::address::Address;
+use crate::{config::RegisterDefaults, type_aliases::address::Address};
 use std::mem::transmute;
 
 #[derive(Default)]
@@ -103,5 +103,25 @@ impl RegisterFile {
         } else {
             Err(Exception::InterpreterFailure)
         }
+    }
+
+    pub fn init(register_defaults: &RegisterDefaults) -> Self {
+        let mut register_file = Self::default();
+        // can't iterate directly due to borrow checker stuff
+        for i in 0..32 {
+            let default_value = register_defaults.general_purpose[i];
+            let _ = register_file.write_u32_to_cpu(i as u8, default_value);
+        }
+        register_file.hi = register_defaults.hi;
+        register_file.lo = register_defaults.lo;
+        for i in 0..32 {
+            let x = f32::from_bits(register_defaults.floating_point[i]);
+            let _ = register_file.write_f32_to_fpu(i as u8, x);
+        }
+        register_file.vaddr = register_defaults.coprocessor_0[0];
+        register_file.status = register_defaults.coprocessor_0[1];
+        register_file.cause = register_defaults.coprocessor_0[2];
+        register_file.epc = register_defaults.coprocessor_0[3];
+        register_file
     }
 }
