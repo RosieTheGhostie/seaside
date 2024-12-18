@@ -1,5 +1,6 @@
 use super::{
     instruction::{fields, Instruction, InstructionFormat},
+    memory::regions::Region,
     Exception, Interpreter,
 };
 use crate::{
@@ -103,12 +104,12 @@ impl Interpreter {
             OrImmediate => self.ori(rt, rs_value, imm),
             XorImmediate => self.xori(rt, rs_value, imm),
             LoadUpperImmediate => self.lui(rt, imm),
-            LoadByte => todo!("lb"),
-            LoadHalf => todo!("lh"),
+            LoadByte => self.lb(rt, rs_value, imm),
+            LoadHalf => self.lh(rt, rs_value, imm),
             LoadWordLeft => todo!("lwl"),
-            LoadWord => todo!("lw"),
-            LoadByteUnsigned => todo!("lbu"),
-            LoadHalfUnsigned => todo!("lhu"),
+            LoadWord => self.lw(rt, rs_value, imm),
+            LoadByteUnsigned => self.lbu(rt, rs_value, imm),
+            LoadHalfUnsigned => self.lhu(rt, rs_value, imm),
             LoadWordRight => todo!("lwr"),
             StoreByte => todo!("sb"),
             StoreHalf => todo!("sh"),
@@ -358,5 +359,40 @@ impl Interpreter {
 
     fn lui(&mut self, rt: u8, imm: u16) -> Result<(), Exception> {
         self.registers.write_u32_to_cpu(rt, (imm as u32) << 16)
+    }
+
+    fn lb(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        let offset: i32 = imm.sign_extend();
+        let address = u32::wrapping_add_signed(rs_value, offset);
+        let value: i32 = self.memory.read_u8(address)?.sign_extend();
+        self.registers.write_i32_to_cpu(rt, value)
+    }
+
+    fn lh(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        let offset: i32 = imm.sign_extend();
+        let address = u32::wrapping_add_signed(rs_value, offset);
+        let value: i32 = self.memory.read_u16(address, true)?.sign_extend();
+        self.registers.write_i32_to_cpu(rt, value)
+    }
+
+    fn lw(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        let offset: i32 = imm.sign_extend();
+        let address = u32::wrapping_add_signed(rs_value, offset);
+        let value: u32 = self.memory.read_u32(address, true)?;
+        self.registers.write_u32_to_cpu(rt, value)
+    }
+
+    fn lbu(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        let offset: i32 = imm.sign_extend();
+        let address = u32::wrapping_add_signed(rs_value, offset);
+        let value = self.memory.read_u8(address)? as u32;
+        self.registers.write_u32_to_cpu(rt, value)
+    }
+
+    fn lhu(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        let offset: i32 = imm.sign_extend();
+        let address = u32::wrapping_add_signed(rs_value, offset);
+        let value = self.memory.read_u16(address, true)? as u32;
+        self.registers.write_u32_to_cpu(rt, value)
     }
 }
