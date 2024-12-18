@@ -350,8 +350,9 @@ impl Interpreter {
         todo!("how does sbrk work???");
     }
 
-    fn exit(&self) -> Result<(), Exception> {
-        todo!("call a method to shut down the interpreter");
+    fn exit(&mut self) -> Result<(), Exception> {
+        self.exit_code = Some(0);
+        Ok(())
     }
 
     fn print_char(&self) -> Result<(), Exception> {
@@ -403,8 +404,9 @@ impl Interpreter {
     }
 
     fn exit_2(&mut self) -> Result<(), Exception> {
-        let _exit_code = self.registers.read_u32_from_cpu(register::A0)?;
-        todo!("call a method to shut down the interpreter (include the exit code)");
+        let exit_code = self.registers.read_u32_from_cpu(register::A0)?;
+        self.exit_code = Some((exit_code & 0xFF) as u8);
+        Ok(())
     }
 
     fn time(&mut self) -> Result<(), Exception> {

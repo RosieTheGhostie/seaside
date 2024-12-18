@@ -22,6 +22,7 @@ impl Interpreter {
             registers,
             pc,
             syscalls,
+            exit_code: None,
         })
     }
 }

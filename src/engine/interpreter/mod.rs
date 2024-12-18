@@ -20,4 +20,20 @@ pub struct Interpreter {
     registers: RegisterFile,
     pc: Address,
     syscalls: Syscalls,
+    pub exit_code: Option<u8>,
+}
+
+impl Interpreter {
+    pub fn run(&mut self) -> Result<(), Exception> {
+        while !self.memory.pc_past_end(self.pc) && self.exit_code.is_none() {
+            self.step()?;
+        }
+        Ok(())
+    }
+
+    pub fn step(&mut self) -> Result<(), Exception> {
+        let instruction = self.memory.get_instruction(self.pc)?;
+        self.pc += 4;
+        self.execute(instruction)
+    }
 }

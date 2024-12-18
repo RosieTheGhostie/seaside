@@ -7,11 +7,8 @@ mod type_aliases;
 use clap::Parser;
 use cmd_args::{CmdArgs, Commands};
 use config::{Config, Validate};
-use engine::{interpreter::Interpreter, Error as EngineError, ErrorKind as EngineErrorKind};
-use minimal_logging::{
-    attributes::to_be_implemented,
-    macros::{fatalln, warnln},
-};
+use engine::{run, Error as EngineError, ErrorKind as EngineErrorKind};
+use minimal_logging::macros::{fatalln, warnln};
 use std::{fs::read_to_string, path::PathBuf};
 use walkdir::WalkDir;
 
@@ -26,7 +23,13 @@ fn main() {
     };
     if let Err(error) = match args.command {
         Commands::Run { directory } => match engine::init::init(config, directory) {
-            Ok(interpreter) => run(interpreter),
+            Ok(interpreter) => run(interpreter).map(|exit_code| {
+                if let Some(exit_code) = exit_code {
+                    println!("program terminated with exit code {exit_code}")
+                } else {
+                    println!("program dropped off the bottom")
+                }
+            }),
             Err(error) => Err(error),
         },
         Commands::Experiment => experimental_code(),
@@ -34,9 +37,6 @@ fn main() {
         fatalln!("{error}");
     }
 }
-
-#[to_be_implemented(Ok(()))]
-fn run(_interpreter: Interpreter) -> Result<(), EngineError>;
 
 fn find_seaside_toml() -> Result<PathBuf, EngineError> {
     for entry in WalkDir::new(".")

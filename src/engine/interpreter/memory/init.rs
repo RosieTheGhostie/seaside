@@ -21,20 +21,20 @@ impl Memory {
         kdata: Option<PathBuf>,
     ) -> Result<Self, Error> {
         let segments = &config.memory_map.segments;
-        let instruction_memory = InstructionMemory {
-            text: init_text_region(&segments.text, Some(text), config.endian)?,
-            ktext: init_text_region(&segments.ktext, ktext, config.endian)?,
-            writeable: config.features.self_modifying_code,
-        };
+        let instruction_memory = InstructionMemory::new(
+            init_text_region(&segments.text, Some(text), config.endian)?,
+            init_text_region(&segments.ktext, ktext, config.endian)?,
+            config.features.self_modifying_code,
+        );
         let [heap, stack] = init_heap_and_stack(&segments.runtime_data);
-        let data_memory = DataMemory {
-            r#extern: init_data_region(&segments.r#extern, r#extern)?,
-            data: init_data_region(&segments.data, data)?,
+        let data_memory = DataMemory::new(
+            init_data_region(&segments.r#extern, r#extern)?,
+            init_data_region(&segments.data, data)?,
             heap,
             stack,
-            kdata: init_data_region(&segments.kdata, kdata)?,
-            mmio: init_data_region(&segments.mmio, None)?,
-        };
+            init_data_region(&segments.kdata, kdata)?,
+            init_data_region(&segments.mmio, None)?,
+        );
         Ok(Self {
             instruction_memory,
             data_memory,

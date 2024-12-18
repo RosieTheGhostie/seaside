@@ -79,10 +79,46 @@ impl Interpreter {
 
     fn execute_immediate_format(
         &mut self,
-        _opcode: Opcode,
-        _instruction: Instruction,
+        opcode: Opcode,
+        instruction: Instruction,
     ) -> Result<(), Exception> {
-        todo!()
+        use Opcode::*;
+        let rs = fields::rs(instruction);
+        let rt = fields::rt(instruction);
+        let imm = fields::imm(instruction);
+        let rs_value = self.registers.read_u32_from_cpu(rs)?;
+        let _rt_value = self.registers.read_u32_from_cpu(rt)?;
+        match opcode {
+            RegisterImmediate => todo!("regimm"),
+            BranchEqual => todo!("beq"),
+            BranchNotEqual => todo!("bne"),
+            BranchGreaterThanZero => todo!("bgtz"),
+            AddImmediate => self.addi(rt, rs_value, imm),
+            AddImmediateUnsigned => self.addiu(rt, rs_value, imm),
+            SetLessThanImmediate => todo!("slti"),
+            SetLessThanImmediateUnsigned => todo!("sltiu"),
+            AndImmediate => todo!("andi"),
+            OrImmediate => todo!("ori"),
+            XorImmediate => todo!("xori"),
+            LoadUpperImmediate => self.lui(rt, imm),
+            LoadByte => todo!("lb"),
+            LoadHalf => todo!("lh"),
+            LoadWordLeft => todo!("lwl"),
+            LoadWord => todo!("lw"),
+            LoadByteUnsigned => todo!("lbu"),
+            LoadHalfUnsigned => todo!("lhu"),
+            LoadWordRight => todo!("lwr"),
+            StoreByte => todo!("sb"),
+            StoreHalf => todo!("sh"),
+            StoreWordLeft => todo!("swl"),
+            StoreWord => todo!("sw"),
+            StoreConditional => todo!("sc"),
+            StoreWordRight => todo!("swr"),
+            LoadLinked => todo!("ll"),
+            LoadWordCoprocessor1 => todo!("lwc1"),
+            StoreWordCoprocessor1 => todo!("swc1"),
+            _ => Err(Exception::InterpreterFailure),
+        }
     }
 
     fn execute_jump_format(
@@ -94,6 +130,7 @@ impl Interpreter {
     }
 }
 
+// register format instructions
 impl Interpreter {
     fn sll(&mut self, rd: u8, rt_value: u32, shamt: u8) -> Result<(), Exception> {
         self.registers.write_u32_to_cpu(rd, rt_value << shamt)
@@ -248,5 +285,27 @@ impl Interpreter {
     fn sltu(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
         self.registers
             .write_u32_to_cpu(rd, if rs_value < rt_value { 1 } else { 0 })
+    }
+}
+
+impl Interpreter {
+    fn addi(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        let rs_value = unsafe { transmute::<u32, i32>(rs_value) };
+        let imm = imm as i32;
+        match i32::checked_add(rs_value, imm) {
+            Some(sum) => self.registers.write_i32_to_cpu(rt, sum),
+            None => Err(Exception::IntegerOverflowOrUndeflow),
+        }
+    }
+
+    fn addiu(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        let rs_value = unsafe { transmute::<u32, i32>(rs_value) };
+        let imm = imm as i32;
+        self.registers
+            .write_i32_to_cpu(rt, i32::wrapping_add(rs_value, imm))
+    }
+
+    fn lui(&mut self, rt: u8, imm: u16) -> Result<(), Exception> {
+        self.registers.write_u32_to_cpu(rt, (imm as u32) << 16)
     }
 }
