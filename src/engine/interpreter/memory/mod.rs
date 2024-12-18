@@ -68,6 +68,10 @@ impl Region for Memory {
 }
 
 impl Memory {
+    pub fn endian(&self) -> &Endian {
+        &self.endian
+    }
+
     pub fn get_instruction(&self, pc: Address) -> Result<Instruction, Exception> {
         self.instruction_memory.read_u32(pc, true)
     }

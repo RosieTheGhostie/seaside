@@ -4,6 +4,7 @@ use super::{
     Exception, Interpreter,
 };
 use crate::{
+    config::Endian,
     constants::{fn_codes::SpecialFn, opcodes::Opcode},
     sign_extend::SignExtend,
 };
@@ -106,11 +107,11 @@ impl Interpreter {
             LoadUpperImmediate => self.lui(rt, imm),
             LoadByte => self.lb(rt, rs_value, imm),
             LoadHalf => self.lh(rt, rs_value, imm),
-            LoadWordLeft => todo!("lwl"),
+            LoadWordLeft => self.lwl(rt, rs_value, rt_value, imm),
             LoadWord => self.lw(rt, rs_value, imm),
             LoadByteUnsigned => self.lbu(rt, rs_value, imm),
             LoadHalfUnsigned => self.lhu(rt, rs_value, imm),
-            LoadWordRight => todo!("lwr"),
+            LoadWordRight => self.lwr(rt, rs_value, rt_value, imm),
             StoreByte => todo!("sb"),
             StoreHalf => todo!("sh"),
             StoreWordLeft => todo!("swl"),
@@ -375,6 +376,23 @@ impl Interpreter {
         self.registers.write_i32_to_cpu(rt, value)
     }
 
+    fn lwl(&mut self, rt: u8, rs_value: u32, rt_value: u32, imm: u16) -> Result<(), Exception> {
+        let offset: i32 = imm.sign_extend();
+        let address = u32::wrapping_add_signed(rs_value, offset);
+        let word_address = address & 0xFFFFFFFC;
+        let shift: u32 = {
+            let shift = (address % 4) << 3;
+            match self.memory.endian() {
+                Endian::Big => shift,
+                Endian::Little => 24 - shift,
+            }
+        };
+        let mask: u32 = !(u32::MAX << shift);
+        let loaded: u32 = self.memory.read_u32(word_address, false)? << shift;
+        self.registers
+            .write_u32_to_cpu(rt, (rt_value & mask) | loaded)
+    }
+
     fn lw(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
         let offset: i32 = imm.sign_extend();
         let address = u32::wrapping_add_signed(rs_value, offset);
@@ -394,5 +412,22 @@ impl Interpreter {
         let address = u32::wrapping_add_signed(rs_value, offset);
         let value = self.memory.read_u16(address, true)? as u32;
         self.registers.write_u32_to_cpu(rt, value)
+    }
+
+    fn lwr(&mut self, rt: u8, rs_value: u32, rt_value: u32, imm: u16) -> Result<(), Exception> {
+        let offset: i32 = imm.sign_extend();
+        let address = u32::wrapping_add_signed(rs_value, offset);
+        let word_address = address & 0xFFFFFFFC;
+        let shift: u32 = {
+            let shift = (address % 4) << 3;
+            match self.memory.endian() {
+                Endian::Big => 24 - shift,
+                Endian::Little => shift,
+            }
+        };
+        let mask: u32 = !(u32::MAX >> shift);
+        let loaded: u32 = self.memory.read_u32(word_address, false)? >> shift;
+        self.registers
+            .write_u32_to_cpu(rt, (rt_value & mask) | loaded)
     }
 }
