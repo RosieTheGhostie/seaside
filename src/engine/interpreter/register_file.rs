@@ -26,7 +26,7 @@ impl RegisterFile {
 
     pub fn read_i32_from_cpu(&self, index: u8) -> Result<i32, Exception> {
         if index < 32 {
-            Ok(unsafe { transmute::<u32, i32>(self.cpu[index as usize]) })
+            Ok(self.cpu[index as usize] as i32)
         } else {
             Err(Exception::InterpreterFailure)
         }
@@ -69,7 +69,7 @@ impl RegisterFile {
     }
 
     pub fn write_i32_to_cpu(&mut self, index: u8, value: i32) -> Result<(), Exception> {
-        self.write_u32_to_cpu(index, unsafe { transmute::<i32, u32>(value) })
+        self.write_u32_to_cpu(index, value as u32)
     }
 
     pub fn write_f32_to_fpu(&mut self, index: u8, value: f32) -> Result<(), Exception> {
