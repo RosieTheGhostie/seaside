@@ -53,7 +53,7 @@ impl Interpreter {
             MoveZero => self.movz(rd, rs_value, rt_value),
             MoveNotZero => self.movn(rd, rs_value, rt_value),
             SystemCall => self.syscall(),
-            Break => todo!("break"),
+            Break => self.r#break(),
             MoveFromHigh => self.mfhi(rd),
             MoveToHigh => self.mthi(rs_value),
             MoveFromLow => self.mflo(rd),
@@ -72,12 +72,12 @@ impl Interpreter {
             Nor => self.nor(rd, rs_value, rt_value),
             SetLessThan => self.slt(rd, rs_value, rt_value),
             SetLessThanUnsigned => self.sltu(rd, rs_value, rt_value),
-            TrapGreaterEqual => todo!("tge"),
-            TrapGreaterEqualUnsigned => todo!("tgeu"),
-            TrapLessThan => todo!("tlt"),
-            TrapLessThanUnsigned => todo!("tltu"),
-            TrapEqual => todo!("teq"),
-            TrapNotEqual => todo!("tne"),
+            TrapGreaterEqual => self.tge(rs_value, rt_value),
+            TrapGreaterEqualUnsigned => self.tgeu(rs_value, rt_value),
+            TrapLessThan => self.tlt(rs_value, rt_value),
+            TrapLessThanUnsigned => self.tltu(rs_value, rt_value),
+            TrapEqual => self.teq(rs_value, rt_value),
+            TrapNotEqual => self.tne(rs_value, rt_value),
         }
     }
 
@@ -134,12 +134,12 @@ impl Interpreter {
         match r#fn {
             BranchLessThanZero => self.bltz(rs_value, imm, false),
             BranchGreaterEqualZero => self.bgez(rs_value, imm, false),
-            TrapGreaterEqualImmediate => todo!("tgei"),
-            TrapGreaterEqualImmediateUnsigned => todo!("tgeiu"),
-            TrapLessThanImmediate => todo!("tlti"),
-            TrapLessThanImmediateUnsigned => todo!("tltiu"),
-            TrapEqualImmediate => todo!("teqi"),
-            TrapNotEqualImmediate => todo!("tnei"),
+            TrapGreaterEqualImmediate => self.tgei(rs_value, imm),
+            TrapGreaterEqualImmediateUnsigned => self.tgeiu(rs_value, imm),
+            TrapLessThanImmediate => self.tlti(rs_value, imm),
+            TrapLessThanImmediateUnsigned => self.tltiu(rs_value, imm),
+            TrapEqualImmediate => self.teqi(rs_value, imm),
+            TrapNotEqualImmediate => self.tnei(rs_value, imm),
             BranchLessThanZeroAndLink => self.bltz(rs_value, imm, true),
             BranchGreaterEqualZeroAndLink => self.bgez(rs_value, imm, true),
         }
@@ -207,6 +207,10 @@ impl Interpreter {
         } else {
             Ok(())
         }
+    }
+
+    fn r#break(&mut self) -> Result<(), Exception> {
+        Err(Exception::Breakpoint)
     }
 
     fn mfhi(&mut self, rd: u8) -> Result<(), Exception> {
@@ -319,6 +323,58 @@ impl Interpreter {
     fn sltu(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
         self.registers
             .write_u32_to_cpu(rd, if rs_value < rt_value { 1 } else { 0 })
+    }
+
+    fn tge(&mut self, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
+        let rs_value = rs_value as i32;
+        let rt_value = rt_value as i32;
+        if rs_value >= rt_value {
+            Err(Exception::Trap)
+        } else {
+            Ok(())
+        }
+    }
+
+    fn tgeu(&mut self, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
+        if rs_value >= rt_value {
+            Err(Exception::Trap)
+        } else {
+            Ok(())
+        }
+    }
+
+    fn tlt(&mut self, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
+        let rs_value = rs_value as i32;
+        let rt_value = rt_value as i32;
+        if rs_value < rt_value {
+            Err(Exception::Trap)
+        } else {
+            Ok(())
+        }
+    }
+
+    fn tltu(&mut self, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
+        if rs_value < rt_value {
+            Err(Exception::Trap)
+        } else {
+            Ok(())
+        }
+    }
+
+    fn teq(&mut self, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
+        if rs_value == rt_value {
+            Err(Exception::Trap)
+        } else {
+            Ok(())
+        }
+    }
+
+    fn tne(&mut self, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
+        if rs_value != rt_value {
+            Err(Exception::Trap)
+        } else {
+            Ok(())
+        }
     }
 }
 
@@ -559,6 +615,56 @@ impl Interpreter {
             self.branch(imm);
         }
         Ok(())
+    }
+
+    fn tgei(&mut self, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        let imm: i32 = imm.sign_extend();
+        if (rs_value as i32) >= imm {
+            Err(Exception::Trap)
+        } else {
+            Ok(())
+        }
+    }
+
+    fn tgeiu(&mut self, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        if rs_value >= (imm as u32) {
+            Err(Exception::Trap)
+        } else {
+            Ok(())
+        }
+    }
+
+    fn tlti(&mut self, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        let imm: i32 = imm.sign_extend();
+        if (rs_value as i32) < imm {
+            Err(Exception::Trap)
+        } else {
+            Ok(())
+        }
+    }
+
+    fn tltiu(&mut self, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        if rs_value < (imm as u32) {
+            Err(Exception::Trap)
+        } else {
+            Ok(())
+        }
+    }
+
+    fn teqi(&mut self, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        if rs_value == (imm as u32) {
+            Err(Exception::Trap)
+        } else {
+            Ok(())
+        }
+    }
+
+    fn tnei(&mut self, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        if rs_value != (imm as u32) {
+            Err(Exception::Trap)
+        } else {
+            Ok(())
+        }
     }
 }
 
