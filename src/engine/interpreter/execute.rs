@@ -42,18 +42,18 @@ impl Interpreter {
         };
         match r#fn {
             ShiftLeftLogical => self.sll(rd, rt_value, shamt),
-            MoveConditional => todo!(),
+            MoveConditional => todo!("movt/movf"),
             ShiftRightLogical => self.srl(rd, rt_value, shamt),
             ShiftRightArithmetic => self.sra(rd, rt_value, shamt),
             ShiftLeftLogicalVariable => self.sllv(rd, rs_value, rt_value),
             ShiftRightLogicalVariable => self.srlv(rd, rs_value, rt_value),
             ShiftRightArithmeticVariable => self.srav(rd, rs_value, rt_value),
-            JumpRegister => todo!(),
-            JumpAndLinkRegister => todo!(),
+            JumpRegister => self.jr(rs_value),
+            JumpAndLinkRegister => todo!("jalr"),
             MoveZero => self.movz(rd, rs_value, rt_value),
             MoveNotZero => self.movn(rd, rs_value, rt_value),
             SystemCall => self.syscall(),
-            Break => todo!(),
+            Break => todo!("break"),
             MoveFromHigh => self.mfhi(rd),
             MoveToHigh => self.mthi(rs_value),
             MoveFromLow => self.mflo(rd),
@@ -72,12 +72,12 @@ impl Interpreter {
             Nor => self.nor(rd, rs_value, rt_value),
             SetLessThan => self.slt(rd, rs_value, rt_value),
             SetLessThanUnsigned => self.sltu(rd, rs_value, rt_value),
-            TrapGreaterEqual => todo!(),
-            TrapGreaterEqualUnsigned => todo!(),
-            TrapLessThan => todo!(),
-            TrapLessThanUnsigned => todo!(),
-            TrapEqual => todo!(),
-            TrapNotEqual => todo!(),
+            TrapGreaterEqual => todo!("tge"),
+            TrapGreaterEqualUnsigned => todo!("tgeu"),
+            TrapLessThan => todo!("tlt"),
+            TrapLessThanUnsigned => todo!("tltu"),
+            TrapEqual => todo!("teq"),
+            TrapNotEqual => todo!("tne"),
         }
     }
 
@@ -93,7 +93,7 @@ impl Interpreter {
         let rs_value = self.registers.read_u32_from_cpu(rs)?;
         let rt_value = self.registers.read_u32_from_cpu(rt)?;
         match opcode {
-            RegisterImmediate => todo!("regimm"),
+            RegisterImmediate => self.execute_regimm(rt, rs_value, imm),
             BranchEqual => self.beq(rs_value, rt_value, imm),
             BranchNotEqual => self.bne(rs_value, rt_value, imm),
             BranchGreaterThanZero => self.bgtz(rs_value, imm),
@@ -125,6 +125,26 @@ impl Interpreter {
         }
     }
 
+    fn execute_regimm(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        use crate::constants::fn_codes::RegisterImmediateFn::{self, *};
+        let r#fn = match RegisterImmediateFn::from_u8(rt) {
+            Some(r#fn) => r#fn,
+            None => return Err(Exception::ReservedInstruction),
+        };
+        match r#fn {
+            BranchLessThanZero => self.bltz(rs_value, imm, false),
+            BranchGreaterEqualZero => self.bgez(rs_value, imm, false),
+            TrapGreaterEqualImmediate => todo!("tgei"),
+            TrapGreaterEqualImmediateUnsigned => todo!("tgeiu"),
+            TrapLessThanImmediate => todo!("tlti"),
+            TrapLessThanImmediateUnsigned => todo!("tltiu"),
+            TrapEqualImmediate => todo!("teqi"),
+            TrapNotEqualImmediate => todo!("tnei"),
+            BranchLessThanZeroAndLink => self.bltz(rs_value, imm, true),
+            BranchGreaterEqualZeroAndLink => self.bgez(rs_value, imm, true),
+        }
+    }
+
     fn execute_jump_format(
         &mut self,
         opcode: Opcode,
@@ -133,7 +153,7 @@ impl Interpreter {
         let jump_index = fields::jump_index(instruction);
         let address = (self.pc & 0xF0000000) | (jump_index << 2);
         if opcode == Opcode::JumpAndLink {
-            self.registers.write_u32_to_cpu(register::RA, self.pc + 4)?;
+            self.link()?;
         }
         self.pc = address;
         Ok(())
@@ -166,6 +186,11 @@ impl Interpreter {
     fn srav(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
         let rt_value = rt_value as i32;
         self.registers.write_i32_to_cpu(rd, rt_value >> rs_value)
+    }
+
+    fn jr(&mut self, rs_value: u32) -> Result<(), Exception> {
+        self.pc = rs_value;
+        Ok(())
     }
 
     fn movz(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
@@ -299,11 +324,6 @@ impl Interpreter {
 
 // immediate format instructions
 impl Interpreter {
-    fn branch(&mut self, offset: u16) {
-        let offset = <u16 as SignExtend<i32>>::sign_extend(&offset) << 2;
-        self.pc = u32::wrapping_add_signed(self.pc, offset);
-    }
-
     fn beq(&mut self, rs_value: u32, rt_value: u32, imm: u16) -> Result<(), Exception> {
         if rs_value == rt_value {
             self.branch(imm);
@@ -516,5 +536,40 @@ impl Interpreter {
         let address = u32::wrapping_add_signed(rs_value, offset);
         let ft_value = self.registers.read_f32_from_fpu(ft)?.to_bits();
         self.memory.write_u32(address, ft_value, true)
+    }
+}
+
+// regimm instructions
+impl Interpreter {
+    fn bltz(&mut self, rs_value: u32, imm: u16, link: bool) -> Result<(), Exception> {
+        if (rs_value as i32) < 0 {
+            if link {
+                self.link()?;
+            }
+            self.branch(imm);
+        }
+        Ok(())
+    }
+
+    fn bgez(&mut self, rs_value: u32, imm: u16, link: bool) -> Result<(), Exception> {
+        if (rs_value as i32) >= 0 {
+            if link {
+                self.link()?;
+            }
+            self.branch(imm);
+        }
+        Ok(())
+    }
+}
+
+// branching utility methods
+impl Interpreter {
+    fn branch(&mut self, offset: u16) {
+        let offset = <u16 as SignExtend<i32>>::sign_extend(&offset) << 2;
+        self.pc = u32::wrapping_add_signed(self.pc, offset);
+    }
+
+    fn link(&mut self) -> Result<(), Exception> {
+        self.registers.write_u32_to_cpu(register::RA, self.pc + 4)
     }
 }
