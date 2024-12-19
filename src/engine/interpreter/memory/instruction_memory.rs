@@ -7,6 +7,7 @@ use crate::type_aliases::address::Address;
 pub struct InstructionMemory {
     text: TextRegion,
     ktext: TextRegion,
+    exception_handler: Option<Address>,
     writeable: bool,
 }
 
@@ -73,10 +74,19 @@ impl Region for InstructionMemory {
 }
 
 impl InstructionMemory {
-    pub fn new(text: TextRegion, ktext: TextRegion, writeable: bool) -> Self {
+    pub fn new(
+        text: TextRegion,
+        ktext: TextRegion,
+        mut exception_handler: Option<Address>,
+        writeable: bool,
+    ) -> Self {
+        if ktext.num_instructions() != 0 {
+            exception_handler = None;
+        }
         Self {
             text,
             ktext,
+            exception_handler,
             writeable,
         }
     }

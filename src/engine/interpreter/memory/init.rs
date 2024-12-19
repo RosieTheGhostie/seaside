@@ -24,6 +24,7 @@ impl Memory {
         let instruction_memory = InstructionMemory::new(
             init_text_region(&segments.text, Some(text), config.endian)?,
             init_text_region(&segments.ktext, ktext, config.endian)?,
+            config.memory_map.exception_handler,
             config.features.self_modifying_code,
         );
         let [heap, stack] = init_heap_and_stack(&segments.runtime_data);
