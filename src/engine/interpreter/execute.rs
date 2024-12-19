@@ -5,7 +5,7 @@ use super::{
 };
 use crate::{
     config::Endian,
-    constants::{fn_codes::SpecialFn, opcodes::Opcode},
+    constants::{fn_codes::SpecialFn, opcodes::Opcode, register},
     sign_extend::SignExtend,
 };
 use num_traits::FromPrimitive;
@@ -127,10 +127,16 @@ impl Interpreter {
 
     fn execute_jump_format(
         &mut self,
-        _opcode: Opcode,
-        _instruction: Instruction,
+        opcode: Opcode,
+        instruction: Instruction,
     ) -> Result<(), Exception> {
-        todo!()
+        let jump_index = fields::jump_index(instruction);
+        let address = (self.pc & 0xF0000000) | (jump_index << 2);
+        if opcode == Opcode::JumpAndLink {
+            self.registers.write_u32_to_cpu(register::RA, self.pc + 4)?;
+        }
+        self.pc = address;
+        Ok(())
     }
 }
 
