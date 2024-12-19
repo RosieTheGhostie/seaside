@@ -112,15 +112,15 @@ impl Interpreter {
             LoadByteUnsigned => self.lbu(rt, rs_value, imm),
             LoadHalfUnsigned => self.lhu(rt, rs_value, imm),
             LoadWordRight => self.lwr(rt, rs_value, rt_value, imm),
-            StoreByte => todo!("sb"),
-            StoreHalf => todo!("sh"),
-            StoreWordLeft => todo!("swl"),
-            StoreWord => todo!("sw"),
-            StoreConditional => todo!("sc"),
-            StoreWordRight => todo!("swr"),
-            LoadLinked => todo!("ll"),
-            LoadWordCoprocessor1 => todo!("lwc1"),
-            StoreWordCoprocessor1 => todo!("swc1"),
+            StoreByte => self.sb(rs_value, rt_value, imm),
+            StoreHalf => self.sh(rs_value, rt_value, imm),
+            StoreWordLeft => self.swl(rs_value, rt_value, imm),
+            StoreWord => self.sw(rs_value, rt_value, imm),
+            StoreConditional => self.sc(rt, rs_value, rt_value, imm),
+            StoreWordRight => self.swr(rs_value, rt_value, imm),
+            LoadLinked => self.ll(rt, rs_value, imm),
+            LoadWordCoprocessor1 => self.lwc1(rt, rs_value, imm),
+            StoreWordCoprocessor1 => self.swc1(rt, rs_value, imm),
             _ => Err(Exception::InterpreterFailure),
         }
     }
@@ -429,5 +429,86 @@ impl Interpreter {
         let loaded: u32 = self.memory.read_u32(word_address, false)? >> shift;
         self.registers
             .write_u32_to_cpu(rt, (rt_value & mask) | loaded)
+    }
+
+    fn sb(&mut self, rs_value: u32, rt_value: u32, imm: u16) -> Result<(), Exception> {
+        let offset: i32 = imm.sign_extend();
+        let address = u32::wrapping_add_signed(rs_value, offset);
+        let byte = (rt_value & u8::MAX as u32) as u8;
+        self.memory.write_u8(address, byte)
+    }
+
+    fn sh(&mut self, rs_value: u32, rt_value: u32, imm: u16) -> Result<(), Exception> {
+        let offset: i32 = imm.sign_extend();
+        let address = u32::wrapping_add_signed(rs_value, offset);
+        let half = (rt_value & u16::MAX as u32) as u16;
+        self.memory.write_u16(address, half, true)
+    }
+
+    fn swl(&mut self, rs_value: u32, rt_value: u32, imm: u16) -> Result<(), Exception> {
+        let offset: i32 = imm.sign_extend();
+        let address = u32::wrapping_add_signed(rs_value, offset);
+        let word_address = address & 0xFFFFFFFC;
+        let shift: u32 = {
+            let shift = (address % 4) << 3;
+            match self.memory.endian() {
+                Endian::Big => shift,
+                Endian::Little => 24 - shift,
+            }
+        };
+        let mask: u32 = !(u32::MAX >> shift);
+        let to_store: u32 = rt_value >> shift;
+        let old_value: u32 = self.memory.read_u32(word_address, true)?;
+        self.memory
+            .write_u32(word_address, (old_value & mask) | to_store, true)
+    }
+
+    fn sw(&mut self, rs_value: u32, rt_value: u32, imm: u16) -> Result<(), Exception> {
+        let offset: i32 = imm.sign_extend();
+        let address = u32::wrapping_add_signed(rs_value, offset);
+        self.memory.write_u32(address, rt_value, true)
+    }
+
+    fn sc(&mut self, rt: u8, rs_value: u32, rt_value: u32, imm: u16) -> Result<(), Exception> {
+        self.sw(rs_value, rt_value, imm)?;
+        // always succeeds because seaside doesn't simulate multiple processors
+        self.registers.write_u32_to_cpu(rt, 1)
+    }
+
+    fn swr(&mut self, rs_value: u32, rt_value: u32, imm: u16) -> Result<(), Exception> {
+        let offset: i32 = imm.sign_extend();
+        let address = u32::wrapping_add_signed(rs_value, offset);
+        let word_address = address & 0xFFFFFFFC;
+        let shift: u32 = {
+            let shift = (address % 4) << 3;
+            match self.memory.endian() {
+                Endian::Big => 24 - shift,
+                Endian::Little => shift,
+            }
+        };
+        let mask: u32 = !(u32::MAX << shift);
+        let to_store: u32 = rt_value << shift;
+        let old_value: u32 = self.memory.read_u32(word_address, true)?;
+        self.memory
+            .write_u32(word_address, (old_value & mask) | to_store, true)
+    }
+
+    fn ll(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        // identical to lw in current version of seaside
+        self.lw(rt, rs_value, imm)
+    }
+
+    fn lwc1(&mut self, ft: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        let offset: i32 = imm.sign_extend();
+        let address = u32::wrapping_add_signed(rs_value, offset);
+        let value = f32::from_bits(self.memory.read_u32(address, true)?);
+        self.registers.write_f32_to_fpu(ft, value)
+    }
+
+    fn swc1(&mut self, ft: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        let offset: i32 = imm.sign_extend();
+        let address = u32::wrapping_add_signed(rs_value, offset);
+        let ft_value = self.registers.read_f32_from_fpu(ft)?.to_bits();
+        self.memory.write_u32(address, ft_value, true)
     }
 }
