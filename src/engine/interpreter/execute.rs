@@ -42,7 +42,7 @@ impl Interpreter {
         };
         match r#fn {
             ShiftLeftLogical => self.sll(rd, rt_value, shamt),
-            MoveConditional => todo!("movt/movf"),
+            MoveConditional => self.movc(rt, rd, rs_value),
             ShiftRightLogical => self.srl(rd, rt_value, shamt),
             ShiftRightArithmetic => self.sra(rd, rt_value, shamt),
             ShiftLeftLogicalVariable => self.sllv(rd, rs_value, rt_value),
@@ -164,6 +164,16 @@ impl Interpreter {
 impl Interpreter {
     fn sll(&mut self, rd: u8, rt_value: u32, shamt: u8) -> Result<(), Exception> {
         self.registers.write_u32_to_cpu(rd, rt_value << shamt)
+    }
+
+    fn movc(&mut self, rt: u8, rd: u8, rs_value: u32) -> Result<(), Exception> {
+        let cc = fields::cc_from_rt(rt);
+        let condition = fields::condition_from_rt(rt);
+        if self.registers.read_flag_from_fpu(cc)? == condition {
+            self.registers.write_u32_to_cpu(rd, rs_value)
+        } else {
+            Ok(())
+        }
     }
 
     fn srl(&mut self, rd: u8, rt_value: u32, shamt: u8) -> Result<(), Exception> {

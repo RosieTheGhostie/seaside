@@ -84,4 +84,12 @@ pub mod fields {
     pub fn jump_index(instruction: Instruction) -> u32 {
         instruction & 0x03FFFFFF
     }
+
+    pub fn cc_from_rt(rt: u8) -> u8 {
+        rt >> 2
+    }
+
+    pub fn condition_from_rt(rt: u8) -> bool {
+        (rt & 1) == 1
+    }
 }
