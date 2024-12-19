@@ -27,7 +27,7 @@ impl Region for TextRegion {
     fn read_u32(&self, address: Address, assert_aligned: bool) -> Result<u32, Exception> {
         match self.calculate_index(address, assert_aligned) {
             Some(index) => Ok(self.instructions[index]),
-            None => Err(Exception::InvalidLoad),
+            None => Err(Exception::InvalidLoad(address)),
         }
     }
 
@@ -54,7 +54,7 @@ impl Region for TextRegion {
             self.instructions[index] = value;
             Ok(())
         } else {
-            Err(Exception::InvalidStore)
+            Err(Exception::InvalidStore(address))
         }
     }
 }

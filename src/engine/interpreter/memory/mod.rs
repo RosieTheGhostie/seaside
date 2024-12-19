@@ -76,6 +76,10 @@ impl Memory {
         self.instruction_memory.read_u32(pc, true)
     }
 
+    pub fn get_exception_handler(&self) -> Option<Address> {
+        self.instruction_memory.exception_handler
+    }
+
     pub fn initial_pc(&self) -> Address {
         self.instruction_memory.initial_pc()
     }

@@ -7,7 +7,7 @@ use crate::type_aliases::address::Address;
 pub struct InstructionMemory {
     text: TextRegion,
     ktext: TextRegion,
-    exception_handler: Option<Address>,
+    pub exception_handler: Option<Address>,
     writeable: bool,
 }
 
@@ -38,7 +38,7 @@ impl Region for InstructionMemory {
                 .write_u8(address, value)
                 .or(self.ktext.write_u8(address, value))
         } else {
-            Err(Exception::InvalidStore)
+            Err(Exception::InvalidStore(address))
         }
     }
 
@@ -53,7 +53,7 @@ impl Region for InstructionMemory {
                 .write_u16(address, value, assert_aligned)
                 .or(self.ktext.write_u16(address, value, assert_aligned))
         } else {
-            Err(Exception::InvalidStore)
+            Err(Exception::InvalidStore(address))
         }
     }
 
@@ -68,7 +68,7 @@ impl Region for InstructionMemory {
                 .write_u32(address, value, assert_aligned)
                 .or(self.ktext.write_u32(address, value, assert_aligned))
         } else {
-            Err(Exception::InvalidStore)
+            Err(Exception::InvalidStore(address))
         }
     }
 }

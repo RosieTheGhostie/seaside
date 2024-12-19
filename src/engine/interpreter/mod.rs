@@ -9,13 +9,13 @@ mod syscalls;
 
 pub use exception::Exception;
 pub use memory::Memory;
-use minimal_logging::macros::debugln;
 pub use register_file::RegisterFile;
 pub use syscalls::Syscalls;
 
 use super::Error;
 use crate::config::Config;
 use crate::type_aliases::address::Address;
+use minimal_logging::macros::debugln;
 use std::path::PathBuf;
 
 pub struct Interpreter {
@@ -52,7 +52,12 @@ impl Interpreter {
 
     pub fn run(&mut self) -> Result<(), Exception> {
         while !self.memory.pc_past_end(self.pc) && self.exit_code.is_none() {
-            self.step()?;
+            if let Err(exception) = self.step() {
+                match self.memory.get_exception_handler() {
+                    Some(exception_handler) => self.trigger_exception(exception, exception_handler),
+                    None => return Err(exception),
+                }
+            };
         }
         Ok(())
     }
@@ -61,6 +66,15 @@ impl Interpreter {
         let instruction = self.memory.get_instruction(self.pc)?;
         self.pc += 4;
         self.execute(instruction)
+    }
+
+    pub fn trigger_exception(&mut self, exception: Exception, exception_handler: Address) {
+        self.registers.vaddr = exception.vaddr().unwrap_or_default();
+        self.registers.status |= 0x00000002; // sets bit 1
+        self.registers.cause &= 0xFFFFFF83; // clears bits 2-6
+        self.registers.cause |= exception.code() << 2;
+        self.registers.epc = self.pc - 4;
+        self.pc = exception_handler;
     }
 
     pub fn print_crash_handler(&self) {

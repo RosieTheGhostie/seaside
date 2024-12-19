@@ -21,28 +21,28 @@ impl Region for DataMemory {
     fn read_u8(&self, address: Address) -> Result<u8, Exception> {
         match self.region_containing(address) {
             Some(region) => region.read_u8(address),
-            None => Err(Exception::InvalidLoad),
+            None => Err(Exception::InvalidLoad(address)),
         }
     }
 
     fn read_u16(&self, address: Address, assert_aligned: bool) -> Result<u16, Exception> {
         match self.region_containing(address) {
             Some(region) => region.read_u16(address, assert_aligned),
-            None => Err(Exception::InvalidLoad),
+            None => Err(Exception::InvalidLoad(address)),
         }
     }
 
     fn read_u32(&self, address: Address, assert_aligned: bool) -> Result<u32, Exception> {
         match self.region_containing(address) {
             Some(region) => region.read_u32(address, assert_aligned),
-            None => Err(Exception::InvalidLoad),
+            None => Err(Exception::InvalidLoad(address)),
         }
     }
 
     fn write_u8(&mut self, address: Address, value: u8) -> Result<(), Exception> {
         match self.region_containing_mut(address) {
             Some(region) => region.write_u8(address, value),
-            None => Err(Exception::InvalidStore),
+            None => Err(Exception::InvalidStore(address)),
         }
     }
 
@@ -54,7 +54,7 @@ impl Region for DataMemory {
     ) -> Result<(), Exception> {
         match self.region_containing_mut(address) {
             Some(region) => region.write_u16(address, value, assert_aligned),
-            None => Err(Exception::InvalidStore),
+            None => Err(Exception::InvalidStore(address)),
         }
     }
 
@@ -66,7 +66,7 @@ impl Region for DataMemory {
     ) -> Result<(), Exception> {
         match self.region_containing_mut(address) {
             Some(region) => region.write_u32(address, value, assert_aligned),
-            None => Err(Exception::InvalidStore),
+            None => Err(Exception::InvalidStore(address)),
         }
     }
 }

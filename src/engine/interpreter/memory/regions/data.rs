@@ -15,14 +15,14 @@ impl Region for DataRegion {
     fn read_u8(&self, address: Address) -> Result<u8, Exception> {
         match self.calculate_index_unaligned(address) {
             Some(index) => Ok(self.data[index]),
-            None => Err(Exception::InvalidLoad),
+            None => Err(Exception::InvalidLoad(address)),
         }
     }
 
     fn read_u16(&self, address: Address, assert_aligned: bool) -> Result<u16, Exception> {
         match self.calculate_index(address, if assert_aligned { 2 } else { 0 }) {
             Some(index) => Ok(u16::from_le_bytes([self.data[index], self.data[index + 1]])),
-            None => Err(Exception::InvalidLoad),
+            None => Err(Exception::InvalidLoad(address)),
         }
     }
 
@@ -34,7 +34,7 @@ impl Region for DataRegion {
                 self.data[index + 2],
                 self.data[index + 3],
             ])),
-            None => Err(Exception::InvalidLoad),
+            None => Err(Exception::InvalidLoad(address)),
         }
     }
 
@@ -44,7 +44,7 @@ impl Region for DataRegion {
                 self.data[index] = value;
                 Ok(())
             }
-            None => Err(Exception::InvalidStore),
+            None => Err(Exception::InvalidStore(address)),
         }
     }
 
@@ -59,7 +59,7 @@ impl Region for DataRegion {
                 [self.data[index], self.data[index + 1]] = value.to_le_bytes();
                 Ok(())
             }
-            None => Err(Exception::InvalidStore),
+            None => Err(Exception::InvalidStore(address)),
         }
     }
 
@@ -79,7 +79,7 @@ impl Region for DataRegion {
                 ] = value.to_le_bytes();
                 Ok(())
             }
-            None => Err(Exception::InvalidStore),
+            None => Err(Exception::InvalidStore(address)),
         }
     }
 }
