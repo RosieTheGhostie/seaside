@@ -19,7 +19,7 @@ use traits::{Contains, Overlapping};
 pub struct MemoryMap {
     pub user_space: AddressRange,
     pub kernel_space: AddressRange,
-    pub exception_handler: Address,
+    pub exception_handler: Option<Address>,
     pub segments: Segments,
 }
 
@@ -38,8 +38,12 @@ impl Validate for MemoryMap {
     fn validate(&self) -> Result<(), Error> {
         let error_msg = if AddressRange::overlapping(&self.user_space, &self.kernel_space) {
             Some("user space and kernel space cannot overlap")
-        } else if !self.kernel_space.contains(&self.exception_handler) {
-            Some("exception handler must be in kernel space")
+        } else if let Some(exception_handler) = self.exception_handler {
+            if !self.kernel_space.contains(&exception_handler) {
+                Some("exception handler must be in kernel space")
+            } else {
+                None
+            }
         } else if !self.user_space.contains(&self.segments.text) {
             Some("text segment must be entirely within user space")
         } else if !self.user_space.contains(&self.segments.r#extern) {
