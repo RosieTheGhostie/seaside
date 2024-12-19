@@ -9,7 +9,7 @@ use clap::Parser;
 use cmd_args::{CmdArgs, Commands};
 use config::{Config, Validate};
 use engine::{run, Error as EngineError, ErrorKind as EngineErrorKind};
-use minimal_logging::macros::{fatalln, warnln};
+use minimal_logging::macros::{fatalln, grayln, warnln};
 use std::{fs::read_to_string, path::PathBuf};
 use walkdir::WalkDir;
 
@@ -26,9 +26,9 @@ fn main() {
         Commands::Run { directory } => match engine::init(config, directory) {
             Ok(mut interpreter) => run(&mut interpreter).map(|exit_code| {
                 if let Some(exit_code) = exit_code {
-                    println!("program terminated with exit code {exit_code}")
+                    grayln!("program terminated with exit code {exit_code}")
                 } else {
-                    println!("program dropped off the bottom")
+                    grayln!("program dropped off the bottom")
                 }
             }),
             Err(error) => Err(error),

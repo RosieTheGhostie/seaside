@@ -171,8 +171,8 @@ checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
 
 [[package]]
 name = "minimal-logging"
-version = "0.3.0"
-source = "git+https://github.com/RosieTheGhostie/minimal-logging.git#dc276f605a73c7dec14e807e7e312021da3e0337"
+version = "0.4.0"
+source = "git+https://github.com/RosieTheGhostie/minimal-logging.git#5884690eda662435a7397ca64ae342f4f667f34f"
 dependencies = [
  "minimal-logging-attributes",
  "minimal-logging-macros",
@@ -181,7 +181,7 @@ dependencies = [
 [[package]]
 name = "minimal-logging-attributes"
 version = "0.1.0"
-source = "git+https://github.com/RosieTheGhostie/minimal-logging.git#dc276f605a73c7dec14e807e7e312021da3e0337"
+source = "git+https://github.com/RosieTheGhostie/minimal-logging.git#5884690eda662435a7397ca64ae342f4f667f34f"
 dependencies = [
  "function-wrapper",
  "minimal-logging-macros",
@@ -192,8 +192,8 @@ dependencies = [
 
 [[package]]
 name = "minimal-logging-macros"
-version = "0.3.0"
-source = "git+https://github.com/RosieTheGhostie/minimal-logging.git#dc276f605a73c7dec14e807e7e312021da3e0337"
+version = "0.4.0"
+source = "git+https://github.com/RosieTheGhostie/minimal-logging.git#5884690eda662435a7397ca64ae342f4f667f34f"
 
 [[package]]
 name = "num-derive"
