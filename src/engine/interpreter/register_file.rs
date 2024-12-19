@@ -204,7 +204,7 @@ fn write_fpu_registers(register_file: &RegisterFile, f: &mut Formatter<'_>) -> F
         let i1 = i0 + 2;
         writeln!(
             f,
-            "┃ {}{i0}: {:>+#15.8e} ┊ {}{i1}: {:>+#15.8e} ┃",
+            "┃ {}{i0}: {:>+#15.7e} ┊ {}{i1}: {:>+#15.7e} ┃",
             if i0 >= 10 { "$f" } else { " $f" },
             register_file.read_f64_from_fpu(i0).unwrap(),
             if i1 >= 10 { "$f" } else { " $f" },
