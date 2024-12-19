@@ -1,6 +1,9 @@
 use super::Exception;
-use crate::{config::RegisterDefaults, type_aliases::address::Address};
-use std::mem::transmute;
+use crate::{config::RegisterDefaults, constants::register, type_aliases::address::Address};
+use std::{
+    fmt::{Display, Formatter, Result as FmtResult},
+    mem::transmute,
+};
 
 #[derive(Default)]
 pub struct RegisterFile {
@@ -124,4 +127,98 @@ impl RegisterFile {
         register_file.epc = register_defaults.coprocessor_0[3];
         register_file
     }
+}
+
+impl Display for RegisterFile {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        writeln!(f, "┏━━━━━━━━━━━━━━━━━━━━━ CPU ━━━━━━━━━━━━━━━━━━━━━┓")?;
+        write_cpu_registers(self, f)?;
+        writeln!(f, "┣━━━━━━━━━━━━━━━━━━━━━ FPU ━━━━━━━━━━━━━━━━━━━━━┫")?;
+        write_fpu_registers(self, f)?;
+        write!(
+            f,
+            "┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ Flags ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┨\n┃    "
+        )?;
+        write_fpu_flags(self.fpu_flags, f)?;
+        writeln!(
+            f,
+            "    ┃\n┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
+        )
+    }
+}
+
+fn write_cpu_registers(register_file: &RegisterFile, f: &mut Formatter<'_>) -> FmtResult {
+    use register::*;
+    writeln!(
+        f,
+        r"┃ $at: {:08x} ┊ $v0: {:08x} ┊ $v1: {:08x} ┃
+┃ $a0: {:08x} ┊ $a1: {:08x} ┊ $a2: {:08x} ┃
+┃ $a3: {:08x} ┊ $t0: {:08x} ┊ $t1: {:08x} ┃
+┃ $t2: {:08x} ┊ $t3: {:08x} ┊ $t4: {:08x} ┃
+┃ $t5: {:08x} ┊ $t6: {:08x} ┊ $t7: {:08x} ┃
+┃ $s0: {:08x} ┊ $s1: {:08x} ┊ $s2: {:08x} ┃
+┃ $s3: {:08x} ┊ $s4: {:08x} ┊ $s5: {:08x} ┃
+┃ $s6: {:08x} ┊ $s7: {:08x} ┊ $t8: {:08x} ┃
+┃ $t9: {:08x} ┊ $k0: {:08x} ┊ $k1: {:08x} ┃
+┃ $gp: {:08x} ┊ $sp: {:08x} ┊ $fp: {:08x} ┃
+┃ $ra: {:08x} ┊  hi: {:08x} ┊  lo: {:08x} ┃",
+        register_file.cpu[AT as usize],
+        register_file.cpu[V0 as usize],
+        register_file.cpu[V1 as usize],
+        register_file.cpu[A0 as usize],
+        register_file.cpu[A1 as usize],
+        register_file.cpu[A2 as usize],
+        register_file.cpu[A3 as usize],
+        register_file.cpu[T0 as usize],
+        register_file.cpu[T1 as usize],
+        register_file.cpu[T2 as usize],
+        register_file.cpu[T3 as usize],
+        register_file.cpu[T4 as usize],
+        register_file.cpu[T5 as usize],
+        register_file.cpu[T6 as usize],
+        register_file.cpu[T7 as usize],
+        register_file.cpu[S0 as usize],
+        register_file.cpu[S1 as usize],
+        register_file.cpu[S2 as usize],
+        register_file.cpu[S3 as usize],
+        register_file.cpu[S4 as usize],
+        register_file.cpu[S5 as usize],
+        register_file.cpu[S6 as usize],
+        register_file.cpu[S7 as usize],
+        register_file.cpu[T8 as usize],
+        register_file.cpu[T9 as usize],
+        register_file.cpu[K0 as usize],
+        register_file.cpu[K1 as usize],
+        register_file.cpu[GP as usize],
+        register_file.cpu[SP as usize],
+        register_file.cpu[FP as usize],
+        register_file.cpu[RA as usize],
+        register_file.hi,
+        register_file.lo,
+    )
+}
+
+fn write_fpu_registers(register_file: &RegisterFile, f: &mut Formatter<'_>) -> FmtResult {
+    for i in 0u8..14u8 {
+        let i0 = i * 2;
+        let i1 = i0 + 2;
+        writeln!(
+            f,
+            "┃ {}{i0}: {:>+#15.8e} ┊ {}{i1}: {:>+#15.8e} ┃",
+            if i0 >= 10 { "$f" } else { " $f" },
+            register_file.read_f64_from_fpu(i0).unwrap(),
+            if i1 >= 10 { "$f" } else { " $f" },
+            register_file.read_f64_from_fpu(i1).unwrap(),
+        )?;
+    }
+    Ok(())
+}
+
+fn write_fpu_flags(mut flags: u8, f: &mut Formatter<'_>) -> FmtResult {
+    write!(f, "0[{}]", if flags & 1 == 1 { '#' } else { ' ' })?;
+    flags >>= 1;
+    for i in 1..8 {
+        write!(f, " {i}[{}]", if flags & 1 == 1 { '#' } else { ' ' })?;
+    }
+    Ok(())
 }

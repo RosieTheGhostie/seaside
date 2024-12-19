@@ -15,6 +15,8 @@ pub struct Features {
     pub self_modifying_code: bool,
     /// Simulate the delay slot.
     pub delay_slot: bool,
+    /// Enables displaying a crash handler when an unhandled exception is thrown.
+    pub show_crash_handler: bool,
     /// Set features available to assembler.
     pub assembler: AssemblerOptions,
     /// Set syscalls available to interpreter.

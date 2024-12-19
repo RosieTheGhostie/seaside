@@ -31,10 +31,15 @@ pub fn init(config: Config, directory: PathBuf) -> Result<Interpreter, Error> {
     Interpreter::init(&config, text, r#extern, data, ktext, kdata)
 }
 
-pub fn run(mut interpreter: Interpreter) -> Result<Option<u8>, Error> {
+pub fn run(interpreter: &mut Interpreter) -> Result<Option<u8>, Error> {
     match interpreter.run() {
         Ok(()) => Ok(interpreter.exit_code),
-        Err(exception) => Err(Error::new(ErrorKind::MipsException, exception)),
+        Err(exception) => {
+            if interpreter.show_crash_handler {
+                interpreter.print_crash_handler();
+            }
+            Err(Error::new(ErrorKind::MipsException, exception))
+        }
     }
 }
 

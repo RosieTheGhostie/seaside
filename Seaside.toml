@@ -5,6 +5,7 @@ endian = "little"
 kernel_space_accessible = true
 self_modifying_code = false
 delay_slot = false
+show_crash_handler = true
 
 [features.assembler]
 pseudo_instructions = false

@@ -562,7 +562,7 @@ impl Interpreter {
     }
 }
 
-// branching utility methods
+// branching utility methods (these all assume no branch delay slot btw)
 impl Interpreter {
     fn branch(&mut self, offset: u16) {
         let offset = <u16 as SignExtend<i32>>::sign_extend(&offset) << 2;
@@ -570,6 +570,6 @@ impl Interpreter {
     }
 
     fn link(&mut self) -> Result<(), Exception> {
-        self.registers.write_u32_to_cpu(register::RA, self.pc + 4)
+        self.registers.write_u32_to_cpu(register::RA, self.pc)
     }
 }

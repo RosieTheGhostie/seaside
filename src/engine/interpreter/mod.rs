@@ -9,6 +9,7 @@ mod syscalls;
 
 pub use exception::Exception;
 pub use memory::Memory;
+use minimal_logging::macros::debugln;
 pub use register_file::RegisterFile;
 pub use syscalls::Syscalls;
 
@@ -22,6 +23,7 @@ pub struct Interpreter {
     registers: RegisterFile,
     pc: Address,
     syscalls: Syscalls,
+    pub show_crash_handler: bool,
     pub exit_code: Option<u8>,
 }
 
@@ -43,6 +45,7 @@ impl Interpreter {
             registers,
             pc,
             syscalls,
+            show_crash_handler: config.features.show_crash_handler,
             exit_code: None,
         })
     }
@@ -58,5 +61,13 @@ impl Interpreter {
         let instruction = self.memory.get_instruction(self.pc)?;
         self.pc += 4;
         self.execute(instruction)
+    }
+
+    pub fn print_crash_handler(&self) {
+        debugln!(
+            "Interpreter State (pc: {:#08x})\n{}",
+            self.pc,
+            self.registers,
+        )
     }
 }
