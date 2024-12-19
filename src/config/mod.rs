@@ -18,7 +18,6 @@ pub use validate::Validate;
 
 use crate::engine::{Error, ErrorKind};
 use clap::crate_version;
-use minimal_logging::attributes::wip;
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
@@ -36,7 +35,6 @@ pub struct Config {
 }
 
 impl Validate for Config {
-    #[wip]
     fn validate(&self) -> Result<(), Error> {
         use VersionComparison::*;
         let seaside_version = Version::from_str(crate_version!()).map_err(|_| {
