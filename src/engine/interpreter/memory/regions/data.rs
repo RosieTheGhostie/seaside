@@ -38,6 +38,13 @@ impl Region for DataRegion {
         }
     }
 
+    fn get_slice(&self, address: Address) -> Result<&[u8], Exception> {
+        match self.calculate_index_unaligned(address) {
+            Some(index) => Ok(&self.data[index..]),
+            None => Err(Exception::InvalidLoad(address)),
+        }
+    }
+
     fn write_u8(&mut self, address: Address, value: u8) -> Result<(), Exception> {
         match self.calculate_index_unaligned(address) {
             Some(index) => {

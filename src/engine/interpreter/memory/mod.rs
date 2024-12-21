@@ -38,6 +38,13 @@ impl Region for Memory {
             .or(self.data_memory.read_u32(address, assert_aligned))
     }
 
+    fn get_slice(&self, address: Address) -> Result<&[u8], Exception> {
+        // I'm checking data memory first on purpose.
+        self.data_memory
+            .get_slice(address)
+            .or(self.instruction_memory.get_slice(address))
+    }
+
     fn write_u8(&mut self, address: Address, value: u8) -> Result<(), Exception> {
         self.instruction_memory
             .write_u8(address, value)

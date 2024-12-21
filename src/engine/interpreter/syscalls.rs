@@ -2,10 +2,12 @@ use super::{Exception, Interpreter};
 use crate::{
     config::features::syscalls,
     constants::{register, service_codes},
+    engine::interpreter::memory::regions::Region,
     type_aliases::address::Address,
 };
 use bitflags::bitflags;
 use std::{
+    ffi::CStr,
     io::{stdin, Read},
     mem::transmute,
     thread::sleep,
@@ -299,8 +301,13 @@ impl Interpreter {
     }
 
     fn print_string(&self) -> Result<(), Exception> {
-        let _buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
-        todo!("fetch the string from memory");
+        let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
+        let string = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
+            .map_err(|_| Exception::SyscallFailure)?
+            .to_str()
+            .map_err(|_| Exception::SyscallFailure)?;
+        print!("{string}");
+        Ok(())
     }
 
     fn read_int(&mut self) -> Result<(), Exception> {

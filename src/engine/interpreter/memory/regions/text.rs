@@ -16,12 +16,12 @@ impl Region for TextRegion {
         self.addresses.contains(&address)
     }
 
-    fn read_u8(&self, _address: Address) -> Result<u8, Exception> {
-        todo!()
+    fn read_u8(&self, address: Address) -> Result<u8, Exception> {
+        Err(Exception::InvalidLoad(address)) // todo
     }
 
-    fn read_u16(&self, _address: Address, _assert_aligned: bool) -> Result<u16, Exception> {
-        todo!()
+    fn read_u16(&self, address: Address, _assert_aligned: bool) -> Result<u16, Exception> {
+        Err(Exception::InvalidLoad(address)) // todo
     }
 
     fn read_u32(&self, address: Address, assert_aligned: bool) -> Result<u32, Exception> {
@@ -31,17 +31,21 @@ impl Region for TextRegion {
         }
     }
 
-    fn write_u8(&mut self, _address: Address, _value: u8) -> Result<(), Exception> {
-        todo!()
+    fn get_slice(&self, address: Address) -> Result<&[u8], Exception> {
+        Err(Exception::InvalidLoad(address)) // todo
+    }
+
+    fn write_u8(&mut self, address: Address, _value: u8) -> Result<(), Exception> {
+        Err(Exception::InvalidStore(address)) // todo
     }
 
     fn write_u16(
         &mut self,
-        _address: Address,
+        address: Address,
         _value: u16,
         _assert_aligned: bool,
     ) -> Result<(), Exception> {
-        todo!()
+        Err(Exception::InvalidStore(address)) // todo
     }
 
     fn write_u32(
