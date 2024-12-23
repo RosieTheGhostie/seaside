@@ -6,9 +6,10 @@ use crate::{
     type_aliases::address::Address,
 };
 use bitflags::bitflags;
+use std::io::stdout;
 use std::{
     ffi::CStr,
-    io::{stdin, Read},
+    io::{stdin, Read, Write},
     mem::transmute,
     thread::sleep,
     time::{Duration, SystemTime},
@@ -260,6 +261,7 @@ impl Interpreter {
             READ_INT => self.read_int(),
             READ_FLOAT => self.read_float(),
             READ_DOUBLE => self.read_double(),
+            READ_STRING => self.read_string(),
             SBRK => self.sbrk(),
             EXIT => self.exit(),
             PRINT_CHAR => self.print_char(),
@@ -307,7 +309,8 @@ impl Interpreter {
             .to_str()
             .map_err(|_| Exception::SyscallFailure)?;
         print!("{string}");
-        Ok(())
+        // We need to flush stdout because the automatic flushing is insufficient in most scenarios.
+        stdout().flush().map_err(|_| Exception::SyscallFailure)
     }
 
     fn read_int(&mut self) -> Result<(), Exception> {
@@ -347,9 +350,33 @@ impl Interpreter {
     }
 
     fn read_string(&mut self) -> Result<(), Exception> {
-        let _buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
-        let _max_chars: u32 = self.registers.read_u32_from_cpu(register::A1)?;
-        todo!("fetch the buffer from memory");
+        let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
+        let buffer = self.memory.get_slice_mut(buffer_address)?;
+        let max_chars = usize::min(
+            self.registers.read_u32_from_cpu(register::A1)? as usize,
+            buffer.len(),
+        );
+        if max_chars == 0 {
+            return Ok(());
+        }
+        let mut buffer = &mut buffer[..max_chars];
+        let mut temp = String::new();
+        stdin()
+            .read_line(&mut temp)
+            .map_err(|_| Exception::SyscallFailure)?;
+        let temp: Vec<u8> = {
+            let mut temp = temp.as_bytes().to_vec();
+            temp.truncate(max_chars);
+            if temp.len() == max_chars {
+                temp[max_chars - 1] = 0;
+            } else {
+                temp.push(0);
+            }
+            temp
+        };
+        buffer
+            .write_all(&temp)
+            .map_err(|_| Exception::SyscallFailure)
     }
 
     fn sbrk(&mut self) -> Result<(), Exception> {
