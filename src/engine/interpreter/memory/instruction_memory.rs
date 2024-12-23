@@ -38,6 +38,12 @@ impl Region for InstructionMemory {
             .or(self.ktext.get_slice(address))
     }
 
+    fn get_slice_mut(&mut self, address: Address) -> Result<&mut [u8], Exception> {
+        self.text
+            .get_slice_mut(address)
+            .or(self.ktext.get_slice_mut(address))
+    }
+
     fn write_u8(&mut self, address: Address, value: u8) -> Result<(), Exception> {
         if self.writeable {
             self.text

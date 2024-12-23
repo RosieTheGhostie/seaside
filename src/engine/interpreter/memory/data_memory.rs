@@ -46,6 +46,13 @@ impl Region for DataMemory {
         }
     }
 
+    fn get_slice_mut(&mut self, address: Address) -> Result<&mut [u8], Exception> {
+        match self.region_containing_mut(address) {
+            Some(region) => region.get_slice_mut(address),
+            None => Err(Exception::InvalidLoad(address)),
+        }
+    }
+
     fn write_u8(&mut self, address: Address, value: u8) -> Result<(), Exception> {
         match self.region_containing_mut(address) {
             Some(region) => region.write_u8(address, value),

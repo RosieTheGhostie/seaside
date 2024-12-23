@@ -35,6 +35,10 @@ impl Region for TextRegion {
         Err(Exception::InvalidLoad(address)) // todo
     }
 
+    fn get_slice_mut(&mut self, address: Address) -> Result<&mut [u8], Exception> {
+        Err(Exception::InvalidLoad(address)) // todo
+    }
+
     fn write_u8(&mut self, address: Address, _value: u8) -> Result<(), Exception> {
         Err(Exception::InvalidStore(address)) // todo
     }

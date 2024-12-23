@@ -45,6 +45,13 @@ impl Region for Memory {
             .or(self.instruction_memory.get_slice(address))
     }
 
+    fn get_slice_mut(&mut self, address: Address) -> Result<&mut [u8], Exception> {
+        // I'm checking data memory first on purpose.
+        self.data_memory
+            .get_slice_mut(address)
+            .or(self.instruction_memory.get_slice_mut(address))
+    }
+
     fn write_u8(&mut self, address: Address, value: u8) -> Result<(), Exception> {
         self.instruction_memory
             .write_u8(address, value)
