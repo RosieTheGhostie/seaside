@@ -287,19 +287,22 @@ impl Interpreter {
     fn print_int(&self) -> Result<(), Exception> {
         let x: i32 = self.registers.read_i32_from_cpu(register::A0)?;
         print!("{x}");
-        Ok(())
+        // We need to flush stdout because the automatic flushing is insufficient in most scenarios.
+        stdout().flush().map_err(|_| Exception::SyscallFailure)
     }
 
     fn print_float(&self) -> Result<(), Exception> {
         let x: f32 = self.registers.read_f32_from_fpu(12)?;
         print!("{x}");
-        Ok(())
+        // We need to flush stdout because the automatic flushing is insufficient in most scenarios.
+        stdout().flush().map_err(|_| Exception::SyscallFailure)
     }
 
     fn print_double(&self) -> Result<(), Exception> {
         let x: f64 = self.registers.read_f64_from_fpu(12)?;
         print!("{x}");
-        Ok(())
+        // We need to flush stdout because the automatic flushing is insufficient in most scenarios.
+        stdout().flush().map_err(|_| Exception::SyscallFailure)
     }
 
     fn print_string(&self) -> Result<(), Exception> {
@@ -395,7 +398,8 @@ impl Interpreter {
             None => return Err(Exception::SyscallFailure),
         };
         print!("{c}");
-        Ok(())
+        // We need to flush stdout because the automatic flushing is insufficient in most scenarios.
+        stdout().flush().map_err(|_| Exception::SyscallFailure)
     }
 
     fn read_char(&mut self) -> Result<(), Exception> {
@@ -479,18 +483,21 @@ impl Interpreter {
     fn print_hex(&self) -> Result<(), Exception> {
         let x: u32 = self.registers.read_u32_from_cpu(register::A0)?;
         print!("0x{x:08x}");
-        Ok(())
+        // We need to flush stdout because the automatic flushing is insufficient in most scenarios.
+        stdout().flush().map_err(|_| Exception::SyscallFailure)
     }
 
     fn print_bin(&self) -> Result<(), Exception> {
         let x: u32 = self.registers.read_u32_from_cpu(register::A0)?;
         print!("0b{x:032b}");
-        Ok(())
+        // We need to flush stdout because the automatic flushing is insufficient in most scenarios.
+        stdout().flush().map_err(|_| Exception::SyscallFailure)
     }
 
     fn print_uint(&self) -> Result<(), Exception> {
         let x: u32 = self.registers.read_u32_from_cpu(register::A0)?;
         print!("{x}");
-        Ok(())
+        // We need to flush stdout because the automatic flushing is insufficient in most scenarios.
+        stdout().flush().map_err(|_| Exception::SyscallFailure)
     }
 }
