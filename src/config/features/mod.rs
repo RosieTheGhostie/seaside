@@ -7,6 +7,7 @@ use assembler::AssemblerOptions;
 use serde::{Deserialize, Serialize};
 use syscalls::Syscalls;
 
+/// Customizes the features available to the seaside engine.
 #[derive(Serialize, Deserialize)]
 pub struct Features {
     /// Allow users to provide code and/or data relating to kernel space.

@@ -1,5 +1,6 @@
 use std::ops::{Index, IndexMut};
 
+/// The values of `N` 32-bit registers stored contiguously in memory.
 #[derive(Debug, Eq, Hash, PartialEq)]
 pub struct Registers<const N: usize> {
     registers: [u32; N],
@@ -14,6 +15,7 @@ impl<const N: usize> Default for Registers<N> {
 }
 
 impl<const N: usize> Registers<N> {
+    /// Returns true if this object is in the default state.
     pub fn is_default(&self) -> bool {
         *self == Self::default()
     }

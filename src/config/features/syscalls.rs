@@ -10,6 +10,11 @@ use crate::engine::{Error, ErrorKind};
 use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
 
+/// Controls which syscalls are available to the seaside engine.
+///
+/// If a program requests a disabled service, a
+/// [`SyscallFailure`](crate::engine::interpreter::Exception::SyscallFailure)
+/// exception will be raised.
 #[derive(Serialize, Deserialize)]
 pub struct Syscalls {
     #[serde(deserialize_with = "maybe_using_preset")]
@@ -26,6 +31,9 @@ pub struct Syscalls {
     pub dialog: Dialog,
 }
 
+/// Controls availability of syscalls relating to GUI dialogs.
+///
+/// These are at a fairly low priority for implementation, so they are unlikely to work for a while.
 #[derive(Serialize, Deserialize)]
 pub struct Dialog {
     #[serde(deserialize_with = "maybe_using_preset")]
@@ -35,6 +43,7 @@ pub struct Dialog {
 }
 
 bitflags! {
+    /// Syscalls for printing certain data types to stdout.
     pub struct Print: u8 {
         const Int = 0x01;
         const Float = 0x02;
@@ -46,6 +55,7 @@ bitflags! {
         const Uint = 0x80;
     }
 
+    /// Syscalls for reading certain data types from stdin.
     pub struct Read: u8 {
         const Int = 0x01;
         const Float = 0x02;
@@ -54,6 +64,7 @@ bitflags! {
         const Char = 0x10;
     }
 
+    /// Syscalls for managing file descriptors.
     pub struct File: u8 {
         const Open = 0x01;
         const Read = 0x02;
@@ -61,6 +72,7 @@ bitflags! {
         const Close = 0x08;
     }
 
+    /// Miscellaneous syscalls for things like program execution, heap allocation, sound, etc.
     pub struct System: u8 {
         const Sbrk = 0x01;
         const Exit = 0x02;
@@ -71,6 +83,7 @@ bitflags! {
         const MidiSync = 0x40;
     }
 
+    /// Syscalls to set up and use random number generators.
     pub struct Random: u8 {
         const SetSeed = 0x01;
         const RandInt = 0x02;
@@ -79,6 +92,7 @@ bitflags! {
         const RandDouble = 0x10;
     }
 
+    /// Syscalls to generate input dialogs.
     pub struct Input: u8 {
         const Confirm = 0x01;
         const Int = 0x02;
@@ -87,6 +101,7 @@ bitflags! {
         const String = 0x10;
     }
 
+    /// Syscalls to generate message dialogs.
     pub struct Message: u8 {
         const General = 0x01;
         const Int = 0x02;

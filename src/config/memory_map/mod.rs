@@ -15,6 +15,10 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use traits::{Contains, Overlapping};
 
+/// Maps various memory regions to [`AddressRange`]s.
+///
+/// This information is crucial for initializing the
+/// [`Interpreter`][crate::engine::interpreter::Interpreter].
 #[derive(Serialize, Deserialize)]
 pub struct MemoryMap {
     pub user_space: AddressRange,
@@ -23,6 +27,7 @@ pub struct MemoryMap {
     pub segments: Segments,
 }
 
+/// Collection of segments in the [`MemoryMap`].
 #[derive(Serialize, Deserialize)]
 pub struct Segments {
     pub text: Segment,

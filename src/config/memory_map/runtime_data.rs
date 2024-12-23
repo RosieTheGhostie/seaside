@@ -1,6 +1,8 @@
 use super::{AddressRange, Contains, Overlapping, Segment};
 use serde::{Deserialize, Serialize};
 
+/// Specifies the memory [`Address`][crate::type_aliases::address::Address]es associated with the
+/// heap and stack.
 #[derive(Deserialize, Serialize)]
 pub struct RuntimeData {
     /// The inclusive range of addresses within this segment.

@@ -6,6 +6,7 @@ use super::super::{
 use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
 
+/// Customizes the assembler's behavior.
 #[derive(Serialize, Deserialize)]
 pub struct AssemblerOptions {
     /// Allow use of pseudo-instructions and formats.
@@ -18,6 +19,7 @@ pub struct AssemblerOptions {
 }
 
 bitflags! {
+    /// Nontrivial assembler directives that can be enabled or disabled.
     pub struct SpecialDirectives: u8 {
         /// `.asciiz`
         const Asciiz = 0x1;
