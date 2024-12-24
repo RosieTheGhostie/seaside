@@ -2,9 +2,9 @@ Seaside Progress:
   Summary:
     Instructions:
       Documented: 0
-      Implemented: 74
-      Work in Progress/Maybe Broken: 1
-      Unimplemented: 55
+      Implemented: 96
+      Work in Progress/Maybe Broken: 23
+      Unimplemented: 15
     Syscalls:
       Documented: 0
       Implemented: 14
@@ -87,8 +87,52 @@ Seaside Progress:
     - tnei
     - xor
     - xori
+    - abs.d
+    - abs.s
+    - c.eq.d
+    - c.eq.s
+    - c.le.d
+    - c.le.s
+    - c.lt.d
+    - c.lt.s
+    - cvt.d.s
+    - cvt.d.w
+    - mov.d
+    - mov.s
+    - movf.d
+    - movf.s
+    - movn.d
+    - movn.s
+    - movt.d
+    - movt.s
+    - movz.d
+    - movz.s
+    - neg.d
+    - neg.s
     Work in Progress/Maybe Broken:
     - syscall
+    - add.d
+    - add.s
+    - ceil.w.d
+    - ceil.w.s
+    - cvt.s.d
+    - cvt.s.w
+    - cvt.w.d
+    - cvt.w.s
+    - div.d
+    - div.s
+    - floor.w.d
+    - floor.w.s
+    - mul.d
+    - mul.s
+    - round.w.d
+    - round.w.s
+    - sqrt.d
+    - sqrt.s
+    - sub.d
+    - sub.s
+    - trunc.w.d
+    - trunc.w.s
     Unimplemented:
     - clo
     - clz
@@ -103,48 +147,8 @@ Seaside Progress:
     - mtc0
     - mul
     - sdc1 # not sure
-    - abs.d
-    - abs.s
-    - add.d
-    - add.s
     - bc1f
     - bc1t
-    - c.eq.d
-    - c.eq.s
-    - c.le.d
-    - c.le.s
-    - c.lt.d
-    - c.lt.s
-    - ceil.w.d
-    - ceil.w.s
-    - cvt.d.s
-    - cvt.d.w
-    - cvt.s.d
-    - cvt.s.w
-    - cvt.w.d
-    - cvt.w.s
-    - div.d
-    - div.s
-    - mov.d
-    - mov.s
-    - movf.d
-    - movf.s
-    - movn.d
-    - movn.s
-    - movt.d
-    - movt.s
-    - movz.d
-    - movz.s
-    - mul.d
-    - mul.s
-    - neg.d
-    - neg.s
-    - round.w.d
-    - round.w.s
-    - sub.d
-    - sub.s
-    - trunc.w.d
-    - trunc.w.s
   Syscalls:
     Documented:
     Implemented:

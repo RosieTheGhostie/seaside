@@ -28,11 +28,7 @@ impl RegisterFile {
     }
 
     pub fn read_i32_from_cpu(&self, index: u8) -> Result<i32, Exception> {
-        if index < 32 {
-            Ok(self.cpu[index as usize] as i32)
-        } else {
-            Err(Exception::InterpreterFailure)
-        }
+        Ok(self.read_u32_from_cpu(index)? as i32)
     }
 
     pub fn read_f32_from_fpu(&self, index: u8) -> Result<f32, Exception> {
@@ -50,6 +46,22 @@ impl RegisterFile {
         } else {
             Err(Exception::InterpreterFailure)
         }
+    }
+
+    pub fn read_u32_from_fpu(&self, index: u8) -> Result<u32, Exception> {
+        Ok(self.read_f32_from_fpu(index)?.to_bits())
+    }
+
+    pub fn read_i32_from_fpu(&self, index: u8) -> Result<i32, Exception> {
+        Ok(self.read_u32_from_fpu(index)? as i32)
+    }
+
+    pub fn read_u64_from_fpu(&self, index: u8) -> Result<u64, Exception> {
+        Ok(self.read_f64_from_fpu(index)?.to_bits())
+    }
+
+    pub fn read_i64_from_fpu(&self, index: u8) -> Result<i64, Exception> {
+        Ok(self.read_u64_from_fpu(index)? as i64)
     }
 
     pub fn read_flag_from_fpu(&self, index: u8) -> Result<bool, Exception> {
@@ -94,6 +106,22 @@ impl RegisterFile {
         } else {
             Err(Exception::InterpreterFailure)
         }
+    }
+
+    pub fn write_u32_to_fpu(&mut self, index: u8, value: u32) -> Result<(), Exception> {
+        self.write_f32_to_fpu(index, f32::from_bits(value))
+    }
+
+    pub fn write_i32_to_fpu(&mut self, index: u8, value: i32) -> Result<(), Exception> {
+        self.write_u32_to_cpu(index, value as u32)
+    }
+
+    pub fn write_u64_to_fpu(&mut self, index: u8, value: u64) -> Result<(), Exception> {
+        self.write_f64_to_fpu(index, f64::from_bits(value))
+    }
+
+    pub fn write_i64_to_fpu(&mut self, index: u8, value: i64) -> Result<(), Exception> {
+        self.write_u64_to_fpu(index, value as u64)
     }
 
     pub fn write_flag_to_fpu(&mut self, index: u8, value: bool) -> Result<(), Exception> {

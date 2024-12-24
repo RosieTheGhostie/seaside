@@ -6,6 +6,7 @@ pub enum InstructionFormat {
     Register,
     Immediate,
     Jump,
+    Coprocessor1,
 }
 
 impl From<Opcode> for InstructionFormat {
@@ -15,7 +16,7 @@ impl From<Opcode> for InstructionFormat {
             Special => Self::Register,
             Jump | JumpAndLink => Self::Jump,
             Coprocessor0 => todo!(),
-            Coprocessor1 => todo!(),
+            Coprocessor1 => Self::Coprocessor1,
             Special2 => todo!(),
             RegisterImmediate
             | BranchEqual
@@ -85,11 +86,27 @@ pub mod fields {
         instruction & 0x03FFFFFF
     }
 
-    pub fn cc_from_rt(rt: u8) -> u8 {
-        rt >> 2
+    pub fn cc_from_index(register_index: u8) -> u8 {
+        register_index >> 2
     }
 
-    pub fn condition_from_rt(rt: u8) -> bool {
-        (rt & 1) == 1
+    pub fn condition_from_index(register_index: u8) -> bool {
+        (register_index & 1) == 1
+    }
+
+    pub fn fmt(instruction: Instruction) -> u8 {
+        rs(instruction)
+    }
+
+    pub fn ft(instruction: Instruction) -> u8 {
+        rt(instruction)
+    }
+
+    pub fn fs(instruction: Instruction) -> u8 {
+        rd(instruction)
+    }
+
+    pub fn fd(instruction: Instruction) -> u8 {
+        shamt(instruction)
     }
 }
