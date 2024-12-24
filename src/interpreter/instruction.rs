@@ -3,7 +3,7 @@ pub use crate::type_aliases::instruction::Instruction;
 use crate::constants::opcodes::Opcode;
 
 pub enum InstructionFormat {
-    Register,
+    Special,
     Immediate,
     Jump,
     Coprocessor1,
@@ -13,7 +13,7 @@ impl From<Opcode> for InstructionFormat {
     fn from(value: Opcode) -> Self {
         use Opcode::*;
         match value {
-            Special => Self::Register,
+            Special => Self::Special,
             Jump | JumpAndLink => Self::Jump,
             Coprocessor0 => todo!(),
             Coprocessor1 => Self::Coprocessor1,
