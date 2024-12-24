@@ -6,6 +6,12 @@ use crate::{constants::fn_codes::SpecialFn, sign_extend::SignExtend};
 use num_traits::FromPrimitive;
 
 impl Interpreter {
+    /// Executes `instruction`, which must follow the "special" instruction format:
+    ///
+    /// ```text
+    /// 000000 xxxxx xxxxx xxxxx xxxxx xxxxxx
+    /// opcode  $rs   $rt   $rd  shamt   fn
+    /// ```
     pub fn execute_special(&mut self, instruction: Instruction) -> Result<(), Exception> {
         use SpecialFn::*;
         let rs = fields::rs(instruction);
