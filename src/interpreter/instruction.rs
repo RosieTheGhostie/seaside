@@ -6,7 +6,9 @@ pub enum InstructionFormat {
     Special,
     Immediate,
     Jump,
+    Coprocessor0,
     Coprocessor1,
+    Special2,
 }
 
 impl From<Opcode> for InstructionFormat {
@@ -15,9 +17,9 @@ impl From<Opcode> for InstructionFormat {
         match value {
             Special => Self::Special,
             Jump | JumpAndLink => Self::Jump,
-            Coprocessor0 => todo!(),
+            Coprocessor0 => Self::Coprocessor0,
             Coprocessor1 => Self::Coprocessor1,
-            Special2 => todo!(),
+            Special2 => Self::Special2,
             RegisterImmediate
             | BranchEqual
             | BranchNotEqual

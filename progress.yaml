@@ -2,9 +2,9 @@ Seaside Progress:
   Summary:
     Instructions:
       Documented: 0
-      Implemented: 96
+      Implemented: 106
       Work in Progress/Maybe Broken: 23
-      Unimplemented: 15
+      Unimplemented: 5
     Syscalls:
       Documented: 0
       Implemented: 14
@@ -28,8 +28,11 @@ Seaside Progress:
     - bltzal
     - bne
     - break
+    - clo
+    - clz
     - div
     - divu
+    - eret
     - j
     - jal
     - jr
@@ -43,12 +46,19 @@ Seaside Progress:
     - lwc1
     - lwl
     - lwr
+    - madd
+    - maddu
+    - mfc0
     - mfhi
     - mflo
     - movn
     - movz
+    - msub
+    - msubu
+    - mtc0
     - mthi
     - mtlo
+    - mul
     - mult
     - multu
     - nor
@@ -134,19 +144,9 @@ Seaside Progress:
     - trunc.w.d
     - trunc.w.s
     Unimplemented:
-    - clo
-    - clz
-    - eret
     - jalr
-    - ldc1 # not sure
-    - madd
-    - maddu
-    - mfc0
-    - msub
-    - msubu
-    - mtc0
-    - mul
-    - sdc1 # not sure
+    - ldc1
+    - sdc1
     - bc1f
     - bc1t
   Syscalls:
