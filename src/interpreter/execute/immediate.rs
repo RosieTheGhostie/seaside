@@ -78,7 +78,7 @@ impl Interpreter {
         let imm: i32 = imm.sign_extend();
         match u32::checked_add_signed(rs_value, imm) {
             Some(sum) => self.registers.write_u32_to_cpu(rt, sum),
-            None => Err(Exception::IntegerOverflowOrUndeflow),
+            None => Err(Exception::IntegerOverflowOrUnderflow),
         }
     }
 

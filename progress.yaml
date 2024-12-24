@@ -1,8 +1,8 @@
 Seaside Progress:
   Summary:
     Instructions:
-      Documented: 0
-      Implemented: 111
+      Documented: 35
+      Implemented: 76
       Work in Progress/Maybe Broken: 23
       Unimplemented: 0
     Syscalls:
@@ -12,12 +12,44 @@ Seaside Progress:
       Unimplemented: 22
   Instructions:
     Documented:
-    Implemented:
     - add
-    - addi
-    - addiu
     - addu
     - and
+    - break
+    - div
+    - divu
+    - jalr
+    - jr
+    - mfhi
+    - mflo
+    - movn
+    - movz
+    - mthi
+    - mtlo
+    - mult
+    - multu
+    - nor
+    - or
+    - sll
+    - sllv
+    - slt
+    - sltu
+    - sra
+    - srav
+    - srl
+    - srlv
+    - sub
+    - subu
+    - teq
+    - tge
+    - tgeu
+    - tlt
+    - tltu
+    - tne
+    - xor
+    Implemented:
+    - addi
+    - addiu
     - andi
     - beq
     - bgez
@@ -27,16 +59,11 @@ Seaside Progress:
     - bltz
     - bltzal
     - bne
-    - break
     - clo
     - clz
-    - div
-    - divu
     - eret
     - j
     - jal
-    - jalr
-    - jr
     - lb
     - lbu
     - ldc1
@@ -51,54 +78,27 @@ Seaside Progress:
     - madd
     - maddu
     - mfc0
-    - mfhi
-    - mflo
-    - movn
-    - movz
     - msub
     - msubu
     - mtc0
-    - mthi
-    - mtlo
     - mul
-    - mult
-    - multu
-    - nor
-    - or
     - ori
     - sb
     - sc
     - sdc1
     - sh
-    - sll
-    - sllv
-    - slt
     - slti
     - sltiu
-    - sltu
-    - sra
-    - srav
-    - srl
-    - srlv
-    - sub
-    - subu
     - sw
     - swc1
     - swl
     - swr
-    - teq
     - teqi
-    - tge
     - tgei
     - tgeiu
-    - tgeu
-    - tlt
     - tlti
     - tltiu
-    - tltu
-    - tne
     - tnei
-    - xor
     - xori
     - abs.d
     - abs.s
