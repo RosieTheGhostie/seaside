@@ -6,6 +6,12 @@ use crate::{constants::fn_codes::Special2Fn, sign_extend::SignExtend};
 use num_traits::FromPrimitive;
 
 impl Interpreter {
+    /// Executes `instruction`, which must follow the "special 2" instruction format:
+    ///
+    /// ```text
+    /// 011100 xxxxx xxxxx xxxxx 00000 xxxxxx
+    /// opcode  $rs   $rt   $rd   n/a    fn
+    /// ```
     pub fn execute_special_2(&mut self, instruction: Instruction) -> Result<(), Exception> {
         use Special2Fn::*;
         let rs = fields::rs(instruction);
@@ -28,6 +34,8 @@ impl Interpreter {
         }
     }
 
+    /// Multiplies `rs_value` and `rt_value` as signed integers, adding the most significant word
+    /// of the product to register `hi` and the least significant word to register `lo`.
     fn madd(&mut self, rt_value: u32, rs_value: u32) -> Result<(), Exception> {
         let rs_value: i64 = rs_value.sign_extend();
         let rt_value: i64 = rt_value.sign_extend();
@@ -37,6 +45,8 @@ impl Interpreter {
         Ok(())
     }
 
+    /// Multiplies `rs_value` and `rt_value` as unsigned integers, adding the most significant word
+    /// of the product to register `hi` and the least significant word to register `lo`.
     fn maddu(&mut self, rt_value: u32, rs_value: u32) -> Result<(), Exception> {
         let rs_value = rs_value as u64;
         let rt_value = rt_value as u64;
@@ -46,6 +56,8 @@ impl Interpreter {
         Ok(())
     }
 
+    /// Multiplies `rs_value` and `rt_value` as signed integers, storing the least significant word
+    /// of the product in CPU register `rd` and discarding the most significant word.
     fn mul(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
         let rs_value = rs_value as i32;
         let rt_value = rt_value as i32;
@@ -53,6 +65,8 @@ impl Interpreter {
             .write_i32_to_cpu(rd, i32::wrapping_mul(rs_value, rt_value))
     }
 
+    /// Multiplies `rs_value` and `rt_value` as signed integers, subtracting the most significant
+    /// word of the product from register `hi` and the least significant word from register `lo`.
     fn msub(&mut self, rt_value: u32, rs_value: u32) -> Result<(), Exception> {
         let rs_value: i64 = rs_value.sign_extend();
         let rt_value: i64 = rt_value.sign_extend();
@@ -62,6 +76,8 @@ impl Interpreter {
         Ok(())
     }
 
+    /// Multiplies `rs_value` and `rt_value` as unsigned integers, subtracting the most significant
+    /// word of the product from register `hi` and the least significant word from register `lo`.
     fn msubu(&mut self, rt_value: u32, rs_value: u32) -> Result<(), Exception> {
         let rs_value = rs_value as u64;
         let rt_value = rt_value as u64;
@@ -71,11 +87,14 @@ impl Interpreter {
         Ok(())
     }
 
+    /// Counts the number of leading zeroes in `rs_value` and stores the result in CPU register
+    /// `rd`.
     fn clz(&mut self, rd: u8, rs_value: u32) -> Result<(), Exception> {
         self.registers
             .write_u32_to_cpu(rd, rs_value.leading_zeros())
     }
 
+    /// Counts the number of leading ones in `rs_value` and stores the result in CPU register `rd`.
     fn clo(&mut self, rd: u8, rs_value: u32) -> Result<(), Exception> {
         self.registers.write_u32_to_cpu(rd, rs_value.leading_ones())
     }
