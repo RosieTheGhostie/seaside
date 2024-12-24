@@ -46,7 +46,9 @@ impl Interpreter {
             StoreWordRight => self.swr(rs_value, rt_value, imm),
             LoadLinked => self.ll(rt, rs_value, imm),
             LoadWordCoprocessor1 => self.lwc1(rt, rs_value, imm),
+            LoadDoubleCoprocessor1 => self.ldc1(rt, rs_value, imm),
             StoreWordCoprocessor1 => self.swc1(rt, rs_value, imm),
+            StoreDoubleCoprocessor1 => self.swc1(rt, rs_value, imm),
             _ => Err(Exception::InterpreterFailure),
         }
     }
@@ -254,15 +256,29 @@ impl Interpreter {
     fn lwc1(&mut self, ft: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
         let offset: i32 = imm.sign_extend();
         let address = u32::wrapping_add_signed(rs_value, offset);
-        let value = f32::from_bits(self.memory.read_u32(address, true)?);
-        self.registers.write_f32_to_fpu(ft, value)
+        let value = self.memory.read_u32(address, true)?;
+        self.registers.write_u32_to_fpu(ft, value)
+    }
+
+    fn ldc1(&mut self, ft: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        let offset: i32 = imm.sign_extend();
+        let address = u32::wrapping_add_signed(rs_value, offset);
+        let value = self.memory.read_u64(address, true)?;
+        self.registers.write_u64_to_fpu(ft, value)
     }
 
     fn swc1(&mut self, ft: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
         let offset: i32 = imm.sign_extend();
         let address = u32::wrapping_add_signed(rs_value, offset);
-        let ft_value = self.registers.read_f32_from_fpu(ft)?.to_bits();
+        let ft_value = self.registers.read_u32_from_fpu(ft)?;
         self.memory.write_u32(address, ft_value, true)
+    }
+
+    fn sdc1(&mut self, ft: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        let offset: i32 = imm.sign_extend();
+        let address = u32::wrapping_add_signed(rs_value, offset);
+        let ft_value = self.registers.read_u64_from_fpu(ft)?;
+        self.memory.write_u64(address, ft_value, true)
     }
 
     pub fn execute_regimm(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {

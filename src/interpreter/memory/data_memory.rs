@@ -39,6 +39,13 @@ impl Region for DataMemory {
         }
     }
 
+    fn read_u64(&self, address: Address, assert_aligned: bool) -> Result<u64, Exception> {
+        match self.region_containing(address) {
+            Some(region) => region.read_u64(address, assert_aligned),
+            None => Err(Exception::InvalidLoad(address)),
+        }
+    }
+
     fn get_slice(&self, address: Address) -> Result<&[u8], Exception> {
         match self.region_containing(address) {
             Some(region) => region.get_slice(address),
@@ -80,6 +87,18 @@ impl Region for DataMemory {
     ) -> Result<(), Exception> {
         match self.region_containing_mut(address) {
             Some(region) => region.write_u32(address, value, assert_aligned),
+            None => Err(Exception::InvalidStore(address)),
+        }
+    }
+
+    fn write_u64(
+        &mut self,
+        address: Address,
+        value: u64,
+        assert_aligned: bool,
+    ) -> Result<(), Exception> {
+        match self.region_containing_mut(address) {
+            Some(region) => region.write_u64(address, value, assert_aligned),
             None => Err(Exception::InvalidStore(address)),
         }
     }

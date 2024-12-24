@@ -38,6 +38,22 @@ impl Region for DataRegion {
         }
     }
 
+    fn read_u64(&self, address: Address, assert_aligned: bool) -> Result<u64, Exception> {
+        match self.calculate_index(address, if assert_aligned { 8 } else { 0 }) {
+            Some(index) => Ok(u64::from_le_bytes([
+                self.data[index],
+                self.data[index + 1],
+                self.data[index + 2],
+                self.data[index + 3],
+                self.data[index + 4],
+                self.data[index + 5],
+                self.data[index + 6],
+                self.data[index + 7],
+            ])),
+            None => Err(Exception::InvalidLoad(address)),
+        }
+    }
+
     fn get_slice(&self, address: Address) -> Result<&[u8], Exception> {
         match self.calculate_index_unaligned(address) {
             Some(index) => Ok(&self.data[index..]),
@@ -90,6 +106,30 @@ impl Region for DataRegion {
                     self.data[index + 1],
                     self.data[index + 2],
                     self.data[index + 3],
+                ] = value.to_le_bytes();
+                Ok(())
+            }
+            None => Err(Exception::InvalidStore(address)),
+        }
+    }
+
+    fn write_u64(
+        &mut self,
+        address: Address,
+        value: u64,
+        assert_aligned: bool,
+    ) -> Result<(), Exception> {
+        match self.calculate_index(address, if assert_aligned { 8 } else { 0 }) {
+            Some(index) => {
+                [
+                    self.data[index],
+                    self.data[index + 1],
+                    self.data[index + 2],
+                    self.data[index + 3],
+                    self.data[index + 4],
+                    self.data[index + 5],
+                    self.data[index + 6],
+                    self.data[index + 7],
                 ] = value.to_le_bytes();
                 Ok(())
             }

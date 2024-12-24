@@ -20,35 +20,7 @@ impl From<Opcode> for InstructionFormat {
             Coprocessor0 => Self::Coprocessor0,
             Coprocessor1 => Self::Coprocessor1,
             Special2 => Self::Special2,
-            RegisterImmediate
-            | BranchEqual
-            | BranchNotEqual
-            | BranchLessEqualZero
-            | BranchGreaterThanZero
-            | AddImmediate
-            | AddImmediateUnsigned
-            | SetLessThanImmediate
-            | SetLessThanImmediateUnsigned
-            | AndImmediate
-            | OrImmediate
-            | XorImmediate
-            | LoadUpperImmediate
-            | LoadByte
-            | LoadHalf
-            | LoadWordLeft
-            | LoadWord
-            | LoadByteUnsigned
-            | LoadHalfUnsigned
-            | LoadWordRight
-            | StoreByte
-            | StoreHalf
-            | StoreWordLeft
-            | StoreWord
-            | StoreConditional
-            | StoreWordRight
-            | LoadLinked
-            | LoadWordCoprocessor1
-            | StoreWordCoprocessor1 => Self::Immediate,
+            _ => Self::Immediate,
         }
     }
 }

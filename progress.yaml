@@ -2,9 +2,9 @@ Seaside Progress:
   Summary:
     Instructions:
       Documented: 0
-      Implemented: 106
+      Implemented: 111
       Work in Progress/Maybe Broken: 23
-      Unimplemented: 5
+      Unimplemented: 0
     Syscalls:
       Documented: 0
       Implemented: 14
@@ -35,9 +35,11 @@ Seaside Progress:
     - eret
     - j
     - jal
+    - jalr
     - jr
     - lb
     - lbu
+    - ldc1
     - lh
     - lhu
     - ll
@@ -66,6 +68,7 @@ Seaside Progress:
     - ori
     - sb
     - sc
+    - sdc1
     - sh
     - sll
     - sllv
@@ -99,6 +102,8 @@ Seaside Progress:
     - xori
     - abs.d
     - abs.s
+    - bc1f
+    - bc1t
     - c.eq.d
     - c.eq.s
     - c.le.d
@@ -144,11 +149,6 @@ Seaside Progress:
     - trunc.w.d
     - trunc.w.s
     Unimplemented:
-    - jalr
-    - ldc1
-    - sdc1
-    - bc1f
-    - bc1t
   Syscalls:
     Documented:
     Implemented:

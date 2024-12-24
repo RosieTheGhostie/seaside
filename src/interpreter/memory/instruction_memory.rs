@@ -32,6 +32,12 @@ impl Region for InstructionMemory {
             .or(self.ktext.read_u32(address, assert_aligned))
     }
 
+    fn read_u64(&self, address: Address, assert_aligned: bool) -> Result<u64, Exception> {
+        self.text
+            .read_u64(address, assert_aligned)
+            .or(self.ktext.read_u64(address, assert_aligned))
+    }
+
     fn get_slice(&self, address: Address) -> Result<&[u8], Exception> {
         self.text
             .get_slice(address)
@@ -79,6 +85,21 @@ impl Region for InstructionMemory {
             self.text
                 .write_u32(address, value, assert_aligned)
                 .or(self.ktext.write_u32(address, value, assert_aligned))
+        } else {
+            Err(Exception::InvalidStore(address))
+        }
+    }
+
+    fn write_u64(
+        &mut self,
+        address: Address,
+        value: u64,
+        assert_aligned: bool,
+    ) -> Result<(), Exception> {
+        if self.writeable {
+            self.text
+                .write_u64(address, value, assert_aligned)
+                .or(self.ktext.write_u64(address, value, assert_aligned))
         } else {
             Err(Exception::InvalidStore(address))
         }

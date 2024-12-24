@@ -36,5 +36,7 @@ pub enum Opcode {
     StoreWordRight = 0x2E,               // SWR
     LoadLinked = 0x30,                   // LL
     LoadWordCoprocessor1 = 0x31,         // LWC1
+    LoadDoubleCoprocessor1 = 0x35,       // LDC1
     StoreWordCoprocessor1 = 0x39,        // SWC1
+    StoreDoubleCoprocessor1 = 0x3D,      // SDC1
 }

@@ -27,7 +27,7 @@ impl Interpreter {
             ShiftRightLogicalVariable => self.srlv(rd, rs_value, rt_value),
             ShiftRightArithmeticVariable => self.srav(rd, rs_value, rt_value),
             JumpRegister => self.jr(rs_value),
-            JumpAndLinkRegister => todo!("jalr"),
+            JumpAndLinkRegister => self.jalr(rd, rs_value),
             MoveZero => self.movz(rd, rs_value, rt_value),
             MoveNotZero => self.movn(rd, rs_value, rt_value),
             SystemCall => self.syscall(),
@@ -96,6 +96,12 @@ impl Interpreter {
     }
 
     fn jr(&mut self, rs_value: u32) -> Result<(), Exception> {
+        self.pc = rs_value;
+        Ok(())
+    }
+
+    fn jalr(&mut self, rd: u8, rs_value: u32) -> Result<(), Exception> {
+        self.registers.write_u32_to_cpu(rd, self.pc)?;
         self.pc = rs_value;
         Ok(())
     }

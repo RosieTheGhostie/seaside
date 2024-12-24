@@ -31,6 +31,10 @@ impl Region for TextRegion {
         }
     }
 
+    fn read_u64(&self, address: Address, _assert_aligned: bool) -> Result<u64, Exception> {
+        Err(Exception::InvalidLoad(address)) // todo
+    }
+
     fn get_slice(&self, address: Address) -> Result<&[u8], Exception> {
         Err(Exception::InvalidLoad(address)) // todo
     }
@@ -64,6 +68,15 @@ impl Region for TextRegion {
         } else {
             Err(Exception::InvalidStore(address))
         }
+    }
+
+    fn write_u64(
+        &mut self,
+        address: Address,
+        _value: u64,
+        _assert_aligned: bool,
+    ) -> Result<(), Exception> {
+        Err(Exception::InvalidStore(address)) // todo
     }
 }
 
