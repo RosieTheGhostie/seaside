@@ -2,20 +2,18 @@ mod cmd_args;
 mod config;
 mod constants;
 mod engine;
+mod interpreter;
 mod sign_extend;
 mod type_aliases;
 
 use clap::Parser;
 use cmd_args::{CmdArgs, Commands};
-use config::{Config, Validate};
-use engine::{run, Error as EngineError, ErrorKind as EngineErrorKind};
+use config::Config;
 use minimal_logging::macros::{fatalln, grayln, warnln};
-use std::{fs::read_to_string, path::PathBuf};
-use walkdir::WalkDir;
 
 fn main() {
     let args: CmdArgs = CmdArgs::parse();
-    let config: Config = match get_config(&args) {
+    let config: Config = match engine::get_config(&args) {
         Ok(config) => config,
         Err(error) => {
             fatalln!("{error}");
@@ -23,8 +21,8 @@ fn main() {
         }
     };
     if let Err(error) = match args.command {
-        Commands::Run { directory } => match engine::init(config, directory) {
-            Ok(mut interpreter) => run(&mut interpreter).map(|exit_code| {
+        Commands::Run { directory } => match engine::init_interpreter(config, directory) {
+            Ok(mut interpreter) => engine::run(&mut interpreter).map(|exit_code| {
                 if let Some(exit_code) = exit_code {
                     grayln!("program terminated with exit code {exit_code}")
                 } else {
@@ -39,44 +37,7 @@ fn main() {
     }
 }
 
-fn find_seaside_toml() -> Result<PathBuf, EngineError> {
-    for entry in WalkDir::new(".")
-        .follow_links(true)
-        .into_iter()
-        .filter_map(|entry| entry.ok())
-    {
-        if entry.file_name() == "Seaside.toml" {
-            return Ok(entry.into_path());
-        }
-    }
-    Err(EngineError::new(
-        EngineErrorKind::NotFound,
-        "couldn't find `Seaside.toml`",
-    ))
-}
-
-fn get_config(args: &CmdArgs) -> Result<Config, EngineError> {
-    let config_path = match &args.config {
-        Some(path) => path,
-        None => &find_seaside_toml()?,
-    };
-    let file_contents = match read_to_string(config_path) {
-        Ok(contents) => contents,
-        Err(_) => {
-            return Err(EngineError::new(
-                EngineErrorKind::ExternalFailure,
-                "failed to read config file",
-            ))
-        }
-    };
-    let config: Config = match toml::from_str(&file_contents) {
-        Ok(config) => config,
-        Err(error) => return Err(EngineError::new(EngineErrorKind::InvalidConfig, error)),
-    };
-    config.validate().map(|_| config)
-}
-
-fn experimental_code() -> Result<(), EngineError> {
+fn experimental_code() -> Result<(), engine::Error> {
     warnln!("no experimental code to run");
     Ok(())
 }

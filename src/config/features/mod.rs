@@ -3,6 +3,7 @@ pub mod assembler;
 pub mod syscalls;
 
 use super::validate::Validate;
+use crate::engine::Error;
 use assembler::AssemblerOptions;
 use serde::{Deserialize, Serialize};
 use syscalls::Syscalls;
@@ -25,7 +26,7 @@ pub struct Features {
 }
 
 impl Validate for Features {
-    fn validate(&self) -> Result<(), crate::engine::Error> {
+    fn validate(&self) -> Result<(), Error> {
         self.syscalls.validate()
     }
 }

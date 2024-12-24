@@ -12,9 +12,7 @@ pub use memory::Memory;
 pub use register_file::RegisterFile;
 pub use syscalls::Syscalls;
 
-use super::Error;
-use crate::config::Config;
-use crate::type_aliases::address::Address;
+use crate::{config::Config, engine::Error, type_aliases::address::Address};
 use minimal_logging::macros::debugln;
 use std::path::PathBuf;
 

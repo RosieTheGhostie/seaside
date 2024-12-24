@@ -1,14 +1,40 @@
-#![allow(dead_code)]
 pub mod error;
-pub mod interpreter;
 
 pub use error::{Error, ErrorKind};
-pub use interpreter::Interpreter;
 
-use crate::config::Config;
-use std::path::{Path, PathBuf};
+use crate::{
+    cmd_args::CmdArgs,
+    config::{Config, Validate},
+    interpreter::Interpreter,
+};
+use std::{
+    fs::read_to_string,
+    path::{Path, PathBuf},
+};
+use walkdir::WalkDir;
 
-pub fn init(config: Config, directory: PathBuf) -> Result<Interpreter, Error> {
+pub fn get_config(args: &CmdArgs) -> Result<Config, Error> {
+    let config_path = match &args.config {
+        Some(path) => path,
+        None => &find_seaside_toml()?,
+    };
+    let file_contents = match read_to_string(config_path) {
+        Ok(contents) => contents,
+        Err(_) => {
+            return Err(Error::new(
+                ErrorKind::ExternalFailure,
+                "failed to read config file",
+            ))
+        }
+    };
+    let config: Config = match toml::from_str(&file_contents) {
+        Ok(config) => config,
+        Err(error) => return Err(Error::new(ErrorKind::InvalidConfig, error)),
+    };
+    config.validate().map(|_| config)
+}
+
+pub fn init_interpreter(config: Config, directory: PathBuf) -> Result<Interpreter, Error> {
     if !directory.is_dir() {
         return Err(Error::new(
             ErrorKind::InvalidProjectDirectory,
@@ -41,6 +67,22 @@ pub fn run(interpreter: &mut Interpreter) -> Result<Option<u8>, Error> {
             Err(Error::new(ErrorKind::MipsException, exception))
         }
     }
+}
+
+fn find_seaside_toml() -> Result<PathBuf, Error> {
+    for entry in WalkDir::new(".")
+        .follow_links(true)
+        .into_iter()
+        .filter_map(|entry| entry.ok())
+    {
+        if entry.file_name() == "Seaside.toml" {
+            return Ok(entry.into_path());
+        }
+    }
+    Err(Error::new(
+        ErrorKind::NotFound,
+        "couldn't find `Seaside.toml`",
+    ))
 }
 
 fn get_file(directory: &Path, name: &str) -> Option<PathBuf> {

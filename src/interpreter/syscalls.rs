@@ -1,8 +1,7 @@
-use super::{Exception, Interpreter};
+use super::{memory::regions::Region, Exception, Interpreter};
 use crate::{
     config::features::syscalls,
     constants::{register, service_codes},
-    engine::interpreter::memory::regions::Region,
     type_aliases::address::Address,
 };
 use bitflags::bitflags;
