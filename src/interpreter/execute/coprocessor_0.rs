@@ -6,6 +6,12 @@ use crate::constants::{fn_codes::Coprocessor0Fn, register};
 use num_traits::FromPrimitive;
 
 impl Interpreter {
+    /// Executes `instruction`, which must follow the "coprocessor 0" instruction format:
+    ///
+    /// ```text
+    /// 010000 x0x00 xxxxx xxxxx 000000xx000
+    /// opcode  fn    $rt   $rd     ???
+    /// ```
     pub fn execute_coprocessor_0(&mut self, instruction: Instruction) -> Result<(), Exception> {
         use Coprocessor0Fn::*;
         let r#fn = match Coprocessor0Fn::from_u8(fields::rs(instruction)) {
@@ -21,6 +27,7 @@ impl Interpreter {
         }
     }
 
+    /// Stores the value of coprocessor 0 register `rd` in CPU register `rt`.
     fn mfc0(&mut self, rt: u8, rd: u8) -> Result<(), Exception> {
         let rd_value = match rd {
             register::VADDR => self.registers.vaddr,
@@ -32,6 +39,7 @@ impl Interpreter {
         self.registers.write_u32_to_cpu(rt, rd_value)
     }
 
+    /// Stores the value of CPU register `rt` in coprocessor 0 register `rd`.
     fn mtc0(&mut self, rd: u8, rt: u8) -> Result<(), Exception> {
         let rt_value = self.registers.read_u32_from_cpu(rt)?;
         let destination = match rd {
@@ -45,6 +53,8 @@ impl Interpreter {
         Ok(())
     }
 
+    /// Sets the program counter (PC) to the value of register `epc`, then sets bit 1 of register
+    /// `status` to `0`.
     fn eret(&mut self, instruction: Instruction) -> Result<(), Exception> {
         if instruction == 0x42000018 {
             self.pc = self.registers.epc;
