@@ -7,7 +7,6 @@ pub mod validate;
 
 mod bitflags_addons;
 mod presets;
-mod red_flag_behavior;
 mod version;
 
 pub use endian::Endian;

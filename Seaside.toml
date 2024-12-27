@@ -9,7 +9,6 @@ show_crash_handler = true
 
 [features.assembler]
 pseudo_instructions = false
-on_spot_register_at = "allow"
 directives = "recommended"
 
 [features.syscalls]
