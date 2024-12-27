@@ -40,11 +40,13 @@ impl RegisterFile {
     }
 
     pub fn read_f64_from_fpu(&self, index: u8) -> Result<f64, Exception> {
-        if index % 2 == 0 && index < 32 {
+        if index >= 32 {
+            Err(Exception::InterpreterFailure)
+        } else if index % 2 != 0 {
+            Err(Exception::MalformedInstruction)
+        } else {
             let registers = [self.fpu[index as usize], self.fpu[index as usize + 1]];
             Ok(unsafe { transmute::<[f32; 2], f64>(registers) })
-        } else {
-            Err(Exception::InterpreterFailure)
         }
     }
 
@@ -97,14 +99,16 @@ impl RegisterFile {
     }
 
     pub fn write_f64_to_fpu(&mut self, index: u8, value: f64) -> Result<(), Exception> {
-        if index % 2 == 0 && index < 32 {
+        if index >= 32 {
+            Err(Exception::InterpreterFailure)
+        } else if index % 2 != 0 {
+            Err(Exception::MalformedInstruction)
+        } else {
             let index = index as usize;
             let halves: [f32; 2] = unsafe { transmute::<f64, [f32; 2]>(value) };
             self.fpu[index] = halves[0];
             self.fpu[index + 1] = halves[1];
             Ok(())
-        } else {
-            Err(Exception::InterpreterFailure)
         }
     }
 

@@ -34,7 +34,7 @@ impl Interpreter {
             register::STATUS => self.registers.status,
             register::CAUSE => self.registers.cause,
             register::EPC => self.registers.epc,
-            _ => return Err(Exception::ReservedInstruction), // not exactly what i'm looking for
+            _ => return Err(Exception::MalformedInstruction),
         };
         self.registers.write_u32_to_cpu(rt, rd_value)
     }
@@ -47,7 +47,7 @@ impl Interpreter {
             register::STATUS => &mut self.registers.status,
             register::CAUSE => &mut self.registers.cause,
             register::EPC => &mut self.registers.epc,
-            _ => return Err(Exception::ReservedInstruction), // not exactly what i'm looking for
+            _ => return Err(Exception::MalformedInstruction),
         };
         *destination = rt_value;
         Ok(())
@@ -61,7 +61,7 @@ impl Interpreter {
             self.registers.status &= !(0x2u32); // set bit 1 to 0
             Ok(())
         } else {
-            Err(Exception::ReservedInstruction)
+            Err(Exception::MalformedInstruction)
         }
     }
 }

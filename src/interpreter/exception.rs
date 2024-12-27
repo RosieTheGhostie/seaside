@@ -6,6 +6,7 @@ use std::{
 
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum Exception {
+    MalformedInstruction,
     InvalidLoad(Address),
     InvalidStore(Address),
     SyscallFailure,
@@ -23,6 +24,7 @@ impl Exception {
     pub const fn as_str(&self) -> &'static str {
         use Exception::*;
         match *self {
+            MalformedInstruction => "malformed instruction",
             InvalidLoad(_) => "invalid load",
             InvalidStore(_) => "invalid store",
             SyscallFailure => "syscall failed to execute",
@@ -40,6 +42,7 @@ impl Exception {
     pub const fn code(&self) -> u32 {
         use Exception::*;
         match *self {
+            MalformedInstruction => 0,
             InvalidLoad(_) => 4,
             InvalidStore(_) => 5,
             SyscallFailure => 8,
