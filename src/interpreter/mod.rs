@@ -14,7 +14,10 @@ pub use syscalls::Syscalls;
 
 use crate::{config::Config, engine::Error, type_aliases::address::Address};
 use minimal_logging::macros::debugln;
-use std::path::PathBuf;
+use std::{
+    io::{stdout, Write},
+    path::PathBuf,
+};
 
 pub struct Interpreter {
     memory: Memory,
@@ -22,6 +25,7 @@ pub struct Interpreter {
     pc: Address,
     syscalls: Syscalls,
     pub show_crash_handler: bool,
+    stdout_pending_flush: bool,
     pub exit_code: Option<u8>,
 }
 
@@ -44,6 +48,7 @@ impl Interpreter {
             pc,
             syscalls,
             show_crash_handler: config.features.show_crash_handler,
+            stdout_pending_flush: false,
             exit_code: None,
         })
     }
@@ -81,5 +86,14 @@ impl Interpreter {
             self.pc,
             self.registers,
         )
+    }
+
+    fn flush_stdout_if_necessary(&mut self) -> Result<(), std::io::Error> {
+        if self.stdout_pending_flush {
+            self.stdout_pending_flush = false;
+            stdout().flush()
+        } else {
+            Ok(())
+        }
     }
 }

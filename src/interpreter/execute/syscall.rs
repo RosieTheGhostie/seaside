@@ -5,7 +5,7 @@ use crate::{
 };
 use std::{
     ffi::CStr,
-    io::{stdin, stdout, Read, Write},
+    io::{stdin, Read, Write},
     mem::transmute,
     thread::sleep,
     time::{Duration, SystemTime},
@@ -46,40 +46,42 @@ impl Interpreter {
 }
 
 impl Interpreter {
-    fn print_int(&self) -> Result<(), Exception> {
+    fn print_int(&mut self) -> Result<(), Exception> {
         let x: i32 = self.registers.read_i32_from_cpu(register::A0)?;
         print!("{x}");
-        // We need to flush stdout because the automatic flushing is insufficient in most scenarios.
-        stdout().flush().map_err(|_| Exception::SyscallFailure)
+        self.stdout_pending_flush = true;
+        Ok(())
     }
 
-    fn print_float(&self) -> Result<(), Exception> {
+    fn print_float(&mut self) -> Result<(), Exception> {
         let x: f32 = self.registers.read_f32_from_fpu(12)?;
         print!("{x}");
-        // We need to flush stdout because the automatic flushing is insufficient in most scenarios.
-        stdout().flush().map_err(|_| Exception::SyscallFailure)
+        self.stdout_pending_flush = true;
+        Ok(())
     }
 
-    fn print_double(&self) -> Result<(), Exception> {
+    fn print_double(&mut self) -> Result<(), Exception> {
         let x: f64 = self.registers.read_f64_from_fpu(12)?;
         print!("{x}");
-        // We need to flush stdout because the automatic flushing is insufficient in most scenarios.
-        stdout().flush().map_err(|_| Exception::SyscallFailure)
+        self.stdout_pending_flush = true;
+        Ok(())
     }
 
-    fn print_string(&self) -> Result<(), Exception> {
+    fn print_string(&mut self) -> Result<(), Exception> {
         let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let string = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
             .map_err(|_| Exception::SyscallFailure)?
             .to_str()
             .map_err(|_| Exception::SyscallFailure)?;
         print!("{string}");
-        // We need to flush stdout because the automatic flushing is insufficient in most scenarios.
-        stdout().flush().map_err(|_| Exception::SyscallFailure)
+        self.stdout_pending_flush = true;
+        Ok(())
     }
 
     fn read_int(&mut self) -> Result<(), Exception> {
         let mut buffer = String::new();
+        self.flush_stdout_if_necessary()
+            .map_err(|_| Exception::SyscallFailure)?;
         stdin()
             .read_line(&mut buffer)
             .map_err(|_| Exception::SyscallFailure)?;
@@ -92,6 +94,8 @@ impl Interpreter {
 
     fn read_float(&mut self) -> Result<(), Exception> {
         let mut buffer = String::new();
+        self.flush_stdout_if_necessary()
+            .map_err(|_| Exception::SyscallFailure)?;
         stdin()
             .read_line(&mut buffer)
             .map_err(|_| Exception::SyscallFailure)?;
@@ -104,6 +108,8 @@ impl Interpreter {
 
     fn read_double(&mut self) -> Result<(), Exception> {
         let mut buffer = String::new();
+        self.flush_stdout_if_necessary()
+            .map_err(|_| Exception::SyscallFailure)?;
         stdin()
             .read_line(&mut buffer)
             .map_err(|_| Exception::SyscallFailure)?;
@@ -115,6 +121,10 @@ impl Interpreter {
     }
 
     fn read_string(&mut self) -> Result<(), Exception> {
+        // To appease the borrow checker, we must flush up here instead of directly before the read
+        // from stdin like the other read services.
+        self.flush_stdout_if_necessary()
+            .map_err(|_| Exception::SyscallFailure)?;
         let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let buffer = self.memory.get_slice_mut(buffer_address)?;
         let max_chars = usize::min(
@@ -154,19 +164,21 @@ impl Interpreter {
         Ok(())
     }
 
-    fn print_char(&self) -> Result<(), Exception> {
+    fn print_char(&mut self) -> Result<(), Exception> {
         let c = match char::from_u32(self.registers.read_u32_from_cpu(register::A0)?) {
             Some(c) => c,
             None => return Err(Exception::SyscallFailure),
         };
         print!("{c}");
-        // We need to flush stdout because the automatic flushing is insufficient in most scenarios.
-        stdout().flush().map_err(|_| Exception::SyscallFailure)
+        self.stdout_pending_flush = true;
+        Ok(())
     }
 
     fn read_char(&mut self) -> Result<(), Exception> {
         // NOTE: I have absolutely no confidence in this method.
         let mut buffer = [0u8; 4];
+        self.flush_stdout_if_necessary()
+            .map_err(|_| Exception::SyscallFailure)?;
         stdin()
             .read_exact(&mut buffer)
             .map_err(|_| Exception::SyscallFailure)?;
@@ -242,24 +254,24 @@ impl Interpreter {
         todo!("generate a sound");
     }
 
-    fn print_hex(&self) -> Result<(), Exception> {
+    fn print_hex(&mut self) -> Result<(), Exception> {
         let x: u32 = self.registers.read_u32_from_cpu(register::A0)?;
         print!("0x{x:08x}");
-        // We need to flush stdout because the automatic flushing is insufficient in most scenarios.
-        stdout().flush().map_err(|_| Exception::SyscallFailure)
+        self.stdout_pending_flush = true;
+        Ok(())
     }
 
-    fn print_bin(&self) -> Result<(), Exception> {
+    fn print_bin(&mut self) -> Result<(), Exception> {
         let x: u32 = self.registers.read_u32_from_cpu(register::A0)?;
         print!("0b{x:032b}");
-        // We need to flush stdout because the automatic flushing is insufficient in most scenarios.
-        stdout().flush().map_err(|_| Exception::SyscallFailure)
+        self.stdout_pending_flush = true;
+        Ok(())
     }
 
-    fn print_uint(&self) -> Result<(), Exception> {
+    fn print_uint(&mut self) -> Result<(), Exception> {
         let x: u32 = self.registers.read_u32_from_cpu(register::A0)?;
         print!("{x}");
-        // We need to flush stdout because the automatic flushing is insufficient in most scenarios.
-        stdout().flush().map_err(|_| Exception::SyscallFailure)
+        self.stdout_pending_flush = true;
+        Ok(())
     }
 }
