@@ -1,7 +1,9 @@
-use super::{super::memory::regions::Region, Exception, Interpreter};
+use super::{
+    super::{memory::regions::Region, syscalls::Syscalls},
+    Exception, Interpreter,
+};
 use crate::{
     constants::{register, service_codes},
-    interpreter::Syscalls,
     type_aliases::address::Address,
 };
 use std::{
@@ -144,18 +146,23 @@ impl Interpreter {
         stdin()
             .read_line(&mut temp)
             .map_err(|_| Exception::SyscallFailure)?;
-        let temp: Vec<u8> = {
-            let mut temp = temp.as_bytes().to_vec();
-            temp.truncate(max_chars);
-            if temp.len() == max_chars {
-                temp[max_chars - 1] = 0;
+        let slice = match temp.strip_suffix("\r\n") {
+            Some(stripped) => stripped,
+            None => &temp,
+        };
+        let bytes: Vec<u8> = {
+            let mut bytes = slice.as_bytes().to_vec();
+            bytes.push(b'\n');
+            bytes.truncate(max_chars);
+            if bytes.len() == max_chars {
+                bytes[max_chars - 1] = b'\0';
             } else {
-                temp.push(0);
+                bytes.push(b'\0');
             }
-            temp
+            bytes
         };
         buffer
-            .write_all(&temp)
+            .write_all(&bytes)
             .map_err(|_| Exception::SyscallFailure)
     }
 
