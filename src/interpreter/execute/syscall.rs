@@ -1,6 +1,7 @@
 use super::{super::memory::regions::Region, Exception, Interpreter};
 use crate::{
     constants::{register, service_codes},
+    interpreter::Syscalls,
     type_aliases::address::Address,
 };
 use std::{
@@ -15,6 +16,10 @@ impl Interpreter {
     pub fn syscall(&mut self) -> Result<(), Exception> {
         use service_codes::*;
         let service_code = self.registers.read_u32_from_cpu(register::V0)? as u8;
+        let syscall_flag = Syscalls::from_bits_truncate(1 << service_code);
+        if !self.syscalls.intersects(syscall_flag) {
+            return Err(Exception::SyscallFailure);
+        }
         match service_code {
             PRINT_INT => self.print_int(),
             PRINT_FLOAT => self.print_float(),
