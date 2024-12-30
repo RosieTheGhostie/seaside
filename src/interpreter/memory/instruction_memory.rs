@@ -113,7 +113,7 @@ impl InstructionMemory {
         mut exception_handler: Option<Address>,
         writeable: bool,
     ) -> Self {
-        if ktext.num_instructions() != 0 {
+        if ktext.num_instructions() == 0 {
             exception_handler = None;
         }
         Self {
