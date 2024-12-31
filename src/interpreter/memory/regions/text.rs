@@ -8,6 +8,7 @@ use std::ops::Range;
 pub struct TextRegion {
     pub addresses: Range<Address>,
     instructions: Box<[u32]>,
+    pub num_instructions: usize,
     pub end_pc: Option<Address>,
 }
 
@@ -87,11 +88,8 @@ impl TextRegion {
             addresses: low_address..(low_address + bytes_to_allocate as u32),
             instructions: vec![0u32; words_to_allocate].into_boxed_slice(),
             end_pc: None,
+            num_instructions: 0,
         }
-    }
-
-    pub fn num_instructions(&self) -> usize {
-        self.instructions.len()
     }
 
     pub fn populate(&mut self, bytes: Vec<u8>, endian: Endian) {
@@ -113,6 +111,7 @@ impl TextRegion {
             ]);
             byte_index += 4;
         }
+        self.num_instructions = num_instructions;
         self.end_pc = Some(byte_index as u32 + self.addresses.start);
     }
 
@@ -128,6 +127,7 @@ impl TextRegion {
             ]);
             byte_index += 4;
         }
+        self.num_instructions = num_instructions;
         self.end_pc = Some(byte_index as u32 + self.addresses.start);
     }
 
