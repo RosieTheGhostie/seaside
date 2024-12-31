@@ -5,6 +5,7 @@ pub mod register_file;
 
 mod execute;
 mod instruction;
+mod rng;
 mod syscalls;
 
 pub use exception::Exception;
@@ -14,7 +15,9 @@ pub use syscalls::Syscalls;
 
 use crate::{config::Config, engine::Error, type_aliases::address::Address};
 use minimal_logging::macros::debugln;
+use rng::Rng;
 use std::{
+    collections::HashMap,
     io::{stdout, Write},
     path::PathBuf,
 };
@@ -24,6 +27,7 @@ pub struct Interpreter {
     registers: RegisterFile,
     pc: Address,
     syscalls: Syscalls,
+    rngs: HashMap<u32, Rng>,
     pub show_crash_handler: bool,
     stdout_pending_flush: bool,
     pub exit_code: Option<u8>,
@@ -47,6 +51,7 @@ impl Interpreter {
             registers,
             pc,
             syscalls,
+            rngs: HashMap::new(),
             show_crash_handler: config.features.show_crash_handler,
             stdout_pending_flush: false,
             exit_code: None,
@@ -86,6 +91,20 @@ impl Interpreter {
             self.pc,
             self.registers,
         )
+    }
+
+    fn get_rng(&mut self, id: u32) -> Option<&mut Rng> {
+        self.rngs.get_mut(&id)
+    }
+
+    fn make_rng(&mut self, id: u32) -> &mut Rng {
+        let seed: u64 = rand::random();
+        self.set_rng_seed(id, seed);
+        self.get_rng(id).unwrap()
+    }
+
+    fn set_rng_seed(&mut self, id: u32, seed: u64) {
+        self.rngs.insert(id, Rng::new(seed));
     }
 
     fn flush_stdout_if_necessary(&mut self) -> Result<(), std::io::Error> {

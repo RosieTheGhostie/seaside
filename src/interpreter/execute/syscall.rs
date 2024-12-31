@@ -47,6 +47,11 @@ impl Interpreter {
             PRINT_HEX => self.print_hex(),
             PRINT_BIN => self.print_bin(),
             PRINT_UINT => self.print_uint(),
+            SET_SEED => self.set_seed(),
+            RAND_INT => self.rand_int(),
+            RAND_INT_RANGE => self.rand_int_range(),
+            RAND_FLOAT => self.rand_float(),
+            RAND_DOUBLE => self.rand_double(),
             _ => Err(Exception::SyscallFailure),
         }
     }
@@ -285,5 +290,55 @@ impl Interpreter {
         print!("{x}");
         self.stdout_pending_flush = true;
         Ok(())
+    }
+
+    fn set_seed(&mut self) -> Result<(), Exception> {
+        let id: u32 = self.registers.read_u32_from_cpu(register::A0)?;
+        let seed: u64 = self.registers.read_u32_from_cpu(register::A1)? as u64;
+        self.set_rng_seed(id, seed);
+        Ok(())
+    }
+
+    fn rand_int(&mut self) -> Result<(), Exception> {
+        let id: u32 = self.registers.read_u32_from_cpu(register::A0)?;
+        let rng = match self.get_rng(id) {
+            Some(rng) => rng,
+            None => self.make_rng(id),
+        };
+        let x: u32 = rng.next_u32();
+        self.registers.write_u32_to_cpu(register::A0, x)
+    }
+
+    fn rand_int_range(&mut self) -> Result<(), Exception> {
+        let id: u32 = self.registers.read_u32_from_cpu(register::A0)?;
+        let upper_bound: u64 = self.registers.read_u32_from_cpu(register::A1)? as u64;
+        let rng = match self.get_rng(id) {
+            Some(rng) => rng,
+            None => self.make_rng(id),
+        };
+        match rng.next_u32_from_range(upper_bound) {
+            Some(x) => self.registers.write_u32_to_cpu(register::A0, x),
+            None => Err(Exception::SyscallFailure),
+        }
+    }
+
+    fn rand_float(&mut self) -> Result<(), Exception> {
+        let id: u32 = self.registers.read_u32_from_cpu(register::A0)?;
+        let rng = match self.get_rng(id) {
+            Some(rng) => rng,
+            None => self.make_rng(id),
+        };
+        let x: f32 = rng.next_f32();
+        self.registers.write_f32_to_fpu(0, x)
+    }
+
+    fn rand_double(&mut self) -> Result<(), Exception> {
+        let id: u32 = self.registers.read_u32_from_cpu(register::A0)?;
+        let rng = match self.get_rng(id) {
+            Some(rng) => rng,
+            None => self.make_rng(id),
+        };
+        let x: f64 = rng.next_f64();
+        self.registers.write_f64_to_fpu(0, x)
     }
 }
