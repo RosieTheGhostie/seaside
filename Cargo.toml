@@ -1,5 +1,5 @@
 [package]
-name = "seaside-v2"
+name = "seaside"
 version = "0.1.0"
 authors = ["RosieTheGhostie"]
 edition = "2021"

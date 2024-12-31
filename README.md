@@ -29,12 +29,12 @@ The other major motivation for making `seaside` is that I, Rose Thorne, needed a
 ### Interpreter (*partially implemented*)
 
 - [X] 134/134 basic instructions supported by MARS
-- [ ] 17/39 system calls supported by MARS
+- [ ] 22/39 system calls supported by MARS
   - [X] 8/8 printing services
   - [X] 5/5 user input services
   - [ ] 0/4 file services
   - [ ] 4/7 misc. system services
-  - [ ] 0/5 RNG services
+  - [X] 5/5 RNG services
   - [ ] 0/10 GUI services
 - [X] Control over user- and kernel-space
 
