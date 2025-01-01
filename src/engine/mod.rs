@@ -8,6 +8,7 @@ use crate::{
     interpreter::Interpreter,
 };
 use std::{
+    env::set_current_dir,
     fs::read_to_string,
     path::{Path, PathBuf},
 };
@@ -39,6 +40,12 @@ pub fn init_interpreter(config: Config, directory: PathBuf) -> Result<Interprete
         return Err(Error::new(
             ErrorKind::InvalidProjectDirectory,
             "expected project path to be a directory",
+        ));
+    }
+    if config.project_directory_is_cwd && set_current_dir(&directory).is_err() {
+        return Err(Error::new(
+            ErrorKind::ExternalFailure,
+            format!("failed to change the cwd to {}", directory.display()),
         ));
     }
     let text = match get_file(&directory, "text") {
