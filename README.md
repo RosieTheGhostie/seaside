@@ -29,10 +29,10 @@ The other major motivation for making `seaside` is that I, Rose Thorne, needed a
 ### Interpreter (*partially implemented*)
 
 - [X] 134/134 basic instructions supported by MARS
-- [ ] 22/39 system calls supported by MARS
+- [ ] 24/39 system calls supported by MARS
   - [X] 8/8 printing services
   - [X] 5/5 user input services
-  - [ ] 0/4 file services
+  - [ ] 2/4 file services
   - [ ] 4/7 misc. system services
   - [X] 5/5 RNG services
   - [ ] 0/10 GUI services
@@ -45,6 +45,7 @@ The other major motivation for making `seaside` is that I, Rose Thorne, needed a
 - [X] Allocated memory for each region
 - [X] Default values of registers
 - [X] Crash handler
+- [X] Current working directory for file IO
 - [X] Enable/disable self-modifying code
 - [ ] Enable/disable individual system calls and directives
 - [ ] + more!!!

@@ -8,6 +8,7 @@ use crate::{
 };
 use std::{
     ffi::CStr,
+    fs::OpenOptions,
     io::{stdin, Read, Write},
     mem::transmute,
     thread::sleep,
@@ -208,13 +209,27 @@ impl Interpreter {
 
     fn open_file(&mut self) -> Result<(), Exception> {
         let file_name_address = self.registers.read_u32_from_cpu(register::A0)?;
-        let _file_name = CStr::from_bytes_until_nul(self.memory.get_slice(file_name_address)?)
+        let file_name = CStr::from_bytes_until_nul(self.memory.get_slice(file_name_address)?)
             .map_err(|_| Exception::SyscallFailure)?
             .to_str()
             .map_err(|_| Exception::SyscallFailure)?;
-        let _flags = self.registers.read_u32_from_cpu(register::A1)?;
+        let flags = self.registers.read_u32_from_cpu(register::A1)?;
+        // The `mode` parameter is currently ignored by both MARS and seaside.
         let _mode = self.registers.read_u32_from_cpu(register::A2)?;
-        todo!("open the file and set $v0 to the fd/error code");
+        let fd: u32 = match OpenOptions::new()
+            .read(flags == 0)
+            .write(flags & 1 != 1)
+            .append(flags & 8 != 0)
+            .open(file_name)
+        {
+            Ok(file) => {
+                let fd = self.next_fd;
+                self.make_file_handle(file);
+                fd
+            }
+            Err(_) => u32::MAX,
+        };
+        self.registers.write_u32_to_cpu(register::V0, fd)
     }
 
     fn read_file(&mut self) -> Result<(), Exception> {
