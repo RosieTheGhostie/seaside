@@ -115,6 +115,15 @@ impl Interpreter {
         self.get_file_handle(fd).unwrap()
     }
 
+    fn close_file_handle(&mut self, fd: u32) -> bool {
+        if let Some(FileHandle::File(_)) = self.get_file_handle(fd) {
+            self.files.remove(&fd);
+            true
+        } else {
+            false
+        }
+    }
+
     fn get_rng(&mut self, id: u32) -> Option<&mut Rng> {
         self.rngs.get_mut(&id)
     }

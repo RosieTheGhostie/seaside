@@ -207,10 +207,14 @@ impl Interpreter {
     }
 
     fn open_file(&mut self) -> Result<(), Exception> {
-        let _file_name_address = self.registers.read_u32_from_cpu(register::A0)?;
+        let file_name_address = self.registers.read_u32_from_cpu(register::A0)?;
+        let _file_name = CStr::from_bytes_until_nul(self.memory.get_slice(file_name_address)?)
+            .map_err(|_| Exception::SyscallFailure)?
+            .to_str()
+            .map_err(|_| Exception::SyscallFailure)?;
         let _flags = self.registers.read_u32_from_cpu(register::A1)?;
         let _mode = self.registers.read_u32_from_cpu(register::A2)?;
-        todo!("get the file name, open the file, and set $v0 to the fd/error code");
+        todo!("open the file and set $v0 to the fd/error code");
     }
 
     fn read_file(&mut self) -> Result<(), Exception> {
@@ -228,8 +232,12 @@ impl Interpreter {
     }
 
     fn close_file(&mut self) -> Result<(), Exception> {
-        let _fd = self.registers.read_u32_from_cpu(register::A0)?;
-        todo!("close the file");
+        let fd = self.registers.read_u32_from_cpu(register::A0)?;
+        // For whatever reason, MARS doesn't complain if you try to close any of the special files
+        // (stdin, stdout, and stderr). I disagree with that, but to maintain compatibility with it,
+        // I'll ignore the result.
+        let _succeeded = self.close_file_handle(fd);
+        Ok(())
     }
 
     fn exit_2(&mut self) -> Result<(), Exception> {
