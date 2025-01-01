@@ -35,18 +35,23 @@ pub fn get_config(args: &CmdArgs) -> Result<Config, Error> {
     config.validate().map(|_| config)
 }
 
-pub fn init_interpreter(config: Config, directory: PathBuf) -> Result<Interpreter, Error> {
+pub fn init_interpreter(config: Config, mut directory: PathBuf) -> Result<Interpreter, Error> {
     if !directory.is_dir() {
         return Err(Error::new(
             ErrorKind::InvalidProjectDirectory,
             "expected project path to be a directory",
         ));
     }
-    if config.project_directory_is_cwd && set_current_dir(&directory).is_err() {
-        return Err(Error::new(
-            ErrorKind::ExternalFailure,
-            format!("failed to change the cwd to {}", directory.display()),
-        ));
+    if config.project_directory_is_cwd {
+        directory = match set_current_dir(&directory) {
+            Ok(()) => ".".parse().unwrap(),
+            Err(_) => {
+                return Err(Error::new(
+                    ErrorKind::ExternalFailure,
+                    format!("failed to change the cwd to {}", directory.display()),
+                ));
+            }
+        };
     }
     let text = match get_file(&directory, "text") {
         Some(text) => text,
