@@ -1,5 +1,6 @@
 version = "0.1.0"
 endian = "little"
+project_directory_is_cwd = true
 
 [features]
 kernel_space_accessible = true

@@ -28,6 +28,7 @@ pub struct Config {
     pub version: Version,
     #[serde(alias = "byte_order")]
     pub endian: Endian,
+    pub project_directory_is_cwd: bool,
     pub features: Features,
     pub memory_map: MemoryMap,
     pub register_defaults: RegisterDefaults,
