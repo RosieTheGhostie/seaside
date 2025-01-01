@@ -4,6 +4,7 @@ pub mod memory;
 pub mod register_file;
 
 mod execute;
+mod file_handle;
 mod instruction;
 mod rng;
 mod syscalls;
@@ -14,10 +15,12 @@ pub use register_file::RegisterFile;
 pub use syscalls::Syscalls;
 
 use crate::{config::Config, engine::Error, type_aliases::address::Address};
+use file_handle::FileHandle;
 use minimal_logging::macros::debugln;
 use rng::Rng;
 use std::{
     collections::HashMap,
+    fs::File,
     io::{stdout, Write},
     path::PathBuf,
 };
@@ -27,6 +30,8 @@ pub struct Interpreter {
     registers: RegisterFile,
     pc: Address,
     syscalls: Syscalls,
+    files: HashMap<u32, FileHandle>,
+    next_fd: u32,
     rngs: HashMap<u32, Rng>,
     pub show_crash_handler: bool,
     stdout_pending_flush: bool,
@@ -46,11 +51,17 @@ impl Interpreter {
         let pc = memory.initial_pc();
         let syscalls = Syscalls::from(&config.features.syscalls);
         let registers = RegisterFile::init(&config.register_defaults);
+        let mut files: HashMap<u32, FileHandle> = HashMap::new();
+        files.insert(0, FileHandle::new_stdin());
+        files.insert(1, FileHandle::new_stdout());
+        files.insert(2, FileHandle::new_stderr());
         Ok(Self {
             memory,
             registers,
             pc,
             syscalls,
+            files,
+            next_fd: 3,
             rngs: HashMap::new(),
             show_crash_handler: config.features.show_crash_handler,
             stdout_pending_flush: false,
@@ -91,6 +102,17 @@ impl Interpreter {
             self.pc,
             self.registers,
         )
+    }
+
+    fn get_file_handle(&mut self, fd: u32) -> Option<&mut FileHandle> {
+        self.files.get_mut(&fd)
+    }
+
+    fn make_file_handle(&mut self, file: File) -> &mut FileHandle {
+        let fd: u32 = self.next_fd;
+        self.files.insert(fd, FileHandle::File(file));
+        self.next_fd += 1;
+        self.get_file_handle(fd).unwrap()
     }
 
     fn get_rng(&mut self, id: u32) -> Option<&mut Rng> {
