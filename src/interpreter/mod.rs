@@ -104,19 +104,15 @@ impl Interpreter {
         )
     }
 
-    fn get_file_handle(&mut self, fd: u32) -> Option<&mut FileHandle> {
-        self.files.get_mut(&fd)
-    }
-
     fn make_file_handle(&mut self, file: File) -> &mut FileHandle {
         let fd: u32 = self.next_fd;
         self.files.insert(fd, FileHandle::File(file));
         self.next_fd += 1;
-        self.get_file_handle(fd).unwrap()
+        self.files.get_mut(&fd).unwrap()
     }
 
     fn close_file_handle(&mut self, fd: u32) -> bool {
-        if let Some(FileHandle::File(_)) = self.get_file_handle(fd) {
+        if let Some(FileHandle::File(_)) = self.files.get_mut(&fd) {
             self.files.remove(&fd);
             true
         } else {
@@ -124,14 +120,10 @@ impl Interpreter {
         }
     }
 
-    fn get_rng(&mut self, id: u32) -> Option<&mut Rng> {
-        self.rngs.get_mut(&id)
-    }
-
     fn make_rng(&mut self, id: u32) -> &mut Rng {
         let seed: u64 = rand::random();
         self.set_rng_seed(id, seed);
-        self.get_rng(id).unwrap()
+        self.rngs.get_mut(&id).unwrap()
     }
 
     fn set_rng_seed(&mut self, id: u32, seed: u64) {

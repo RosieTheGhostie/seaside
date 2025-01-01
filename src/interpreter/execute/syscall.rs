@@ -240,10 +240,21 @@ impl Interpreter {
     }
 
     fn write_file(&mut self) -> Result<(), Exception> {
-        let _fd = self.registers.read_u32_from_cpu(register::A0)?;
-        let _buffer_address = self.registers.read_u32_from_cpu(register::A1)?;
-        let _chars_to_write = self.registers.read_u32_from_cpu(register::A2)?;
-        todo!("write stuff from the buffer to the file and set $v0 accordingly");
+        let fd = self.registers.read_u32_from_cpu(register::A0)?;
+        let buffer_address = self.registers.read_u32_from_cpu(register::A1)?;
+        let buffer = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
+            .map_err(|_| Exception::SyscallFailure)?
+            .to_bytes();
+        let max_chars = usize::min(
+            self.registers.read_u32_from_cpu(register::A2)? as usize,
+            buffer.len(),
+        );
+        let buffer = &buffer[..max_chars];
+        let bytes_written = match self.files.get_mut(&fd) {
+            Some(handle) => handle.write(buffer).map_or(u32::MAX, |n| n as u32),
+            None => u32::MAX,
+        };
+        self.registers.write_u32_to_cpu(register::V0, bytes_written)
     }
 
     fn close_file(&mut self) -> Result<(), Exception> {
@@ -324,7 +335,7 @@ impl Interpreter {
 
     fn rand_int(&mut self) -> Result<(), Exception> {
         let id: u32 = self.registers.read_u32_from_cpu(register::A0)?;
-        let rng = match self.get_rng(id) {
+        let rng = match self.rngs.get_mut(&id) {
             Some(rng) => rng,
             None => self.make_rng(id),
         };
@@ -335,7 +346,7 @@ impl Interpreter {
     fn rand_int_range(&mut self) -> Result<(), Exception> {
         let id: u32 = self.registers.read_u32_from_cpu(register::A0)?;
         let upper_bound: u64 = self.registers.read_u32_from_cpu(register::A1)? as u64;
-        let rng = match self.get_rng(id) {
+        let rng = match self.rngs.get_mut(&id) {
             Some(rng) => rng,
             None => self.make_rng(id),
         };
@@ -347,7 +358,7 @@ impl Interpreter {
 
     fn rand_float(&mut self) -> Result<(), Exception> {
         let id: u32 = self.registers.read_u32_from_cpu(register::A0)?;
-        let rng = match self.get_rng(id) {
+        let rng = match self.rngs.get_mut(&id) {
             Some(rng) => rng,
             None => self.make_rng(id),
         };
@@ -357,7 +368,7 @@ impl Interpreter {
 
     fn rand_double(&mut self) -> Result<(), Exception> {
         let id: u32 = self.registers.read_u32_from_cpu(register::A0)?;
-        let rng = match self.get_rng(id) {
+        let rng = match self.rngs.get_mut(&id) {
             Some(rng) => rng,
             None => self.make_rng(id),
         };
