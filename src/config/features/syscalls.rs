@@ -119,7 +119,7 @@ impl_deserialize!(Read);
 impl_bitflags_has_basic_presets!(Read, Self::everything());
 impl_serialize!(File);
 impl_deserialize!(File);
-impl_bitflags_has_basic_presets!(File, Self::nothing());
+impl_bitflags_has_basic_presets!(File, Self::everything());
 impl_serialize!(System);
 impl_deserialize!(System);
 impl_bitflags_has_basic_presets!(System, Self::Exit | Self::Exit2 | Self::Sleep);

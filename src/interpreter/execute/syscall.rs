@@ -218,7 +218,8 @@ impl Interpreter {
         let _mode = self.registers.read_u32_from_cpu(register::A2)?;
         let fd: u32 = match OpenOptions::new()
             .read(flags == 0)
-            .write(flags & 1 != 1)
+            .write(flags & 1 != 0)
+            .create(flags & 1 != 0)
             .append(flags & 8 != 0)
             .open(file_name)
         {
