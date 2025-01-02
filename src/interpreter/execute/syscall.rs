@@ -234,10 +234,22 @@ impl Interpreter {
     }
 
     fn read_file(&mut self) -> Result<(), Exception> {
-        let _fd = self.registers.read_u32_from_cpu(register::A0)?;
-        let _buffer_address = self.registers.read_u32_from_cpu(register::A1)?;
-        let _max_chars = self.registers.read_u32_from_cpu(register::A2)?;
-        todo!("read stuff from the file into the buffer and set $v0 accordingly");
+        let fd = self.registers.read_u32_from_cpu(register::A0)?;
+        let buffer_address = self.registers.read_u32_from_cpu(register::A1)?;
+        let buffer = self.memory.get_slice_mut(buffer_address)?;
+        let max_chars = usize::min(
+            self.registers.read_u32_from_cpu(register::A2)? as usize,
+            buffer.len(),
+        );
+        if max_chars == 0 {
+            return Ok(());
+        }
+        let buffer = &mut buffer[..max_chars];
+        let bytes_read = match self.files.get_mut(&fd) {
+            Some(handle) => handle.read(buffer).map_or(u32::MAX, |n| n as u32),
+            None => u32::MAX,
+        };
+        self.registers.write_u32_to_cpu(register::V0, bytes_read)
     }
 
     fn write_file(&mut self) -> Result<(), Exception> {
