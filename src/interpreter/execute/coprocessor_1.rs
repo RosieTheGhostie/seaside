@@ -33,12 +33,15 @@ impl Interpreter {
         let ft = fields::ft(instruction);
         let fs = fields::fs(instruction);
         let fd = fields::fd(instruction);
+        let fmt = fields::fmt(instruction);
+        if fmt == 8 {
+            return self.bc1c(ft, instruction);
+        }
         let r#fn = match Coprocessor1Fn::from_u8(fields::r#fn(instruction)) {
-            Some(Coprocessor1Fn::BranchConditional) => return self.bc1c(ft, instruction),
             Some(r#fn) => r#fn,
             None => return Err(Exception::ReservedInstruction),
         };
-        match NumberFormat::from_u8(fields::fmt(instruction)) {
+        match NumberFormat::from_u8(fmt) {
             Some(Single) => self.execute_coprocessor_1_single(ft, fs, fd, r#fn),
             Some(Double) => self.execute_coprocessor_1_double(ft, fs, fd, r#fn),
             Some(Word) => self.execute_coprocessor_1_word(fs, fd, r#fn),
@@ -73,7 +76,6 @@ impl Interpreter {
             AbsoluteValue => self.abs_s(fd, fs_value),
             Move => self.mov_s(fd, fs_value),
             Negate => self.neg_s(fd, fs_value),
-            BranchConditional => Err(Exception::InterpreterFailure),
             RoundWord => self.round_w_s(fd, fs_value),
             TruncateWord => self.trunc_w_s(fd, fs_value),
             CeilingWord => self.ceil_w_s(fd, fs_value),
@@ -111,7 +113,6 @@ impl Interpreter {
             AbsoluteValue => self.abs_d(fd, fs_value),
             Move => self.mov_d(fd, fs_value),
             Negate => self.neg_d(fd, fs_value),
-            BranchConditional => Err(Exception::InterpreterFailure),
             RoundWord => self.round_w_d(fd, fs_value),
             TruncateWord => self.trunc_w_d(fd, fs_value),
             CeilingWord => self.ceil_w_d(fd, fs_value),
