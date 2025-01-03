@@ -19,7 +19,6 @@ kYouWin1: .asciiz " seconds\n"
 kRngId: .word 69
 kBadGuessSleepTime: .word 750
 kNoMatchSleepTime: .word 1250
-k2ToThe32nd: .double 4294967296
 k1000: .double 1000
 
 .text
@@ -116,12 +115,7 @@ main:
     subu $v0, $a0, $a2
     subu $v0, $v0, $t1
     mtc1 $v0, $f0
-    mtc1 $v1, $f1
     cvt.d.w $f20, $f0
-    ldc1 $f4, k2ToThe32nd
-    mul.d $f20, $f20, $f4
-    cvt.d.w $f4, $f1
-    add.d $f20, $f20, $f4
     ldc1 $f4, k1000
     div.d $f20, $f20, $f4
 
