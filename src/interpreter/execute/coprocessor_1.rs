@@ -9,7 +9,7 @@ impl Interpreter {
     /// Executes `instruction`, which must follow the "coprocessor 1" instruction format:
     ///
     /// ```text
-    /// 010001 00x0x xxxxx xxxxx xxxxx xxxxxx
+    /// 010001 x0x0x xxxxx xxxxx xxxxx xxxxxx
     /// opcode  fmt   $ft   $fd   $fs    fn
     /// ```
     ///
@@ -17,7 +17,7 @@ impl Interpreter {
     /// flag, `cc` is found in the field `$fd` as shown:
     ///
     /// ```text
-    /// 010001 00x0x xxxxx xxx 00 xxxxx 0xx00x
+    /// 010001 10x0x xxxxx xxx 00 xxxxx 0xx00x
     /// opcode  fmt   $ft  cc      $fs    fn
     /// ```
     ///
@@ -25,7 +25,7 @@ impl Interpreter {
     /// the condition can be found in the field `$ft` instead:
     ///
     /// ```text
-    /// 010001 00x0x xxx 0 x xxxxx xxxxx 11xxx0
+    /// 010001 10x0x xxx 0 x xxxxx xxxxx 11xxx0
     /// opcode  fmt  cc    c  $fd   $fs    fn
     /// ```
     pub fn execute_coprocessor_1(&mut self, instruction: Instruction) -> Result<(), Exception> {
@@ -42,7 +42,13 @@ impl Interpreter {
             Some(Single) => self.execute_coprocessor_1_single(ft, fs, fd, r#fn),
             Some(Double) => self.execute_coprocessor_1_double(ft, fs, fd, r#fn),
             Some(Word) => self.execute_coprocessor_1_word(fs, fd, r#fn),
-            None => Err(Exception::ReservedInstruction),
+            Some(SingleNoPrefix) if r#fn == Coprocessor1Fn::Add => {
+                self.mfc1(ft, self.registers.read_f32_from_fpu(fd)?)
+            }
+            Some(WordNoPrefix) if r#fn == Coprocessor1Fn::Add => {
+                self.mtc1(fd, self.registers.read_u32_from_cpu(ft)?)
+            }
+            _ => Err(Exception::ReservedInstruction),
         }
     }
 
@@ -425,5 +431,15 @@ impl Interpreter {
     fn c_le_d(&mut self, fd: u8, fs_value: f64, ft_value: f64) -> Result<(), Exception> {
         let cc = fields::cc_from_index(fd);
         self.registers.write_flag_to_fpu(cc, fs_value <= ft_value)
+    }
+
+    /// Stores `fd_value` in CPU register `rt`.
+    fn mfc1(&mut self, rt: u8, fd_value: f32) -> Result<(), Exception> {
+        self.registers.write_u32_to_cpu(rt, fd_value.to_bits())
+    }
+
+    /// Stores `rt_value` in FPU register `fd`.
+    fn mtc1(&mut self, fd: u8, rt_value: u32) -> Result<(), Exception> {
+        self.registers.write_u32_to_fpu(fd, rt_value)
     }
 }

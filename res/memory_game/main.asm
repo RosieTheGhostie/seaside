@@ -13,20 +13,27 @@ kAnsiClearScreen:
 kTableHeader: .asciiz "   0  1  2  3  4  5\n"
 kGetGuessPrompt: .asciiz "Flip a card (format like 'row column'): "
 kBadGuess: .asciiz "Invalid guess. Try again...\n"
-kYouWin: .asciiz "You win! :3\n"
+kYouWin0: .asciiz "You won! :3\nYour final time is "
+kYouWin1: .asciiz " seconds\n"
 
 kRngId: .word 69
 kBadGuessSleepTime: .word 750
 kNoMatchSleepTime: .word 1250
+k2ToThe32nd: .double 4294967296
+k1000: .double 1000
 
 .text
 main:
     main_prologue:
-        addiu $sp, $sp, -20
+        addiu $sp, $sp, -28
     main_endprologue:
 
     addu $a0, $0, $sp
     jal SetTable
+    addiu $v0, $0, 30
+    syscall
+    sw $a0, 20($sp)
+    sw $a1, 24($sp)
     addiu $s1, $0, 0 # open_guesses = 0
     main_for0:
         addiu $s0, $0, 0 # matches = 0
@@ -100,6 +107,24 @@ main:
         addiu $s1, $s1, 1
         j main_for0_check
     main_endfor0:
+    addiu $v0, $0, 30
+    syscall
+    lw $a2, 20($sp)
+    lw $a3, 24($sp)
+    subu $v1, $a1, $a3
+    sltu $t1, $a1, $v1
+    subu $v0, $a0, $a2
+    subu $v0, $v0, $t1
+    mtc1 $v0, $f0
+    mtc1 $v1, $f1
+    cvt.d.w $f20, $f0
+    ldc1 $f4, k2ToThe32nd
+    mul.d $f20, $f20, $f4
+    cvt.d.w $f4, $f1
+    add.d $f20, $f20, $f4
+    ldc1 $f4, k1000
+    div.d $f20, $f20, $f4
+
     addiu $v0, $0, 4
     la $a0, kAnsiClearScreen
     syscall
@@ -107,11 +132,17 @@ main:
     jal DisplayTable
     # TODO: maybe play a sound effect?
     addiu $v0, $0, 4
-    la $a0, kYouWin
+    la $a0, kYouWin0
+    syscall
+    addiu $v0, $0, 3
+    mov.d $f12, $f20
+    syscall
+    addiu $v0, $0, 4
+    la $a0, kYouWin1
     syscall
 
     main_epilogue:
-        addiu $sp, $sp, 20
+        addiu $sp, $sp, 28
         addiu $v0, $0, 10
         syscall
     main_endepliogue:
