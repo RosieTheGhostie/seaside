@@ -231,8 +231,8 @@ fn write_cpu_registers(register_file: &RegisterFile, f: &mut Formatter<'_>) -> F
 }
 
 fn write_fpu_registers(register_file: &RegisterFile, f: &mut Formatter<'_>) -> FmtResult {
-    for i in 0u8..14u8 {
-        let i0 = i * 2;
+    for i in 0u8..7u8 {
+        let i0 = i * 4;
         let i1 = i0 + 2;
         writeln!(
             f,
