@@ -13,7 +13,11 @@ kAnsiClearScreen:
 kTableHeader: .asciiz "   0  1  2  3  4  5\n"
 kGetGuessPrompt: .asciiz "Flip a card (format like 'row column'): "
 kBadGuess: .asciiz "Invalid guess. Try again...\n"
+kYouWin: .asciiz "You win! :3\n"
+
 kRngId: .word 69
+kBadGuessSleepTime: .word 750
+kNoMatchSleepTime: .word 1250
 
 .text
 main:
@@ -23,17 +27,87 @@ main:
 
     addu $a0, $0, $sp
     jal SetTable
+    addiu $s1, $0, 0 # open_guesses = 0
+    main_for0:
+        addiu $s0, $0, 0 # matches = 0
+    main_for0_check:
+        bge $s0, 9, main_endfor0
+    main_for0_body:
+        main_for0_body_if0:
+            blt $s1, 2, main_for0_body_endif0
+            lbu $s2, 18($sp)
+            lbu $s3, 19($sp)
+            addu $s2, $sp, $s2
+            addu $s3, $sp, $s3
+            lbu $s4, ($s2)
+            lbu $s5, ($s3)
+            main_for0_body_if0_if0:
+                bne $s4, $s5, main_for0_body_if0_else0
+                addiu $s0, $s0, 1
+                j main_for0_body_if0_endif0
+            main_for0_body_if0_else0:
+                # TODO: maybe play a sound effect?
+                addiu $v0, $0, 4
+                la $a0, kAnsiClearScreen
+                syscall
+                addu $a0, $0, $sp
+                jal DisplayTable
+                addiu $v0, $0, 32
+                lw $a0, kNoMatchSleepTime
+                syscall
+                andi $s4, $s4, 0xbf
+                andi $s5, $s5, 0xbf
+                sb $s4, ($s2)
+                sb $s5, ($s3)
+            main_for0_body_if0_endif0:
+            # TODO: maybe play a sound effect?
+            addiu $s1, $0, 0
+            j main_for0_check
+        main_for0_body_endif0:
+        addiu $v0, $0, 4
+        la $a0, kAnsiClearScreen
+        syscall
+        addu $a0, $0, $sp
+        jal DisplayTable
+        jal GetGuess
+        main_for0_body_if1:
+            bgez $v0, main_for0_body_endif1
+            addiu $v0, $0, 32
+            lw $a0, kBadGuessSleepTime
+            syscall
+            j main_for0_body_endif0
+        main_for0_body_endif1:
+        addu $a0, $0, $v0
+        addu $a1, $0, $v1
+        jal CoordinatesToIndex
+        addu $t0, $sp, $v0
+        lbu $t1, ($t0)
+        ori $t2, $t1, 0x40
+        main_for0_body_if2:
+            bne $t1, $t2, main_for0_body_endif2
+            addiu $v0, $0, 4
+            la $a0, kBadGuess
+            syscall
+            addiu $v0, $0, 32
+            lw $a0, kBadGuessSleepTime
+            syscall
+            j main_for0_body_endif0
+        main_for0_body_endif2:
+        sb $t2, ($t0)
+        addiu $t0, $sp, 18
+        addu $t0, $t0, $s1
+        sb $v0, ($t0)
+        addiu $s1, $s1, 1
+        j main_for0_check
+    main_endfor0:
+    addiu $v0, $0, 4
+    la $a0, kAnsiClearScreen
+    syscall
     addu $a0, $0, $sp
     jal DisplayTable
-    jal GetGuess
-    addu $a0, $0, $v0
-    addu $a1, $0, $v1
-    jal CoordinatesToIndex
-    addu $a0, $0, $v0
-    addiu $v0, $0, 1
-    syscall
-    addiu $v0, $0, 11
-    addiu $a0, $0, 10
+    # TODO: maybe play a sound effect?
+    addiu $v0, $0, 4
+    la $a0, kYouWin
     syscall
 
     main_epilogue:
@@ -109,8 +183,7 @@ DisplayTableRow:
     DisplayTableRow_for0:
         addiu $s2, $0, 0
     DisplayTableRow_for0_check:
-        addiu $at, $0, 6
-        bge $s2, $at, DisplayTableRow_endfor0
+        bge $s2, 6, DisplayTableRow_endfor0
     DisplayTableRow_for0_body:
         addu $t0, $s0, $s2
         lbu $a0, ($t0)
@@ -133,8 +206,7 @@ DisplayTableRow:
     DisplayTableRow_for1:
         addiu $s2, $0, 0
     DisplayTableRow_for1_check:
-        addiu $at, $0, 6
-        bge $s2, $at, DisplayTableRow_endfor1
+        bge $s2, 6, DisplayTableRow_endfor1
     DisplayTableRow_for1_body:
         addu $t0, $s0, $s2
         lbu $a0, ($t0)
@@ -154,8 +226,7 @@ DisplayTableRow:
     DisplayTableRow_for2:
         addiu $s2, $0, 0
     DisplayTableRow_for2_check:
-        addiu $at, $0, 6
-        bge $s2, $at, DisplayTableRow_endfor2
+        bge $s2, 6, DisplayTableRow_endfor2
     DisplayTableRow_for2_body:
         addu $t0, $s0, $s2
         lbu $a0, ($t0)
@@ -340,19 +411,15 @@ GetGuess:
     lbu $t0, 12($sp)
     addiu $s0, $t0, -48
     bltz $s0, GetGuess_badguess
-    addiu $t1, $0, 3
-    bge $s0, $t1, GetGuess_badguess
+    bge $s0, 3, GetGuess_badguess
     lbu $t0, 13($sp)
-    addiu $t1, $0, 32
-    bne $t0, $t1, GetGuess_badguess
+    bne $t0, 32, GetGuess_badguess
     lbu $t0, 14($sp)
     addiu $s1, $t0, -48
     bltz $s1, GetGuess_badguess
-    addiu $t1, $0, 6
-    bge $s1, $t1, GetGuess_badguess
+    bge $s1, 6, GetGuess_badguess
     lbu $t0, 15($sp)
-    addiu $t1, $0, 10
-    bne $t0, $t1, GetGuess_badguess
+    bne $t0, 10, GetGuess_badguess
     addu $v0, $0, $s0
     addu $v1, $0, $s1
     j GetGuess_epilogue
