@@ -54,7 +54,7 @@ impl Interpreter {
             LoadWordCoprocessor1 => self.lwc1(rt, rs_value, imm),
             LoadDoubleCoprocessor1 => self.ldc1(rt, rs_value, imm),
             StoreWordCoprocessor1 => self.swc1(rt, rs_value, imm),
-            StoreDoubleCoprocessor1 => self.swc1(rt, rs_value, imm),
+            StoreDoubleCoprocessor1 => self.sdc1(rt, rs_value, imm),
             _ => Err(Exception::InterpreterFailure),
         }
     }

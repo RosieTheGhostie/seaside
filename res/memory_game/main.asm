@@ -10,16 +10,31 @@ kAnsiClearScreen:
     .ascii "[2J"
     .byte 0x1b
     .asciiz "[H"
+kTryToBeat0: .asciiz "Try to beat "
+kTryToBeat1: .asciiz "'s time of "
 kTableHeader: .asciiz "   0  1  2  3  4  5\n"
 kGetGuessPrompt: .asciiz "Flip a card (format like 'row column'): "
 kBadGuess: .asciiz "Invalid guess. Try again...\n"
-kYouWin0: .asciiz "You won! :3\nYour final time is "
-kYouWin1: .asciiz " second(s)\n"
+kOpenFileError: .asciiz "Failed to open high score file\n"
+kReadFileError: .asciiz "Failed to read high score\n"
+kWriteFileError: .asciiz "Failed to write high score\n"
+kYouWon: .asciiz "You won! :3\n"
+kReportTime: .asciiz "Your final time was "
+kSeconds: .asciiz " second(s)!\n"
+kNewRecord: .asciiz "You just set a new record of "
+kNamePrompt: .asciiz "What's your name? (max of 22 chars): "
 
+kHighScorePath: .asciiz "high_score.dat"
 kRngId: .word 69
+kIntroSleepTime: .word 3000
 kBadGuessSleepTime: .word 750
 kNoMatchSleepTime: .word 1250
 k1000: .double 1000
+
+.align 3
+kRecordHolder: .space 24
+kNewRecordHolder: .space 24
+kHighScore: .space 8
 
 .text
 main:
@@ -29,6 +44,25 @@ main:
 
     addu $a0, $0, $sp
     jal SetTable
+    jal GetHighScore
+    addiu $v0, $0, 4
+    la $a0, kAnsiClearScreen
+    syscall
+    la $a0, kTryToBeat0
+    syscall
+    la $a0, kRecordHolder
+    syscall
+    la $a0, kTryToBeat1
+    syscall
+    addiu $v0, $0, 3
+    ldc1 $f12, kHighScore
+    syscall
+    addiu $v0, $0, 4
+    la $a0, kSeconds
+    syscall
+    addiu $v0, $0, 32
+    lw $a0, kIntroSleepTime
+    syscall
     addiu $v0, $0, 30
     syscall
     sw $a0, 20($sp)
@@ -126,14 +160,35 @@ main:
     jal DisplayTable
     # TODO: maybe play a sound effect?
     addiu $v0, $0, 4
-    la $a0, kYouWin0
+    la $a0, kYouWon
     syscall
-    addiu $v0, $0, 3
-    mov.d $f12, $f20
-    syscall
-    addiu $v0, $0, 4
-    la $a0, kYouWin1
-    syscall
+    main_if0:
+        ldc1 $f4, kHighScore
+        c.lt.d $f20, $f4
+        bc1f main_else0
+        sdc1 $f20, kHighScore
+        la $a0, kNewRecord
+        syscall
+        addiu $v0, $0, 3
+        mov.d $f12, $f20
+        syscall
+        addiu $v0, $0, 4
+        la $a0, kSeconds
+        syscall
+        la $a0, kNewRecordHolder
+        jal GetName
+        jal SetHighScore
+        j main_endif0
+    main_else0:
+        la $a0, kReportTime
+        syscall
+        addiu $v0, $0, 3
+        mov.d $f12, $f20
+        syscall
+        addiu $v0, $0, 4
+        la $a0, kSeconds
+        syscall
+    main_endif0:
 
     main_epilogue:
         addiu $sp, $sp, 28
@@ -464,6 +519,107 @@ GetGuess:
         jr $ra
     GetGuess_endepilogue:
 
+GetHighScore:
+    GetHighScore_prologue:
+        addiu $sp, $sp, -4
+        sw $s0, ($sp)
+    GetHighScore_endprologue:
+
+    addiu $v0, $0, 13
+    la $a0, kHighScorePath
+    addiu $a1, $0, 0 # read-only
+    syscall
+    bltz $v0, ThrowOpenFileError
+    addu $s0, $0, $v0
+    addiu $v0, $0, 14
+    addu $a0, $0, $s0
+    la $a1, kRecordHolder
+    addiu $a2, $0, 24
+    syscall
+    bne $v0, $a2, ThrowReadFileError
+    addiu $v0, $0, 14
+    la $a1, kHighScore
+    addiu $a2, $0, 8
+    syscall
+    bne $v0, $a2, ThrowReadFileError
+    addiu $v0, $0, 16
+    syscall
+
+    GetHighScore_epilogue:
+        lw $s0, ($sp)
+        addiu $sp, $sp, 4
+        jr $ra
+    GetHighScore_endepilogue:
+
+GetName:
+    GetName_prologue:
+        addiu $sp, $sp, -4
+        sw $s0, ($sp)
+        addu $s0, $0, $a0
+    GetName_endprologue:
+
+    addiu $v0, $0, 4
+    la $a0, kNamePrompt
+    syscall
+    addiu $v0, $0, 8
+    addu $a0, $0, $s0
+    addiu $a1, $0, 24
+    syscall
+    addiu $t9, $0, 10
+    GetName_for0:
+        addiu $t0, $s0, 23
+    GetName_for0_check:
+        blt $t0, $s0, GetName_endfor0
+    GetName_for0_body:
+        lbu $t1, ($t0)
+        GetName_for0_body_if0:
+            bne $t1, $t9, GetName_for0_body_endif0
+            sb $0, ($t0)
+            j GetName_endfor0
+        GetName_for0_body_endif0:
+    GetName_for0_inc:
+        addiu $t0, $t0, -1
+        j GetName_for0_check
+    GetName_endfor0:
+
+    GetName_epilogue:
+        lw $s0, ($sp)
+        addiu $sp, $sp, 4
+        jr $ra
+    GetName_endepilogue:
+
+SetHighScore:
+    SetHighScore_prologue:
+        addiu $sp, $sp, -4
+        sw $s0, ($sp)
+    SetHighScore_endprologue:
+
+    addiu $v0, $0, 13
+    la $a0, kHighScorePath
+    addiu $a1, $0, 1 # write
+    syscall
+    bltz $v0, ThrowOpenFileError
+    addu $s0, $0, $v0
+    addiu $v0, $0, 15
+    addu $a0, $0, $s0
+    la $a1, kNewRecordHolder
+    addiu $a2, $0, 24
+    syscall
+    bne $v0, $a2, ThrowWriteFileError
+    addiu $v0, $0, 15
+    la $a1, kHighScore
+    addiu $a2, $0, 8
+    syscall
+    bne $v0, $a2, ThrowWriteFileError
+    addiu $v0, $0, 16
+    syscall
+
+    SetHighScore_epilogue:
+        lw $s0, ($sp)
+        addiu $sp, $sp, 4
+        jr $ra
+    SetHighScore_endepilogue:
+
 SetTable:
     SetTable_prologue:
         addiu $sp, $sp, -4
@@ -524,3 +680,45 @@ SetTable:
         addiu $sp, $sp, 4
         jr $ra
     SetTable_endepilogue:
+
+ThrowOpenFileError:
+    ThrowOpenFileError_prologue:
+    ThrowOpenFileError_endprologue:
+
+    addiu $v0, $0, 4
+    la $a0, kOpenFileError
+    syscall
+
+    ThrowOpenFileError_epilogue:
+        addiu $v0, $0, 17
+        addiu $a0, $0, 1
+        syscall
+    ThrowOpenFileError_endepilogue:
+
+ThrowReadFileError:
+    ThrowReadFileError_prologue:
+    ThrowReadFileError_endprologue:
+
+    addiu $v0, $0, 4
+    la $a0, kReadFileError
+    syscall
+
+    ThrowReadFileError_epilogue:
+        addiu $v0, $0, 17
+        addiu $a0, $0, 1
+        syscall
+    ThrowReadFileError_endepilogue:
+
+ThrowWriteFileError:
+    ThrowWriteFileError_prologue:
+    ThrowWriteFileError_endprologue:
+
+    addiu $v0, $0, 4
+    la $a0, kWriteFileError
+    syscall
+
+    ThrowWriteFileError_epilogue:
+        addiu $v0, $0, 17
+        addiu $a0, $0, 1
+        syscall
+    ThrowWriteFileError_endepilogue:

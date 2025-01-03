@@ -255,9 +255,7 @@ impl Interpreter {
     fn write_file(&mut self) -> Result<(), Exception> {
         let fd = self.registers.read_u32_from_cpu(register::A0)?;
         let buffer_address = self.registers.read_u32_from_cpu(register::A1)?;
-        let buffer = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
-            .map_err(|_| Exception::SyscallFailure)?
-            .to_bytes();
+        let buffer = self.memory.get_slice(buffer_address)?;
         let max_chars = usize::min(
             self.registers.read_u32_from_cpu(register::A2)? as usize,
             buffer.len(),
