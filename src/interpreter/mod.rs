@@ -72,12 +72,14 @@ impl Interpreter {
     pub fn run(&mut self) -> Result<(), Exception> {
         while !self.memory.pc_past_end(self.pc) && self.exit_code.is_none() {
             if let Err(exception) = self.step() {
+                let _ = self.flush_stdout_if_necessary();
                 match self.memory.get_exception_handler() {
                     Some(exception_handler) => self.trigger_exception(exception, exception_handler),
                     None => return Err(exception),
                 }
             };
         }
+        let _ = self.flush_stdout_if_necessary();
         Ok(())
     }
 

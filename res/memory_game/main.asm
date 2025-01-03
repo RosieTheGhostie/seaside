@@ -5,6 +5,7 @@ kFlippedOver:
 kAnsiReset:
 	.byte 0x1b
 	.asciiz "[0m"
+kTableHeader: .asciiz "   0  1  2  3  4  5\n"
 kRngId: .word 69
 
 .text
@@ -15,6 +16,9 @@ main:
 
     addu $a0, $0, $sp
     jal SetTable
+    lbu $t0, ($sp)
+    ori $t0, $t0, 0x40
+    sb $t0, ($sp)
     addu $a0, $0, $sp
     jal DisplayTable
 
@@ -32,17 +36,27 @@ DisplayTable:
         addu $s0, $0, $a0
     DisplayTable_endprologue:
 
+    addiu $v0, $0, 4
+    la $a0, kTableHeader
+    syscall
+    addu $a0, $0, $s0
+    addiu $a1, $0, 0
     jal DisplayTableRow
     addiu $v0, $0, 11
     addiu $a0, $0, 10
     syscall
     addiu $a0, $s0, 6
+    addiu $a1, $0, 1
     jal DisplayTableRow
     addiu $v0, $0, 11
     addiu $a0, $0, 10
     syscall
     addiu $a0, $s0, 12
+    addiu $a1, $0, 2
     jal DisplayTableRow
+    addiu $v0, $0, 11
+    addiu $a0, $0, 10
+    syscall
 
     DisplayTable_epilogue:
         lw $s0, 4($sp)
@@ -53,75 +67,92 @@ DisplayTable:
 
 DisplayTableRow:
     DisplayTableRow_prologue:
-        addiu $sp, $sp, -16
+        addiu $sp, $sp, -20
         sw $ra, ($sp)
         sw $s0, 4($sp)
         sw $s1, 8($sp)
+        sw $s2, 12($sp)
         addu $s0, $0, $a0
+        addu $s1, $0, $a1
     DisplayTableRow_endprologue:
 
+    addiu $v0, $0, 11
+    addiu $a0, $0, 32
+    syscall
+    syscall
     DisplayTableRow_for0:
-        addiu $s1, $0, 0
+        addiu $s2, $0, 0
     DisplayTableRow_for0_check:
         addiu $at, $0, 6
-        bge $s1, $at, DisplayTableRow_endfor0
+        bge $s2, $at, DisplayTableRow_endfor0
     DisplayTableRow_for0_body:
-        addu $t0, $s0, $s1
+        addu $t0, $s0, $s2
         lbu $a0, ($t0)
-        sw $s1, 12($sp)
+        sw $s2, 16($sp)
         jal DisplayCardTop
-        lw $s1, 12($sp)
+        lw $s2, 16($sp)
     DisplayTableRow_for0_inc:
-        addiu $s1, $s1, 1
+        addiu $s2, $s2, 1
         j DisplayTableRow_for0_check
     DisplayTableRow_endfor0:
     addiu $v0, $0, 11
     addiu $a0, $0, 10
     syscall
+    addiu $v0, $0, 1
+    addu $a0, $0, $s1
+    syscall
+    addiu $v0, $0, 11
+    addiu $a0, $0, 32
+    syscall
     DisplayTableRow_for1:
-        addiu $s1, $0, 0
+        addiu $s2, $0, 0
     DisplayTableRow_for1_check:
         addiu $at, $0, 6
-        bge $s1, $at, DisplayTableRow_endfor1
+        bge $s2, $at, DisplayTableRow_endfor1
     DisplayTableRow_for1_body:
-        addu $t0, $s0, $s1
+        addu $t0, $s0, $s2
         lbu $a0, ($t0)
-        sw $s1, 12($sp)
+        sw $s2, 16($sp)
         jal DisplayCardMiddle
-        lw $s1, 12($sp)
+        lw $s2, 16($sp)
     DisplayTableRow_for1_inc:
-        addiu $s1, $s1, 1
+        addiu $s2, $s2, 1
         j DisplayTableRow_for1_check
     DisplayTableRow_endfor1:
     addiu $v0, $0, 11
     addiu $a0, $0, 10
     syscall
+    addiu $a0, $0, 32
+    syscall
+    syscall
     DisplayTableRow_for2:
-        addiu $s1, $0, 0
+        addiu $s2, $0, 0
     DisplayTableRow_for2_check:
         addiu $at, $0, 6
-        bge $s1, $at, DisplayTableRow_endfor2
+        bge $s2, $at, DisplayTableRow_endfor2
     DisplayTableRow_for2_body:
-        addu $t0, $s0, $s1
+        addu $t0, $s0, $s2
         lbu $a0, ($t0)
-        sw $s1, 12($sp)
+        sw $s2, 16($sp)
         jal DisplayCardBottom
-        lw $s1, 12($sp)
+        lw $s2, 16($sp)
     DisplayTableRow_for2_inc:
-        addiu $s1, $s1, 1
+        addiu $s2, $s2, 1
         j DisplayTableRow_for2_check
     DisplayTableRow_endfor2:
 
     DisplayTableRow_epilogue:
+        lw $s2, 12($sp)
         lw $s1, 8($sp)
         lw $s0, 4($sp)
         lw $ra, ($sp)
-        addiu $sp, $sp, 16
+        addiu $sp, $sp, 20
         jr $ra
     DisplayTableRow_endepilogue:
 
 DisplayCardTop:
     DisplayCardTop_prologue:
+    	addiu $sp, $sp, -8
     DisplayCardTop_endprologue:
 
     andi $t0, $a0, 0x80 # not_blank
@@ -163,6 +194,7 @@ DisplayCardTop:
     syscall
 
     DisplayCardTop_epilogue:
+    	addiu $sp, $sp, 8
         jr $ra
     DisplayCardTop_endepilogue:
 
@@ -218,6 +250,7 @@ DisplayCardMiddle:
 
 DisplayCardBottom:
     DisplayCardBottom_prologue:
+    	addiu $sp, $sp, -8
     DisplayCardBottom_endprologue:
 
     andi $t0, $a0, 0x80 # not_blank
@@ -259,6 +292,7 @@ DisplayCardBottom:
     syscall
 
     DisplayCardBottom_epilogue:
+    	addiu $sp, $sp, 8
         jr $ra
     DisplayCardBottom_endepilogue:
 
