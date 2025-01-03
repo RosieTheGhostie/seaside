@@ -10,6 +10,7 @@ use clap::Parser;
 use cmd_args::{CmdArgs, Commands};
 use config::Config;
 use minimal_logging::macros::{fatalln, grayln, warnln};
+use std::env::current_exe;
 
 fn main() {
     let args: CmdArgs = CmdArgs::parse();
@@ -31,9 +32,23 @@ fn main() {
             }),
             Err(error) => Err(error),
         },
+        Commands::ExePath => print_exe_path(),
         Commands::Experiment => experimental_code(),
     } {
         fatalln!("{error}");
+    }
+}
+
+fn print_exe_path() -> Result<(), engine::Error> {
+    match current_exe() {
+        Ok(path) => {
+            println!("{}", path.display());
+            Ok(())
+        }
+        Err(_) => Err(engine::Error::new(
+            engine::ErrorKind::ExternalFailure,
+            "'std::env::current_exe' failed",
+        )),
     }
 }
 

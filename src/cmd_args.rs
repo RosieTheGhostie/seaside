@@ -17,6 +17,8 @@ pub struct CmdArgs {
 pub enum Commands {
     /// Runs an assembled MIPS program in the specified project directory.
     Run { directory: PathBuf },
+    /// Prints the file path of the `seaside` executable.
+    ExePath,
     /// Runs experimental code.
     Experiment,
 }
