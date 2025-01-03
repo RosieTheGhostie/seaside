@@ -5,7 +5,14 @@ kFlippedOver:
 kAnsiReset:
 	.byte 0x1b
 	.asciiz "[0m"
+kAnsiClearScreen:
+    .byte 0x1b
+    .ascii "[2J"
+    .byte 0x1b
+    .asciiz "[H"
 kTableHeader: .asciiz "   0  1  2  3  4  5\n"
+kGetGuessPrompt: .asciiz "Flip a card (format like 'row column'): "
+kBadGuess: .asciiz "Invalid guess. Try again...\n"
 kRngId: .word 69
 
 .text
@@ -16,17 +23,36 @@ main:
 
     addu $a0, $0, $sp
     jal SetTable
-    lbu $t0, ($sp)
-    ori $t0, $t0, 0x40
-    sb $t0, ($sp)
     addu $a0, $0, $sp
     jal DisplayTable
+    jal GetGuess
+    addu $a0, $0, $v0
+    addu $a1, $0, $v1
+    jal CoordinatesToIndex
+    addu $a0, $0, $v0
+    addiu $v0, $0, 1
+    syscall
+    addiu $v0, $0, 11
+    addiu $a0, $0, 10
+    syscall
 
     main_epilogue:
         addiu $sp, $sp, 20
         addiu $v0, $0, 10
         syscall
     main_endepliogue:
+
+CoordinatesToIndex:
+    CoordinatesToIndex_prologue:
+    CoordinatesToIndex_endprologue:
+
+    addiu $at, $0, 6
+    mul $v0, $a0, $at
+    addu $v0, $v0, $a1
+
+    CoordinatesToIndex_epilogue:
+        jr $ra
+    CoordinatesToIndex_endepilogue:
 
 DisplayTable:
     DisplayTable_prologue:
@@ -295,6 +321,56 @@ DisplayCardBottom:
     	addiu $sp, $sp, 8
         jr $ra
     DisplayCardBottom_endepilogue:
+
+GetGuess:
+    GetGuess_prologue:
+        addiu $sp, $sp, -28
+        sw $ra, ($sp)
+        sw $s0, 4($sp)
+        sw $s1, 8($sp)
+    GetGuess_endprologue:
+
+    addiu $v0, $0, 4
+    la $a0, kGetGuessPrompt
+    syscall
+    addiu $v0, $0, 8
+    addiu $a0, $sp, 12
+    addiu $a1, $0, 16
+    syscall
+    lbu $t0, 12($sp)
+    addiu $s0, $t0, -48
+    bltz $s0, GetGuess_badguess
+    addiu $t1, $0, 3
+    bge $s0, $t1, GetGuess_badguess
+    lbu $t0, 13($sp)
+    addiu $t1, $0, 32
+    bne $t0, $t1, GetGuess_badguess
+    lbu $t0, 14($sp)
+    addiu $s1, $t0, -48
+    bltz $s1, GetGuess_badguess
+    addiu $t1, $0, 6
+    bge $s1, $t1, GetGuess_badguess
+    lbu $t0, 15($sp)
+    addiu $t1, $0, 10
+    bne $t0, $t1, GetGuess_badguess
+    addu $v0, $0, $s0
+    addu $v1, $0, $s1
+    j GetGuess_epilogue
+
+    GetGuess_badguess:
+        addiu $v0, $0, 4
+        la $a0, kBadGuess
+        syscall
+        addiu $v0, $0, -1
+        addiu $v1, $0, -1
+
+    GetGuess_epilogue:
+        lw $s1, 8($sp)
+        lw $s0, 4($sp)
+        lw $ra, ($sp)
+        addiu $sp, $sp, 28
+        jr $ra
+    GetGuess_endepilogue:
 
 SetTable:
     SetTable_prologue:
