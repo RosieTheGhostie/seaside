@@ -154,7 +154,7 @@ impl DataRegion {
 
     fn calculate_index(&self, address: Address, alignment: u32) -> Option<usize> {
         if is_aligned(address, alignment) && self.contains(address) {
-            Some(unsafe { self.calculate_index_unchecked(address) })
+            Some(self.calculate_index_unchecked(address))
         } else {
             None
         }
@@ -162,13 +162,13 @@ impl DataRegion {
 
     fn calculate_index_unaligned(&self, address: Address) -> Option<usize> {
         if self.contains(address) {
-            Some(unsafe { self.calculate_index_unchecked(address) })
+            Some(self.calculate_index_unchecked(address))
         } else {
             None
         }
     }
 
-    unsafe fn calculate_index_unchecked(&self, address: Address) -> usize {
-        u32::unchecked_sub(address, self.addresses.start) as usize
+    fn calculate_index_unchecked(&self, address: Address) -> usize {
+        (address - self.addresses.start) as usize
     }
 }

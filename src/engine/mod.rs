@@ -15,23 +15,18 @@ use std::{
 use walkdir::WalkDir;
 
 pub fn get_config(args: &CmdArgs) -> Result<Config, Error> {
-    let config_path = match &args.config {
-        Some(path) => path,
-        None => &find_seaside_toml()?,
-    };
-    let file_contents = match read_to_string(config_path) {
-        Ok(contents) => contents,
-        Err(_) => {
-            return Err(Error::new(
-                ErrorKind::ExternalFailure,
-                "failed to read config file",
-            ))
-        }
-    };
-    let config: Config = match toml::from_str(&file_contents) {
-        Ok(config) => config,
-        Err(error) => return Err(Error::new(ErrorKind::InvalidConfig, error)),
-    };
+    let config_path: &PathBuf;
+    let stupid_binding: PathBuf;
+    if let Some(path) = &args.config {
+        config_path = path;
+    } else {
+        stupid_binding = find_seaside_toml()?;
+        config_path = &stupid_binding;
+    }
+    let file_contents = read_to_string(config_path)
+        .map_err(|_| Error::new(ErrorKind::ExternalFailure, "failed to read config file"))?;
+    let config: Config = toml::from_str(&file_contents)
+        .map_err(|error| Error::new(ErrorKind::InvalidConfig, error))?;
     config.validate().map(|_| config)
 }
 

@@ -139,8 +139,4 @@ impl TextRegion {
             None
         }
     }
-
-    unsafe fn calculate_index_unchecked(&self, address: Address) -> usize {
-        u32::unchecked_sub(address >> 2, self.addresses.start) as usize
-    }
 }
