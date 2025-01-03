@@ -122,7 +122,7 @@ impl_deserialize!(File);
 impl_bitflags_has_basic_presets!(File, Self::everything());
 impl_serialize!(System);
 impl_deserialize!(System);
-impl_bitflags_has_basic_presets!(System, Self::Exit | Self::Exit2 | Self::Sleep);
+impl_bitflags_has_basic_presets!(System, Self::Exit | Self::Exit2 | Self::Sleep | Self::Time);
 impl_serialize!(Random);
 impl_deserialize!(Random);
 impl_bitflags_has_basic_presets!(Random, Self::everything());

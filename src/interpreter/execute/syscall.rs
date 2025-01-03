@@ -287,7 +287,7 @@ impl Interpreter {
 
     fn time(&mut self) -> Result<(), Exception> {
         // NOTE: Byte order shenanigans will probably mess things up.
-        let system_time: u64 = match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
+        let system_time: u64 = match SystemTime::UNIX_EPOCH.elapsed() {
             Ok(duration) => duration.as_millis() as u64,
             Err(_) => return Err(Exception::SyscallFailure),
         };

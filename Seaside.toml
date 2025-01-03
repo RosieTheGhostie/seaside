@@ -15,10 +15,10 @@ directives = "recommended"
 [features.syscalls]
 print = "all"
 read = "all"
-file = "recommended"
-system = "recommended"
+file = "all"
+system = "all"
 random = "all"
-dialog = "none"
+dialog = "all"
 
 [memory_map]
 exception_handler = 0x80000180
