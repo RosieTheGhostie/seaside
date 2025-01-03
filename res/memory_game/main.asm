@@ -14,7 +14,7 @@ kTableHeader: .asciiz "   0  1  2  3  4  5\n"
 kGetGuessPrompt: .asciiz "Flip a card (format like 'row column'): "
 kBadGuess: .asciiz "Invalid guess. Try again...\n"
 kYouWin0: .asciiz "You won! :3\nYour final time is "
-kYouWin1: .asciiz " seconds\n"
+kYouWin1: .asciiz " second(s)\n"
 
 kRngId: .word 69
 kBadGuessSleepTime: .word 750
