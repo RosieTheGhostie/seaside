@@ -50,6 +50,59 @@ The other major motivation for making `seaside` is that I, Rose Thorne, needed a
 - [ ] Enable/disable individual system calls and directives
 - [ ] + more!!!
 
+## Usage
+
+When running a program, the `seaside` engine expects you to provide a directory with the following files:
+
+- `text`: MIPS machine code
+- `extern` (optional): binary data
+- `data` (optional): binary data
+- `ktext` (optional): MIPS machine code
+- `kdata` (optional): binary data
+
+Each of these files directly corresponds to their respective segments in the MIPS assembly code.
+
+Seeing as how there is currently no assembler built into `seaside`, you'll likely want to keep a tool like MARS lying around to assemble and dump the necessary segments. MARS only supports dumping `.text` and `.data`, though, so other segments might need to be dumped by hand...
+
 ## Installation
 
-Seeing as how the project is still in its infancy, there is no release available yet. You can compile the code yourself with `cargo`, but I won't make an effort to write a proper guide until later.
+### Prerequisites
+
+As with any other Rust app, you'll need `cargo` to compile it. I won't go into detail on how to install that here, but you can find some information about it [here](https://doc.rust-lang.org/cargo/getting-started/installation.html).
+
+Other than that, `seaside` shouldn't need anything else to be installed on your computer.
+
+### Compilation
+
+1. Navigate to `seaside`'s root directory. This is the directory containing `Cargo.toml`.
+2. In your terminal/command prompt of choice, enter the following command:
+    ```bash
+    cargo build --release
+    ```
+3. Sit back and watch the Rust compiler do its magic.
+
+At this point, you should find the `seaside` executable in `./target/release`. You may delete all other files in `./target` if you wish.
+
+## Post-Installation
+
+Although `seaside` will technically work now, there are some things I would recommend doing to get the best experience.
+
+### Adding `seaside` to the System Path
+
+To avoid typing out the full executable path every time you want to run `seaside`, you can add it to your system path. This process will vary wildly by operating system, so I won't attempt to describe it here.
+
+Regardless of your OS, the directory you'll append to your system path will be the parent of the `seaside` executable. The easiest way to find this is to run the following command from the `seaside` root directory:
+
+```bash
+cargo run -- exe-path
+```
+
+This will print the absolute path of the executable. Simply remove the executable from the end of that path to get the parent's path.
+
+### Configuration
+
+`seaside` has extensive configuration options, as described [above](#configuration-mostly-implemented). These are designed to mimic MARS' default settings out of the box, but you are welcome to change them however you see fit.
+
+If `seaside` is ran in a directory with a file named `Seaside.toml`, that file will be used to set up the engine. Otherwise, it will attempt to find `Seaside.toml` in its own root directory. For this reason, you should never move or delete the configuration file shipped with `seaside`.
+
+I haven't had a chance to thoroughly document `Seaside.toml`, so you'll mostly have to play it by ear; however, a savvy Rust developer should be able to comb through the [`config`](src/config/mod.rs) module and understand what's going on. Expect more accessible documentation within the next few releases.
