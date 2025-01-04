@@ -8,11 +8,10 @@ use crate::{
     interpreter::Interpreter,
 };
 use std::{
-    env::set_current_dir,
+    env::{current_exe, set_current_dir},
     fs::read_to_string,
     path::{Path, PathBuf},
 };
-use walkdir::WalkDir;
 
 pub fn get_config(args: &CmdArgs) -> Result<Config, Error> {
     let config_path: &PathBuf;
@@ -77,19 +76,31 @@ pub fn run(interpreter: &mut Interpreter) -> Result<Option<u8>, Error> {
 }
 
 fn find_seaside_toml() -> Result<PathBuf, Error> {
-    for entry in WalkDir::new(".")
-        .follow_links(true)
-        .into_iter()
-        .filter_map(|entry| entry.ok())
-    {
-        if entry.file_name() == "Seaside.toml" {
-            return Ok(entry.into_path());
-        }
+    let path = PathBuf::from("Seaside.toml");
+    if path.exists() {
+        return Ok(path);
     }
-    Err(Error::new(
-        ErrorKind::NotFound,
-        "couldn't find `Seaside.toml`",
-    ))
+    match current_exe()
+        .map_err(|_| Error::new(ErrorKind::ExternalFailure, "'std::env::current_exe' failed"))?
+        .ancestors()
+        .nth(3)
+    {
+        Some(seaside_root) => {
+            let path = seaside_root.join(path);
+            if path.exists() {
+                Ok(path)
+            } else {
+                Err(Error::new(
+                    ErrorKind::NotFound,
+                    "couldn't find `Seaside.toml`",
+                ))
+            }
+        }
+        None => Err(Error::new(
+            ErrorKind::NotFound,
+            "couldn't find seaside's root directory",
+        )),
+    }
 }
 
 fn get_file(directory: &Path, name: &str) -> Option<PathBuf> {

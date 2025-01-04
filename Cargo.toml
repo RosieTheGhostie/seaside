@@ -12,7 +12,6 @@ num-traits = "0.2"
 rand = "0.8"
 semver = "1.0"
 toml = "0.8"
-walkdir = "2.5"
 
 [dependencies.clap]
 version = "4.5"
