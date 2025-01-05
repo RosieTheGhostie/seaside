@@ -4,6 +4,14 @@ version = "1.0.2"
 authors = ["RosieTheGhostie"]
 edition = "2021"
 
+[profile.release]
+opt-level = 3
+debug = false
+strip = true
+debug-assertions = false
+overflow-checks = true
+incremental = true
+
 [dependencies]
 bitflags = "2.6"
 convert_case = "0.6"
