@@ -105,4 +105,4 @@ This will print the absolute path of the executable. Simply remove the executabl
 
 If `seaside` is ran in a directory with a file named `Seaside.toml`, that file will be used to set up the engine. Otherwise, it will attempt to find `Seaside.toml` in its own root directory. For this reason, you should never move or delete the configuration file shipped with `seaside`.
 
-I haven't had a chance to thoroughly document `Seaside.toml`, so you'll mostly have to play it by ear; however, a savvy Rust developer should be able to comb through the [`config`](src/config/mod.rs) module and understand what's going on. Expect more accessible documentation within the next few releases.
+Extensive documentation of the available configuration options can be found [here](https://github.com/RosieTheGhostie/seaside/wiki/Configuration-Manual).
