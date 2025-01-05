@@ -1,6 +1,7 @@
 use super::super::{
     bitflags_addons::{impl_deserialize, impl_serialize},
     presets::{impl_bitflags_has_basic_presets, maybe_using_preset},
+    primitive_defaults::r#true,
 };
 use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
@@ -9,6 +10,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 pub struct AssemblerOptions {
     /// Allow use of pseudo-instructions and formats.
+    #[serde(default = "r#true")]
     pub pseudo_instructions: bool,
     /// Which special directives to allow.
     #[serde(deserialize_with = "maybe_using_preset")]

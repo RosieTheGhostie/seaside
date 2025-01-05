@@ -7,6 +7,7 @@ pub mod validate;
 
 mod bitflags_addons;
 mod presets;
+mod primitive_defaults;
 mod version;
 
 pub use endian::Endian;
@@ -26,11 +27,13 @@ use version::VersionComparison;
 pub struct Config {
     #[serde(with = "version")]
     pub version: Version,
-    #[serde(alias = "byte_order")]
+    #[serde(default, alias = "byte_order")]
     pub endian: Endian,
+    #[serde(default = "primitive_defaults::r#true")]
     pub project_directory_is_cwd: bool,
     pub features: Features,
     pub memory_map: MemoryMap,
+    #[serde(default)]
     pub register_defaults: RegisterDefaults,
 }
 

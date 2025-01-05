@@ -18,7 +18,7 @@ use traits::{Contains, Overlapping};
 /// Maps various memory regions to [`AddressRange`]s.
 ///
 /// This information is crucial for initializing the
-/// [`Interpreter`][crate::engine::interpreter::Interpreter].
+/// [`Interpreter`][crate::interpreter::Interpreter].
 #[derive(Serialize, Deserialize)]
 pub struct MemoryMap {
     pub user_space: AddressRange,
