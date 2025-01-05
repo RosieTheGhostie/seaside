@@ -53,6 +53,16 @@ impl Interpreter {
             RAND_INT_RANGE => self.rand_int_range(),
             RAND_FLOAT => self.rand_float(),
             RAND_DOUBLE => self.rand_double(),
+            CONFIRM_DIALOG => self.confirm_dialog(),
+            INPUT_DIALOG_INT => self.input_dialog_int(),
+            INPUT_DIALOG_FLOAT => self.input_dialog_float(),
+            INPUT_DIALOG_DOUBLE => self.input_dialog_double(),
+            INPUT_DIALOG_STRING => self.input_dialog_string(),
+            MESSAGE_DIALOG => self.message_dialog(),
+            MESSAGE_DIALOG_INT => self.message_dialog_int(),
+            MESSAGE_DIALOG_FLOAT => self.message_dialog_float(),
+            MESSAGE_DIALOG_DOUBLE => self.message_dialog_double(),
+            MESSAGE_DIALOG_STRING => self.message_dialog_string(),
             _ => Err(Exception::SyscallFailure),
         }
     }
@@ -140,28 +150,29 @@ impl Interpreter {
             .map_err(|_| Exception::SyscallFailure)?;
         let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let buffer = self.memory.get_slice_mut(buffer_address)?;
-        let max_chars = usize::min(
+        let max_bytes = usize::min(
             self.registers.read_u32_from_cpu(register::A1)? as usize,
             buffer.len(),
         );
-        if max_chars == 0 {
+        if max_bytes == 0 {
             return Ok(());
         }
-        let mut buffer = &mut buffer[..max_chars];
+        let mut buffer = &mut buffer[..max_bytes];
         let mut temp = String::new();
         stdin()
             .read_line(&mut temp)
             .map_err(|_| Exception::SyscallFailure)?;
-        let slice = match temp.strip_suffix("\r\n") {
-            Some(stripped) => stripped,
-            None => &temp,
-        };
+        let slice = temp
+            .strip_suffix('\n')
+            .unwrap_or(&temp)
+            .strip_suffix('\r')
+            .unwrap_or(&temp);
         let bytes: Vec<u8> = {
             let mut bytes = slice.as_bytes().to_vec();
             bytes.push(b'\n');
-            bytes.truncate(max_chars);
-            if bytes.len() == max_chars {
-                bytes[max_chars - 1] = b'\0';
+            bytes.truncate(max_bytes);
+            if bytes.len() == max_bytes {
+                bytes[max_bytes - 1] = b'\0';
             } else {
                 bytes.push(b'\0');
             }
@@ -237,14 +248,14 @@ impl Interpreter {
         let fd = self.registers.read_u32_from_cpu(register::A0)?;
         let buffer_address = self.registers.read_u32_from_cpu(register::A1)?;
         let buffer = self.memory.get_slice_mut(buffer_address)?;
-        let max_chars = usize::min(
+        let max_bytes = usize::min(
             self.registers.read_u32_from_cpu(register::A2)? as usize,
             buffer.len(),
         );
-        if max_chars == 0 {
+        if max_bytes == 0 {
             return Ok(());
         }
-        let buffer = &mut buffer[..max_chars];
+        let buffer = &mut buffer[..max_bytes];
         let bytes_read = match self.files.get_mut(&fd) {
             Some(handle) => handle.read(buffer).map_or(u32::MAX, |n| n as u32),
             None => u32::MAX,
@@ -256,11 +267,11 @@ impl Interpreter {
         let fd = self.registers.read_u32_from_cpu(register::A0)?;
         let buffer_address = self.registers.read_u32_from_cpu(register::A1)?;
         let buffer = self.memory.get_slice(buffer_address)?;
-        let max_chars = usize::min(
+        let max_bytes = usize::min(
             self.registers.read_u32_from_cpu(register::A2)? as usize,
             buffer.len(),
         );
-        let buffer = &buffer[..max_chars];
+        let buffer = &buffer[..max_bytes];
         let bytes_written = match self.files.get_mut(&fd) {
             Some(handle) => handle.write(buffer).map_or(u32::MAX, |n| n as u32),
             None => u32::MAX,
@@ -284,14 +295,14 @@ impl Interpreter {
     }
 
     fn time(&mut self) -> Result<(), Exception> {
-        // NOTE: Byte order shenanigans will probably mess things up.
         let system_time: u64 = match SystemTime::UNIX_EPOCH.elapsed() {
             Ok(duration) => duration.as_millis() as u64,
             Err(_) => return Err(Exception::SyscallFailure),
         };
-        let halves: [u32; 2] = unsafe { transmute::<u64, [u32; 2]>(system_time) };
-        self.registers.write_u32_to_cpu(register::A0, halves[0])?;
-        self.registers.write_u32_to_cpu(register::A1, halves[1])
+        let upper_half: u32 = (system_time >> 32) as u32;
+        let lower_half: u32 = (system_time & u32::MAX as u64) as u32;
+        self.registers.write_u32_to_cpu(register::A0, lower_half)?;
+        self.registers.write_u32_to_cpu(register::A1, upper_half)
     }
 
     fn midi_out(&self) -> Result<(), Exception> {
@@ -385,5 +396,104 @@ impl Interpreter {
         };
         let x: f64 = rng.next_f64();
         self.registers.write_f64_to_fpu(0, x)
+    }
+
+    fn confirm_dialog(&mut self) -> Result<(), Exception> {
+        let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
+        let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
+            .map_err(|_| Exception::SyscallFailure)?
+            .to_str()
+            .map_err(|_| Exception::SyscallFailure)?;
+        todo!("show the dialog and return the result");
+    }
+
+    fn input_dialog_int(&mut self) -> Result<(), Exception> {
+        let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
+        let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
+            .map_err(|_| Exception::SyscallFailure)?
+            .to_str()
+            .map_err(|_| Exception::SyscallFailure)?;
+        todo!("show the dialog and return the result");
+    }
+
+    fn input_dialog_float(&mut self) -> Result<(), Exception> {
+        let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
+        let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
+            .map_err(|_| Exception::SyscallFailure)?
+            .to_str()
+            .map_err(|_| Exception::SyscallFailure)?;
+        todo!("show the dialog and return the result");
+    }
+
+    fn input_dialog_double(&mut self) -> Result<(), Exception> {
+        let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
+        let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
+            .map_err(|_| Exception::SyscallFailure)?
+            .to_str()
+            .map_err(|_| Exception::SyscallFailure)?;
+        todo!("show the dialog and return the result");
+    }
+
+    fn input_dialog_string(&mut self) -> Result<(), Exception> {
+        let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
+        let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
+            .map_err(|_| Exception::SyscallFailure)?
+            .to_str()
+            .map_err(|_| Exception::SyscallFailure)?;
+        todo!("show the dialog and return the result");
+    }
+
+    fn message_dialog(&mut self) -> Result<(), Exception> {
+        let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
+        let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
+            .map_err(|_| Exception::SyscallFailure)?
+            .to_str()
+            .map_err(|_| Exception::SyscallFailure)?;
+        let _message_type = self.registers.read_u32_from_cpu(register::A1)?;
+        todo!("show the dialog");
+    }
+
+    fn message_dialog_int(&mut self) -> Result<(), Exception> {
+        let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
+        let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
+            .map_err(|_| Exception::SyscallFailure)?
+            .to_str()
+            .map_err(|_| Exception::SyscallFailure)?;
+        let _x = self.registers.read_u32_from_cpu(register::A1)?;
+        todo!("show the dialog");
+    }
+
+    fn message_dialog_float(&mut self) -> Result<(), Exception> {
+        let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
+        let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
+            .map_err(|_| Exception::SyscallFailure)?
+            .to_str()
+            .map_err(|_| Exception::SyscallFailure)?;
+        let _x = self.registers.read_f32_from_fpu(12)?;
+        todo!("show the dialog");
+    }
+
+    fn message_dialog_double(&mut self) -> Result<(), Exception> {
+        let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
+        let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
+            .map_err(|_| Exception::SyscallFailure)?
+            .to_str()
+            .map_err(|_| Exception::SyscallFailure)?;
+        let _x = self.registers.read_f64_from_fpu(12)?;
+        todo!("show the dialog");
+    }
+
+    fn message_dialog_string(&mut self) -> Result<(), Exception> {
+        let buffer_address_0: Address = self.registers.read_u32_from_cpu(register::A0)?;
+        let _message_0 = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address_0)?)
+            .map_err(|_| Exception::SyscallFailure)?
+            .to_str()
+            .map_err(|_| Exception::SyscallFailure)?;
+        let buffer_address_1: Address = self.registers.read_u32_from_cpu(register::A1)?;
+        let _message_1 = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address_1)?)
+            .map_err(|_| Exception::SyscallFailure)?
+            .to_str()
+            .map_err(|_| Exception::SyscallFailure)?;
+        todo!("show the dialog");
     }
 }

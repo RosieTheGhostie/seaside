@@ -1,4 +1,4 @@
-version = "1.0.1"
+version = "1.0.2"
 endian = "little"
 project_directory_is_cwd = true
 
