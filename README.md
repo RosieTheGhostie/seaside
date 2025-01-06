@@ -28,7 +28,7 @@ The other major motivation for making `seaside` is that I, Rose Thorne, needed a
 
 ### Interpreter (*partially implemented*)
 
-- [X] 134/134 basic instructions supported by MARS
+- [X] 136/136 basic instructions supported by MARS
 - [ ] 26/39 system calls supported by MARS
   - [X] 8/8 printing services
   - [X] 5/5 user input services
@@ -46,8 +46,9 @@ The other major motivation for making `seaside` is that I, Rose Thorne, needed a
 - [X] Default values of registers
 - [X] Crash handler
 - [X] Current working directory for file IO
-- [X] Enable/disable self-modifying code
-- [ ] Enable/disable individual system calls and directives
+- [X] Toggle self-modifying code
+- [X] Toggle individual system calls
+- [ ] Toggle individual directives
 - [ ] + more!!!
 
 ## Usage
@@ -81,7 +82,10 @@ Other than that, `seaside` shouldn't need anything else to be installed on your 
     ```
 3. Sit back and watch the Rust compiler do its magic.
 
-At this point, you should find the `seaside` executable in `./target/release`. You may delete all other files in `./target` if you wish.
+> [!NOTE]
+> On Linux, `cargo` demands that you append `-Znext-lockfile-bump` to the build command. No idea why.
+
+At this point, you should find the `seaside` executable in `./target/release`. You may delete all other files in `./target` if you wish, but leaving them around will speed up future compilations.
 
 ## Post-Installation
 
