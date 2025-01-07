@@ -411,7 +411,7 @@ impl Interpreter {
     ///
     /// ```text
     /// 000001 xxxxx xxxxx xxxxxxxxxxxxxxxx
-    /// opcode  $rs   $rt        imm
+    /// opcode  $rs   fn         imm
     /// ```
     pub fn execute_regimm(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
         use crate::constants::fn_codes::RegisterImmediateFn::{self, *};
