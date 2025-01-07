@@ -2,14 +2,14 @@ use num_derive::FromPrimitive;
 
 #[derive(Clone, Copy, Debug, Eq, FromPrimitive, PartialEq)]
 pub enum RegisterImmediateFn {
-    BranchLessThanZero = 0x00,                // BLTZ
-    BranchGreaterEqualZero = 0x01,            // BGEZ
-    TrapGreaterEqualImmediate = 0x08,         // TGEI
-    TrapGreaterEqualImmediateUnsigned = 0x09, // TGEIU
-    TrapLessThanImmediate = 0x0A,             // TLTI
-    TrapLessThanImmediateUnsigned = 0x0B,     // TLTIU
-    TrapEqualImmediate = 0x0C,                // TEQI
-    TrapNotEqualImmediate = 0x0E,             // TNEI
-    BranchLessThanZeroAndLink = 0x10,         // BLTZAL
-    BranchGreaterEqualZeroAndLink = 0x11,     // BGEZAL
+    BranchLessThanZero = 0x00,                // bltz
+    BranchGreaterEqualZero = 0x01,            // bgez
+    TrapGreaterEqualImmediate = 0x08,         // tgei
+    TrapGreaterEqualImmediateUnsigned = 0x09, // tgeiu
+    TrapLessThanImmediate = 0x0a,             // tlti
+    TrapLessThanImmediateUnsigned = 0x0b,     // tltiu
+    TrapEqualImmediate = 0x0c,                // teqi
+    TrapNotEqualImmediate = 0x0e,             // tnei
+    BranchLessThanZeroAndLink = 0x10,         // bltzal
+    BranchGreaterEqualZeroAndLink = 0x11,     // bgezal
 }

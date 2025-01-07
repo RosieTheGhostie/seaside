@@ -1,4 +1,4 @@
-# `seaside`: A modern tool to learn MIPS Assembly
+# seaside: A modern tool to learn MIPS Assembly
 
 This tool rethinks the way educators and students write MIPS Assembly.
 
@@ -6,11 +6,11 @@ This tool rethinks the way educators and students write MIPS Assembly.
 
 As of 2025, the gold standard for MIPS in education is [MARS](https://github.com/gon1332/mars). MARS is undoubtedly a wonderful piece of software, but it hasn't seen a major update in nearly a decade, and having a separate IDE for developing MIPS Assembly code is rather inconvenient.
 
-The other major motivation for making `seaside` is that I, Rose Thorne, needed a Capstone project to graduate. I took a course on computer architecture during the Autumn 2024 semester, and seeing how my project needs to connect to a class I've taken, this seems like a good candidate.
+The other major motivation for making seaside is that I, Rose Thorne, needed a Capstone project to graduate. I took a course on computer architecture during the Autumn 2024 semester, and seeing how my project needs to connect to a class I've taken, this seems like a good candidate.
 
 ## Features
 
-`seaside` is currently a huge work-in-progress, so there aren't many features yet; however, I aim to make this as good (if not better) than MARS in the coming years.
+seaside is currently a huge work-in-progress, so there aren't many features yet; however, I aim to make this as good (if not better) than MARS in the coming years.
 
 ### Assembler (*not implemented*)
 
@@ -53,29 +53,29 @@ The other major motivation for making `seaside` is that I, Rose Thorne, needed a
 
 ## Usage
 
-When running a program, the `seaside` engine expects you to provide a directory with the following files:
+When running a program, the seaside engine expects you to provide a directory with the following files:
 
-- `text`: MIPS machine code
-- `extern` (optional): binary data
-- `data` (optional): binary data
-- `ktext` (optional): MIPS machine code
-- `kdata` (optional): binary data
+- 'text': MIPS machine code
+- 'extern' (optional): binary data
+- 'data' (optional): binary data
+- 'ktext' (optional): MIPS machine code
+- 'kdata' (optional): binary data
 
 Each of these files directly corresponds to their respective segments in the MIPS assembly code.
 
-Seeing as how there is currently no assembler built into `seaside`, you'll likely want to keep a tool like MARS lying around to assemble and dump the necessary segments. MARS only supports dumping `.text` and `.data`, though, so other segments might need to be dumped by hand...
+Seeing as how there is currently no assembler built into seaside, you'll likely want to keep a tool like MARS lying around to assemble and dump the necessary segments. MARS only supports dumping `.text` and `.data`, though, so other segments might need to be dumped by hand...
 
 ## Installation
 
 ### Prerequisites
 
-As with any other Rust app, you'll need `cargo` to compile it. I won't go into detail on how to install that here, but you can find some information about it [here](https://doc.rust-lang.org/cargo/getting-started/installation.html).
+As with any other Rust app, you'll need [cargo](https://doc.rust-lang.org/cargo/) to compile it. I won't go into detail on how to install that here, but you can find some information about it [here](https://doc.rust-lang.org/cargo/getting-started/installation.html).
 
-Other than that, `seaside` shouldn't need anything else to be installed on your computer.
+Other than that, seaside shouldn't need anything else to be installed on your computer.
 
 ### Compilation
 
-1. Navigate to `seaside`'s root directory. This is the directory containing `Cargo.toml`.
+1. Navigate to seaside's root directory. This is the directory containing 'Cargo.toml'.
 2. In your terminal/command prompt of choice, enter the following command:
     ```bash
     cargo build --release
@@ -83,19 +83,19 @@ Other than that, `seaside` shouldn't need anything else to be installed on your 
 3. Sit back and watch the Rust compiler do its magic.
 
 > [!NOTE]
-> On Linux, `cargo` demands that you append `-Znext-lockfile-bump` to the build command. No idea why.
+> On Linux, cargo demands that you append `-Znext-lockfile-bump` to the build command. No idea why.
 
-At this point, you should find the `seaside` executable in `./target/release`. You may delete all other files in `./target` if you wish, but leaving them around will speed up future compilations.
+At this point, you should find the seaside executable in './target/release'. You may delete all other files in './target' if you wish, but leaving them around will speed up future compilations.
 
 ## Post-Installation
 
-Although `seaside` will technically work now, there are some things I would recommend doing to get the best experience.
+Although seaside will technically work now, there are some things I would recommend doing to get the best experience.
 
-### Adding `seaside` to the System Path
+### Adding seaside to the System Path
 
-To avoid typing out the full executable path every time you want to run `seaside`, you can add it to your system path. This process will vary wildly by operating system, so I won't attempt to describe it here.
+To avoid typing out the full executable path every time you want to run seaside, you can add it to your system path. This process will vary wildly by operating system, so I won't attempt to describe it here.
 
-Regardless of your OS, the directory you'll append to your system path will be the parent of the `seaside` executable. The easiest way to find this is to run the following command from the `seaside` root directory:
+Regardless of your OS, the directory you'll append to your system path will be the parent of the seaside executable. The easiest way to find this is to run the following command from the seaside root directory:
 
 ```bash
 cargo run -- exe-path
@@ -105,8 +105,8 @@ This will print the absolute path of the executable. Simply remove the executabl
 
 ### Configuration
 
-`seaside` has extensive configuration options, as described [above](#configuration-mostly-implemented). These are designed to mimic MARS' default settings out of the box, but you are welcome to change them however you see fit.
+seaside has extensive configuration options, as described [above](#configuration-mostly-implemented). These are designed to mimic MARS' default settings out of the box, but you are welcome to change them however you see fit.
 
-If `seaside` is ran in a directory with a file named `Seaside.toml`, that file will be used to set up the engine. Otherwise, it will attempt to find `Seaside.toml` in its own root directory. For this reason, you should never move or delete the configuration file shipped with `seaside`.
+If seaside is ran in a directory with a file named 'Seaside.toml', that file will be used to set up the engine. Otherwise, it will attempt to find 'Seaside.toml' in its own root directory. For this reason, you should never move or delete the configuration file shipped with seaside.
 
 Extensive documentation of the available configuration options can be found [here](https://github.com/RosieTheGhostie/seaside/wiki/Configuration-Manual).

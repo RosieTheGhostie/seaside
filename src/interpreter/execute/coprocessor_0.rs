@@ -54,7 +54,7 @@ impl Interpreter {
     }
 
     /// Sets the program counter (PC) to the value of register `epc`, then sets bit 1 of register
-    /// `status` to `0`.
+    /// `status` to 0.
     fn eret(&mut self, instruction: Instruction) -> Result<(), Exception> {
         if instruction == 0x42000018 {
             self.pc = self.registers.epc;

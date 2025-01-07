@@ -11,7 +11,7 @@ impl Interpreter {
     ///
     /// ```text
     /// xxxxxx xxxxx xxxxx xxxxxxxxxxxxxxxx
-    /// opcode  $rs   $rt        imm
+    /// opcode  $rs   $rt     offset/imm
     /// ```
     pub fn execute_immediate_format(
         &mut self,
@@ -59,26 +59,26 @@ impl Interpreter {
         }
     }
 
-    /// If `rs_value` is equal to `rt_value`, branches `imm` instructions ahead.
-    fn beq(&mut self, rs_value: u32, rt_value: u32, imm: u16) -> Result<(), Exception> {
+    /// If `rs_value` is equal to `rt_value`, branches `offset` instructions ahead.
+    fn beq(&mut self, rs_value: u32, rt_value: u32, offset: u16) -> Result<(), Exception> {
         if rs_value == rt_value {
-            self.branch(imm);
+            self.branch(offset);
         }
         Ok(())
     }
 
-    /// If `rs_value` is not equal to `rt_value`, branches `imm` instructions ahead.
-    fn bne(&mut self, rs_value: u32, rt_value: u32, imm: u16) -> Result<(), Exception> {
+    /// If `rs_value` is not equal to `rt_value`, branches `offset` instructions ahead.
+    fn bne(&mut self, rs_value: u32, rt_value: u32, offset: u16) -> Result<(), Exception> {
         if rs_value != rt_value {
-            self.branch(imm);
+            self.branch(offset);
         }
         Ok(())
     }
 
-    /// If `rs_value` is strictly positive, branches `imm` instructions ahead.
-    fn bgtz(&mut self, rs_value: u32, imm: u16) -> Result<(), Exception> {
+    /// If `rs_value` is strictly positive, branches `offset` instructions ahead.
+    fn bgtz(&mut self, rs_value: u32, offset: u16) -> Result<(), Exception> {
         if rs_value as i32 > 0 {
-            self.branch(imm);
+            self.branch(offset);
         }
         Ok(())
     }
@@ -105,7 +105,7 @@ impl Interpreter {
     }
 
     /// If `rs_value` (interpreted as a signed integer) is less than the sign-extended `imm`, stores
-    /// the value `1` in CPU register `rt`. Otherwise, stores the value `0` in `rt`.
+    /// the value 1 in CPU register `rt`. Otherwise, stores the value 0 in `rt`.
     fn slti(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
         let rs_value = rs_value as i32;
         let imm: i32 = imm.sign_extend();
@@ -113,8 +113,8 @@ impl Interpreter {
             .write_u32_to_cpu(rt, if rs_value < imm { 1 } else { 0 })
     }
 
-    /// If `rs_value` (interpreted as an unsigned integer) is less than `imm`, stores the value `1`
-    /// in CPU register `rt`. Otherwise, stores the value `0` in `rt`.
+    /// If `rs_value` (interpreted as an unsigned integer) is less than `imm`, stores the value 1 in
+    /// CPU register `rt`. Otherwise, stores the value 0 in `rt`.
     fn sltiu(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
         let imm = <u16 as SignExtend<i32>>::sign_extend(&imm) as u32;
         self.registers
@@ -141,36 +141,36 @@ impl Interpreter {
         self.registers.write_u32_to_cpu(rt, (imm as u32) << 16)
     }
 
-    /// Loads the sign-extended byte stored at address `rs_value + imm.sign_extend()` into CPU
+    /// Loads the sign-extended byte stored at address `rs_value + offset.sign_extend()` into CPU
     /// register `rt`.
     ///
     /// # Exceptions
     ///
     /// Raises an [invalid load][Exception::InvalidLoad] exception if the computed address points
     /// to currently inaccessible memory.
-    fn lb(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
-        let offset: i32 = imm.sign_extend();
+    fn lb(&mut self, rt: u8, rs_value: u32, offset: u16) -> Result<(), Exception> {
+        let offset: i32 = offset.sign_extend();
         let address = u32::wrapping_add_signed(rs_value, offset);
         let value: i32 = self.memory.read_u8(address)?.sign_extend();
         self.registers.write_i32_to_cpu(rt, value)
     }
 
-    /// Loads the sign-extended halfword stored at address `rs_value + imm.sign_extend()` into CPU
-    /// register `rt`.
+    /// Loads the sign-extended halfword stored at address `rs_value + offset.sign_extend()` into
+    /// CPU register `rt`.
     ///
     /// # Exceptions
     ///
     /// Raises an [invalid load][Exception::InvalidLoad] exception if the computed address points
     /// to currently inaccessible memory or if the address is not aligned to 2 bytes.
-    fn lh(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
-        let offset: i32 = imm.sign_extend();
+    fn lh(&mut self, rt: u8, rs_value: u32, offset: u16) -> Result<(), Exception> {
+        let offset: i32 = offset.sign_extend();
         let address = u32::wrapping_add_signed(rs_value, offset);
         let value: i32 = self.memory.read_u16(address, true)?.sign_extend();
         self.registers.write_i32_to_cpu(rt, value)
     }
 
-    fn lwl(&mut self, rt: u8, rs_value: u32, rt_value: u32, imm: u16) -> Result<(), Exception> {
-        let offset: i32 = imm.sign_extend();
+    fn lwl(&mut self, rt: u8, rs_value: u32, rt_value: u32, offset: u16) -> Result<(), Exception> {
+        let offset: i32 = offset.sign_extend();
         let address = u32::wrapping_add_signed(rs_value, offset);
         let word_address = address & 0xFFFFFFFC;
         let shift: u32 = {
@@ -186,47 +186,48 @@ impl Interpreter {
             .write_u32_to_cpu(rt, (rt_value & mask) | loaded)
     }
 
-    /// Loads the word stored at address `rs_value + imm.sign_extend()` into CPU register `rt`.
+    /// Loads the word stored at address `rs_value + offset.sign_extend()` into CPU register `rt`.
     ///
     /// # Exceptions
     ///
     /// Raises an [invalid load][Exception::InvalidLoad] exception if the computed address points
     /// to currently inaccessible memory or if the address is not aligned to 4 bytes.
-    fn lw(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
-        let offset: i32 = imm.sign_extend();
+    fn lw(&mut self, rt: u8, rs_value: u32, offset: u16) -> Result<(), Exception> {
+        let offset: i32 = offset.sign_extend();
         let address = u32::wrapping_add_signed(rs_value, offset);
         let value: u32 = self.memory.read_u32(address, true)?;
         self.registers.write_u32_to_cpu(rt, value)
     }
 
-    /// Loads the byte stored at address `rs_value + imm.sign_extend()` into CPU register `rt`.
+    /// Loads the byte stored at address `rs_value + offset.sign_extend()` into CPU register `rt`.
     ///
     /// # Exceptions
     ///
     /// Raises an [invalid load][Exception::InvalidLoad] exception if the computed address points
     /// to currently inaccessible memory.
-    fn lbu(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
-        let offset: i32 = imm.sign_extend();
+    fn lbu(&mut self, rt: u8, rs_value: u32, offset: u16) -> Result<(), Exception> {
+        let offset: i32 = offset.sign_extend();
         let address = u32::wrapping_add_signed(rs_value, offset);
         let value = self.memory.read_u8(address)? as u32;
         self.registers.write_u32_to_cpu(rt, value)
     }
 
-    /// Loads the halfword stored at address `rs_value + imm.sign_extend()` into CPU register `rt`.
+    /// Loads the halfword stored at address `rs_value + offset.sign_extend()` into CPU register
+    /// `rt`.
     ///
     /// # Exceptions
     ///
     /// Raises an [invalid load][Exception::InvalidLoad] exception if the computed address points
     /// to currently inaccessible memory or if the address is not aligned to 2 bytes.
-    fn lhu(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
-        let offset: i32 = imm.sign_extend();
+    fn lhu(&mut self, rt: u8, rs_value: u32, offset: u16) -> Result<(), Exception> {
+        let offset: i32 = offset.sign_extend();
         let address = u32::wrapping_add_signed(rs_value, offset);
         let value = self.memory.read_u16(address, true)? as u32;
         self.registers.write_u32_to_cpu(rt, value)
     }
 
-    fn lwr(&mut self, rt: u8, rs_value: u32, rt_value: u32, imm: u16) -> Result<(), Exception> {
-        let offset: i32 = imm.sign_extend();
+    fn lwr(&mut self, rt: u8, rs_value: u32, rt_value: u32, offset: u16) -> Result<(), Exception> {
+        let offset: i32 = offset.sign_extend();
         let address = u32::wrapping_add_signed(rs_value, offset);
         let word_address = address & 0xFFFFFFFC;
         let shift: u32 = {
@@ -243,35 +244,35 @@ impl Interpreter {
     }
 
     /// Stores the least significant byte of `rt_value` at the address
-    /// `rs_value + imm.sign_extend()`.
+    /// `rs_value + offset.sign_extend()`.
     ///
     /// # Exceptions
     ///
     /// Raises an [invalid store][Exception::InvalidStore] exception if the computed address points
     /// to currently inaccessible memory.
-    fn sb(&mut self, rs_value: u32, rt_value: u32, imm: u16) -> Result<(), Exception> {
-        let offset: i32 = imm.sign_extend();
+    fn sb(&mut self, rs_value: u32, rt_value: u32, offset: u16) -> Result<(), Exception> {
+        let offset: i32 = offset.sign_extend();
         let address = u32::wrapping_add_signed(rs_value, offset);
         let byte = (rt_value & u8::MAX as u32) as u8;
         self.memory.write_u8(address, byte)
     }
 
     /// Stores the least significant halfword of `rt_value` at the address
-    /// `rs_value + imm.sign_extend()`.
+    /// `rs_value + offset.sign_extend()`.
     ///
     /// # Exceptions
     ///
     /// Raises an [invalid store][Exception::InvalidStore] exception if the computed address points
     /// to currently inaccessible memory or if the address is not aligned to 2 bytes.
-    fn sh(&mut self, rs_value: u32, rt_value: u32, imm: u16) -> Result<(), Exception> {
-        let offset: i32 = imm.sign_extend();
+    fn sh(&mut self, rs_value: u32, rt_value: u32, offset: u16) -> Result<(), Exception> {
+        let offset: i32 = offset.sign_extend();
         let address = u32::wrapping_add_signed(rs_value, offset);
         let half = (rt_value & u16::MAX as u32) as u16;
         self.memory.write_u16(address, half, true)
     }
 
-    fn swl(&mut self, rs_value: u32, rt_value: u32, imm: u16) -> Result<(), Exception> {
-        let offset: i32 = imm.sign_extend();
+    fn swl(&mut self, rs_value: u32, rt_value: u32, offset: u16) -> Result<(), Exception> {
+        let offset: i32 = offset.sign_extend();
         let address = u32::wrapping_add_signed(rs_value, offset);
         let word_address = address & 0xFFFFFFFC;
         let shift: u32 = {
@@ -288,40 +289,39 @@ impl Interpreter {
             .write_u32(word_address, (old_value & mask) | to_store, true)
     }
 
-    /// Stores `rt_value` at the address `rs_value + imm.sign_extend()`.
+    /// Stores `rt_value` at the address `rs_value + offset.sign_extend()`.
     ///
     /// # Exceptions
     ///
     /// Raises an [invalid store][Exception::InvalidStore] exception if the computed address points
     /// to currently inaccessible memory or if the address is not aligned to 4 bytes.
-    fn sw(&mut self, rs_value: u32, rt_value: u32, imm: u16) -> Result<(), Exception> {
-        let offset: i32 = imm.sign_extend();
+    fn sw(&mut self, rs_value: u32, rt_value: u32, offset: u16) -> Result<(), Exception> {
+        let offset: i32 = offset.sign_extend();
         let address = u32::wrapping_add_signed(rs_value, offset);
         self.memory.write_u32(address, rt_value, true)
     }
 
-    /// Stores `rt_value` at the address `rs_value + imm.sign_extend()`. If the store was
-    /// successful, stores the value `1` in CPU register `rt`. Otherwise, stores the value `0` in
-    /// `rt`.
+    /// Stores `rt_value` at the address `rs_value + offset.sign_extend()`. If the store was
+    /// successful, stores the value 1 in CPU register `rt`. Otherwise, stores the value 0 in `rt`.
     ///
     /// In real MIPS processors, this instruction performs an atomic store, so there is a chance for
-    /// `rt` to be set to `0`; however, seaside (like most MIPS simulators out there) does not
+    /// `rt` to be set to 0; however, seaside (like most MIPS simulators out there) does not
     /// simulate multiple processors. Thus, this instruction will always succeed (assuming it
     /// doesn't raise an exception), and as such, it is impossible for `rt` to be set to anything
-    /// besides `1`.
+    /// besides 1.
     ///
     /// # Exceptions
     ///
     /// Raises an [invalid store][Exception::InvalidStore] exception if the computed address points
     /// to currently inaccessible memory or if the address is not aligned to 4 bytes.
-    fn sc(&mut self, rt: u8, rs_value: u32, rt_value: u32, imm: u16) -> Result<(), Exception> {
-        self.sw(rs_value, rt_value, imm)?;
+    fn sc(&mut self, rt: u8, rs_value: u32, rt_value: u32, offset: u16) -> Result<(), Exception> {
+        self.sw(rs_value, rt_value, offset)?;
         // always succeeds because seaside doesn't simulate multiple processors
         self.registers.write_u32_to_cpu(rt, 1)
     }
 
-    fn swr(&mut self, rs_value: u32, rt_value: u32, imm: u16) -> Result<(), Exception> {
-        let offset: i32 = imm.sign_extend();
+    fn swr(&mut self, rs_value: u32, rt_value: u32, offset: u16) -> Result<(), Exception> {
+        let offset: i32 = offset.sign_extend();
         let address = u32::wrapping_add_signed(rs_value, offset);
         let word_address = address & 0xFFFFFFFC;
         let shift: u32 = {
@@ -338,7 +338,7 @@ impl Interpreter {
             .write_u32(word_address, (old_value & mask) | to_store, true)
     }
 
-    /// Loads the word stored at address `rs_value + imm.sign_extend()` into CPU register `rt`.
+    /// Loads the word stored at address `rs_value + offset.sign_extend()` into CPU register `rt`.
     ///
     /// In real MIPS processors, this instruction begins an atomic read-modify-write (RMW) sequence.
     /// Seeing as how seaside (like most MIPS simulators out there) does not simulate multiple
@@ -348,60 +348,60 @@ impl Interpreter {
     ///
     /// Raises an [invalid load][Exception::InvalidLoad] exception if the computed address points
     /// to currently inaccessible memory or if the address is not aligned to 4 bytes.
-    fn ll(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
+    fn ll(&mut self, rt: u8, rs_value: u32, offset: u16) -> Result<(), Exception> {
         // identical to lw in current version of seaside
-        self.lw(rt, rs_value, imm)
+        self.lw(rt, rs_value, offset)
     }
 
-    /// Loads the word stored at address `rs_value + imm.sign_extend()` into FPU register `ft`.
+    /// Loads the word stored at address `rs_value + offset.sign_extend()` into FPU register `ft`.
     ///
     /// # Exceptions
     ///
     /// Raises an [invalid load][Exception::InvalidLoad] exception if the computed address points
     /// to currently inaccessible memory or if the address is not aligned to 4 bytes.
-    fn lwc1(&mut self, ft: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
-        let offset: i32 = imm.sign_extend();
+    fn lwc1(&mut self, ft: u8, rs_value: u32, offset: u16) -> Result<(), Exception> {
+        let offset: i32 = offset.sign_extend();
         let address = u32::wrapping_add_signed(rs_value, offset);
         let value = self.memory.read_u32(address, true)?;
         self.registers.write_u32_to_fpu(ft, value)
     }
 
-    /// Loads the double stored at address `rs_value + imm.sign_extend()` into FPU register `ft`.
+    /// Loads the double stored at address `rs_value + offset.sign_extend()` into FPU register `ft`.
     ///
     /// # Exceptions
     ///
     /// Raises an [invalid load][Exception::InvalidLoad] exception if the computed address points
     /// to currently inaccessible memory, the address is not aligned to 8 bytes, or `ft` is not
     /// divisible by two.
-    fn ldc1(&mut self, ft: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
-        let offset: i32 = imm.sign_extend();
+    fn ldc1(&mut self, ft: u8, rs_value: u32, offset: u16) -> Result<(), Exception> {
+        let offset: i32 = offset.sign_extend();
         let address = u32::wrapping_add_signed(rs_value, offset);
         let value = self.memory.read_u64(address, true)?;
         self.registers.write_u64_to_fpu(ft, value)
     }
 
-    /// Stores the value of FPU register `ft` at address `rs_value + imm.sign_extend()`.
+    /// Stores the value of FPU register `ft` at address `rs_value + offset.sign_extend()`.
     ///
     /// # Exceptions
     ///
     /// Raises an [invalid store][Exception::InvalidStore] exception if the computed address points
     /// to currently inaccessible memory or if the address is not aligned to 4 bytes.
-    fn swc1(&mut self, ft: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
-        let offset: i32 = imm.sign_extend();
+    fn swc1(&mut self, ft: u8, rs_value: u32, offset: u16) -> Result<(), Exception> {
+        let offset: i32 = offset.sign_extend();
         let address = u32::wrapping_add_signed(rs_value, offset);
         let ft_value = self.registers.read_u32_from_fpu(ft)?;
         self.memory.write_u32(address, ft_value, true)
     }
 
-    /// Stores the value of FPU register `ft` at address `rs_value + imm.sign_extend()`.
+    /// Stores the value of FPU register `ft` at address `rs_value + offset.sign_extend()`.
     ///
     /// # Exceptions
     ///
     /// Raises an [invalid store][Exception::InvalidStore] exception if the computed address points
     /// to currently inaccessible memory, the address is not aligned to 8 bytes, or `ft` is not
     /// divisible by two.
-    fn sdc1(&mut self, ft: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
-        let offset: i32 = imm.sign_extend();
+    fn sdc1(&mut self, ft: u8, rs_value: u32, offset: u16) -> Result<(), Exception> {
+        let offset: i32 = offset.sign_extend();
         let address = u32::wrapping_add_signed(rs_value, offset);
         let ft_value = self.registers.read_u64_from_fpu(ft)?;
         self.memory.write_u64(address, ft_value, true)
@@ -433,26 +433,26 @@ impl Interpreter {
         }
     }
 
-    /// If `rs_value` is negative, branches `imm` instructions ahead. Also performs a link if `link`
-    /// is set to `true`.
-    fn bltz(&mut self, rs_value: u32, imm: u16, link: bool) -> Result<(), Exception> {
+    /// If `rs_value` is negative, branches `offset` instructions ahead. Also performs a link if
+    /// `link` is set to `true`.
+    fn bltz(&mut self, rs_value: u32, offset: u16, link: bool) -> Result<(), Exception> {
         if (rs_value as i32) < 0 {
             if link {
                 self.link()?;
             }
-            self.branch(imm);
+            self.branch(offset);
         }
         Ok(())
     }
 
-    /// If `rs_value` is non-negative, branches `imm` instructions ahead. Also performs a link if
+    /// If `rs_value` is non-negative, branches `offset` instructions ahead. Also performs a link if
     /// `link` is set to `true`.
-    fn bgez(&mut self, rs_value: u32, imm: u16, link: bool) -> Result<(), Exception> {
+    fn bgez(&mut self, rs_value: u32, offset: u16, link: bool) -> Result<(), Exception> {
         if (rs_value as i32) >= 0 {
             if link {
                 self.link()?;
             }
-            self.branch(imm);
+            self.branch(offset);
         }
         Ok(())
     }

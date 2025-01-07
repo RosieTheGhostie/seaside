@@ -248,14 +248,14 @@ impl Interpreter {
 
     /// Rounds `fs_value` to the nearest integer, storing the result in FPU register `fd`.
     ///
-    /// If `fs_value` is exactly halfway between two integers, rounds away from `0.0`.
+    /// If `fs_value` is exactly halfway between two integers, rounds away from 0.0.
     fn round_w_s(&mut self, fd: u8, fs_value: f32) -> Result<(), Exception> {
         self.registers.write_i32_to_fpu(fd, fs_value.round() as i32)
     }
 
     /// Rounds `fs_value` to the nearest integer, storing the result in FPU register `fd`.
     ///
-    /// If `fs_value` is exactly halfway between two integers, rounds away from `0.0`.
+    /// If `fs_value` is exactly halfway between two integers, rounds away from 0.0.
     fn round_w_d(&mut self, fd: u8, fs_value: f64) -> Result<(), Exception> {
         self.registers.write_i64_to_fpu(fd, fs_value.round() as i64)
     }

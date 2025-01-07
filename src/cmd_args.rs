@@ -9,7 +9,7 @@ pub struct CmdArgs {
     pub command: Commands,
 
     #[arg(long)]
-    /// An explicit path to a `Seaside.toml` file
+    /// An explicit path to 'Seaside.toml'.
     pub config: Option<PathBuf>,
 }
 
@@ -17,7 +17,7 @@ pub struct CmdArgs {
 pub enum Commands {
     /// Runs an assembled MIPS program in the specified project directory.
     Run { directory: PathBuf },
-    /// Prints the file path of the `seaside` executable.
+    /// Prints the file path of the seaside executable.
     ExePath,
     /// Runs experimental code.
     Experiment,

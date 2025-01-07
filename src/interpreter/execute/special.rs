@@ -142,9 +142,9 @@ impl Interpreter {
         }
     }
 
-    /// Raises a [breakpoint][Exception::Breakpoint] exception.
+    /// Raises a [break][Exception::Break] exception.
     fn r#break(&mut self) -> Result<(), Exception> {
-        Err(Exception::Breakpoint)
+        Err(Exception::Break)
     }
 
     /// Stores the value of register `hi` in CPU register `rd`.
@@ -282,7 +282,7 @@ impl Interpreter {
     }
 
     /// If `rs_value` is less than `rt_value` (both interpreted as signed integers), stores the
-    /// value `1` in CPU register `rd`. Otherwise, stores the value `0` in `rd`.
+    /// value 1 in CPU register `rd`. Otherwise, stores the value 0 in `rd`.
     fn slt(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
         let rs_value = rs_value as i32;
         let rt_value = rt_value as i32;
@@ -291,7 +291,7 @@ impl Interpreter {
     }
 
     /// If `rs_value` is less than `rt_value` (both interpreted as unsigned integers), stores the
-    /// value `1` in CPU register `rd`. Otherwise, stores the value `0` in `rd`.
+    /// value 1 in CPU register `rd`. Otherwise, stores the value 0 in `rd`.
     fn sltu(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
         self.registers
             .write_u32_to_cpu(rd, if rs_value < rt_value { 1 } else { 0 })

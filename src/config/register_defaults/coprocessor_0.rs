@@ -35,8 +35,8 @@ impl FromPrimitive for Coprocessor0Register {
     /// # Examples
     ///
     /// ```rust
+    /// # use crate::config::register_defaults::Coprocessor0Register;
     /// # use num_traits::FromPrimitive;
-    /// # use crate::registers::Coprocessor0Register;
     /// #
     /// assert_eq!(
     ///     Coprocessor0Register::from_i64(8),
@@ -63,8 +63,8 @@ impl FromPrimitive for Coprocessor0Register {
     /// # Examples
     ///
     /// ```rust
+    /// # use crate::config::register_defaults::Coprocessor0Register;
     /// # use num_traits::FromPrimitive;
-    /// # use crate::registers::Coprocessor0Register;
     /// #
     /// assert_eq!(
     ///     Coprocessor0Register::from_u64(8),
@@ -95,8 +95,8 @@ impl FromPrimitive for Coprocessor0Register {
     /// # Examples
     ///
     /// ```rust
+    /// # use crate::config::register_defaults::Coprocessor0Register;
     /// # use num_traits::FromPrimitive;
-    /// # use crate::registers::Coprocessor0Register;
     /// #
     /// assert_eq!(
     ///     Coprocessor0Register::from_isize(0),
@@ -127,8 +127,8 @@ impl FromPrimitive for Coprocessor0Register {
     /// # Examples
     ///
     /// ```rust
+    /// # use crate::config::register_defaults::Coprocessor0Register;
     /// # use num_traits::FromPrimitive;
-    /// # use crate::registers::Coprocessor0Register;
     /// #
     /// assert_eq!(
     ///     Coprocessor0Register::from_usize(0),

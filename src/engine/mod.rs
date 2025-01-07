@@ -92,7 +92,7 @@ fn find_seaside_toml() -> Result<PathBuf, Error> {
             } else {
                 Err(Error::new(
                     ErrorKind::NotFound,
-                    "couldn't find `Seaside.toml`",
+                    "couldn't find 'Seaside.toml'",
                 ))
             }
         }
