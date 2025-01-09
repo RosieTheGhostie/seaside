@@ -67,6 +67,8 @@ Seeing as how there is currently no assembler built into seaside, you'll likely 
 
 ## Installation
 
+I plan to make this process more streamlined at some point (maybe with package managers or a dedicated installer), but for now, it's a bit complicated. If you have ideas for how to improve the installation process, *please* let me know.
+
 ### Prerequisites
 
 As with any other Rust app, you'll need [cargo](https://doc.rust-lang.org/cargo/) to compile it. I won't go into detail on how to install that here, but you can find some information about it [here](https://doc.rust-lang.org/cargo/getting-started/installation.html).
