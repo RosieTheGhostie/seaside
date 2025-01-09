@@ -122,6 +122,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b63caa9aa9397e2d9480a9b13673856c78d8ac123288526c37d7839f2a86990"
 
 [[package]]
+name = "console"
+version = "0.15.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ea3c6ecd8059b57859df5c69830340ed3c41d30e3da0c1cbed90a96ac853041b"
+dependencies = [
+ "encode_unicode",
+ "libc",
+ "once_cell",
+ "unicode-width",
+ "windows-sys",
+]
+
+[[package]]
 name = "convert_case"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -129,6 +142,12 @@ checksum = "ec182b0ca2f35d8fc196cf3404988fd8b8c739a4d270ff118a398feb0cbec1ca"
 dependencies = [
  "unicode-segmentation",
 ]
+
+[[package]]
+name = "encode_unicode"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "34aa73646ffb006b8f5147f3dc182bd4bcb190227ce861fc4a4844bf8e3cb2c0"
 
 [[package]]
 name = "equivalent"
@@ -187,6 +206,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7943c866cc5cd64cbc25b2e01621d07fa8eb2a1a23160ee81ce38704e97b8ecf"
 
 [[package]]
+name = "lazy_static"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
+
+[[package]]
 name = "libc"
 version = "0.2.169"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -200,8 +225,8 @@ checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
 
 [[package]]
 name = "minimal-logging"
-version = "0.4.0"
-source = "git+https://github.com/RosieTheGhostie/minimal-logging.git#5884690eda662435a7397ca64ae342f4f667f34f"
+version = "0.5.0"
+source = "git+https://github.com/RosieTheGhostie/minimal-logging.git#1756522c0026275a24f4b05a43d434644e418317"
 dependencies = [
  "minimal-logging-attributes",
  "minimal-logging-macros",
@@ -210,7 +235,7 @@ dependencies = [
 [[package]]
 name = "minimal-logging-attributes"
 version = "0.1.0"
-source = "git+https://github.com/RosieTheGhostie/minimal-logging.git#5884690eda662435a7397ca64ae342f4f667f34f"
+source = "git+https://github.com/RosieTheGhostie/minimal-logging.git#1756522c0026275a24f4b05a43d434644e418317"
 dependencies = [
  "function-wrapper",
  "minimal-logging-macros",
@@ -221,8 +246,12 @@ dependencies = [
 
 [[package]]
 name = "minimal-logging-macros"
-version = "0.4.0"
-source = "git+https://github.com/RosieTheGhostie/minimal-logging.git#5884690eda662435a7397ca64ae342f4f667f34f"
+version = "0.5.0"
+source = "git+https://github.com/RosieTheGhostie/minimal-logging.git#1756522c0026275a24f4b05a43d434644e418317"
+dependencies = [
+ "console",
+ "lazy_static",
+]
 
 [[package]]
 name = "num-derive"
@@ -243,6 +272,12 @@ checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
 dependencies = [
  "autocfg",
 ]
+
+[[package]]
+name = "once_cell"
+version = "1.20.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1261fe7e33c73b354eab43b1273a57c8f967d0391e80353e51f764ac02cf6775"
 
 [[package]]
 name = "ppv-lite86"
@@ -307,6 +342,7 @@ version = "1.0.2"
 dependencies = [
  "bitflags",
  "clap",
+ "console",
  "convert_case",
  "minimal-logging",
  "num-derive",
@@ -414,6 +450,12 @@ name = "unicode-segmentation"
 version = "1.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f6ccf251212114b54433ec949fd6a7841275f9ada20dddd2f29e9ceea4501493"
+
+[[package]]
+name = "unicode-width"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1fc81956842c57dac11422a97c3b8195a1ff727f06e85c84ed2e8aa277c9a0fd"
 
 [[package]]
 name = "utf8parse"

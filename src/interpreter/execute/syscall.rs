@@ -6,11 +6,11 @@ use crate::{
     constants::{register, service_codes},
     type_aliases::address::Address,
 };
+use console::Term;
 use std::{
     ffi::CStr,
     fs::OpenOptions,
     io::{stdin, Read, Write},
-    mem::transmute,
     thread::sleep,
     time::{Duration, SystemTime},
 };
@@ -204,18 +204,16 @@ impl Interpreter {
     }
 
     fn read_char(&mut self) -> Result<(), Exception> {
-        // NOTE: I have absolutely no confidence in this method.
-        let mut buffer = [0u8; 4];
         self.flush_stdout_if_necessary()
             .map_err(|_| Exception::SyscallFailure)?;
-        stdin()
-            .read_exact(&mut buffer)
+        // No idea why we're supposedly reading from stdout, but this works.
+        let input = Term::buffered_stdout()
+            .read_char()
             .map_err(|_| Exception::SyscallFailure)?;
-        let input = unsafe { transmute::<[u8; 4], u32>(buffer) };
-        match char::from_u32(input) {
-            Some(_) => self.registers.write_u32_to_cpu(register::V0, input),
-            None => Err(Exception::SyscallFailure),
-        }
+        // `Term::read_char` hides what it reads, so we have to show it ourselves.
+        print!("{input}");
+        self.stdout_pending_flush = true;
+        self.registers.write_u32_to_cpu(register::V0, input as u32)
     }
 
     fn open_file(&mut self) -> Result<(), Exception> {
