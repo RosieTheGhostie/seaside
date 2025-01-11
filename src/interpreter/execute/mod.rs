@@ -6,11 +6,12 @@ mod special;
 mod special_2;
 mod syscall;
 
-use super::{
-    instruction::{fields, Instruction, InstructionFormat},
-    Exception, Interpreter,
+use super::{Exception, Interpreter};
+use crate::{
+    constants::{instruction_format::InstructionFormat, opcodes::Opcode},
+    disassembler::fields,
+    type_aliases::instruction::Instruction,
 };
-use crate::constants::opcodes::Opcode;
 use num_traits::FromPrimitive;
 
 impl Interpreter {

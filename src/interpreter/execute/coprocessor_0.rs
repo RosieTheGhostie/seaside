@@ -1,8 +1,9 @@
-use super::super::{
-    instruction::{fields, Instruction},
-    Exception, Interpreter,
+use super::super::{Exception, Interpreter};
+use crate::{
+    constants::{fn_codes::Coprocessor0Fn, register},
+    disassembler::fields,
+    type_aliases::instruction::Instruction,
 };
-use crate::constants::{fn_codes::Coprocessor0Fn, register};
 use num_traits::FromPrimitive;
 
 impl Interpreter {

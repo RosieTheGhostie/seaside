@@ -3,8 +3,11 @@ pub mod init;
 pub mod instruction_memory;
 pub mod regions;
 
-use super::{instruction::Instruction, Exception};
-use crate::{config::Endian, type_aliases::address::Address};
+use super::Exception;
+use crate::{
+    config::Endian,
+    type_aliases::{address::Address, instruction::Instruction},
+};
 use data_memory::DataMemory;
 use instruction_memory::InstructionMemory;
 use regions::Region;

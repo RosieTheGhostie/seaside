@@ -1,4 +1,5 @@
 use num_derive::FromPrimitive;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 
 #[derive(Clone, Copy, Debug, Eq, FromPrimitive, PartialEq)]
 pub enum SpecialFn {
@@ -39,4 +40,49 @@ pub enum SpecialFn {
     TrapLessThanUnsigned = 0x33,         // tltu
     TrapEqual = 0x34,                    // teq
     TrapNotEqual = 0x36,                 // tne
+}
+
+impl Display for SpecialFn {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        use SpecialFn::*;
+        f.write_str(match *self {
+            ShiftLeftLogical => "sll",
+            MoveConditional => "movc",
+            ShiftRightLogical => "srl",
+            ShiftRightArithmetic => "sra",
+            ShiftLeftLogicalVariable => "sllv",
+            ShiftRightLogicalVariable => "srlv",
+            ShiftRightArithmeticVariable => "srav",
+            JumpRegister => "jr",
+            JumpAndLinkRegister => "jalr",
+            MoveZero => "movz",
+            MoveNotZero => "movn",
+            SystemCall => "syscall",
+            Break => "break",
+            MoveFromHigh => "mfhi",
+            MoveToHigh => "mthi",
+            MoveFromLow => "mflo",
+            MoveToLow => "mtlo",
+            Multiply => "mult",
+            MultiplyUnsigned => "multu",
+            Divide => "div",
+            DivideUnsigned => "divu",
+            Add => "add",
+            AddUnsigned => "addu",
+            Subtract => "sub",
+            SubtractUnsigned => "subu",
+            And => "and",
+            Or => "or",
+            Xor => "xor",
+            Nor => "nor",
+            SetLessThan => "slt",
+            SetLessThanUnsigned => "sltu",
+            TrapGreaterEqual => "tge",
+            TrapGreaterEqualUnsigned => "tgeu",
+            TrapLessThan => "tlt",
+            TrapLessThanUnsigned => "tltu",
+            TrapEqual => "teq",
+            TrapNotEqual => "tne",
+        })
+    }
 }

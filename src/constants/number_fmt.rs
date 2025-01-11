@@ -1,4 +1,5 @@
 use num_derive::FromPrimitive;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 
 #[derive(Clone, Copy, Debug, Eq, FromPrimitive, PartialEq)]
 pub enum NumberFormat {
@@ -10,4 +11,15 @@ pub enum NumberFormat {
     Double = 17,
     Word = 20,
     // Long = 21,
+}
+
+impl Display for NumberFormat {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        use NumberFormat::*;
+        f.write_str(match *self {
+            Single | SingleNoPrefix => ".s",
+            Double | DoubleNoPrefix => ".d",
+            Word | WordNoPrefix => ".w",
+        })
+    }
 }

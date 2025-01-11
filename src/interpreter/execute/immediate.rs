@@ -1,9 +1,8 @@
-use super::super::{
-    instruction::{fields, Instruction},
-    memory::regions::Region,
-    Exception, Interpreter,
+use super::super::{memory::regions::Region, Exception, Interpreter};
+use crate::{
+    config::Endian, constants::opcodes::Opcode, disassembler::fields, sign_extend::SignExtend,
+    type_aliases::instruction::Instruction,
 };
-use crate::{config::Endian, constants::opcodes::Opcode, sign_extend::SignExtend};
 use num_traits::FromPrimitive;
 
 impl Interpreter {

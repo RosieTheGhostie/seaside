@@ -1,8 +1,8 @@
-use super::super::{
-    instruction::{fields, Instruction},
-    Exception, Interpreter,
+use super::super::{Exception, Interpreter};
+use crate::{
+    constants::fn_codes::SpecialFn, disassembler::fields, sign_extend::SignExtend,
+    type_aliases::instruction::Instruction,
 };
-use crate::{constants::fn_codes::SpecialFn, sign_extend::SignExtend};
 use num_traits::FromPrimitive;
 
 impl Interpreter {

@@ -1,4 +1,5 @@
 use num_derive::FromPrimitive;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 
 #[derive(Clone, Copy, Debug, Eq, FromPrimitive, PartialEq)]
 pub enum Coprocessor1Fn {
@@ -23,4 +24,32 @@ pub enum Coprocessor1Fn {
     CompareEqual = 0x32,     // c.eq.fmt
     CompareLessThan = 0x3c,  // c.lt.fmt
     CompareLessEqual = 0x3e, // c.le.fmt
+}
+
+impl Display for Coprocessor1Fn {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        use Coprocessor1Fn::*;
+        f.write_str(match *self {
+            Add => "add",
+            Subtract => "sub",
+            Multiply => "mul",
+            Divide => "div",
+            SquareRoot => "sqrt",
+            AbsoluteValue => "abs",
+            Move | MoveConditional => "mov", // `MoveConditional` will be properly prefixed later
+            Negate => "neg",
+            RoundWord => "round.w",
+            TruncateWord => "trunc.w",
+            CeilingWord => "ceil.w",
+            FloorWord => "floor.w",
+            MoveZero => "movz",
+            MoveNotZero => "movn",
+            ConvertToSingle => "cvt.s",
+            ConvertToDouble => "cvt.d",
+            ConvertToWord => "cvt.w",
+            CompareEqual => "c.eq",
+            CompareLessThan => "c.lt",
+            CompareLessEqual => "c.le",
+        })
+    }
 }

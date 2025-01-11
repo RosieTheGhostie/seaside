@@ -1,10 +1,9 @@
-use super::super::{
-    instruction::{fields, Instruction},
-    Exception, Interpreter,
-};
+use super::super::{Exception, Interpreter};
 use crate::{
     constants::{opcodes::Opcode, register},
+    disassembler::fields,
     sign_extend::SignExtend,
+    type_aliases::instruction::Instruction,
 };
 
 impl Interpreter {

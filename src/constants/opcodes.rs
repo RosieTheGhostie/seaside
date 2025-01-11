@@ -1,4 +1,5 @@
 use num_derive::FromPrimitive;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 
 #[derive(Clone, Copy, Debug, Eq, FromPrimitive, PartialEq)]
 pub enum Opcode {
@@ -39,4 +40,49 @@ pub enum Opcode {
     LoadDoubleCoprocessor1 = 0x35,       // ldc1
     StoreWordCoprocessor1 = 0x39,        // swc1
     StoreDoubleCoprocessor1 = 0x3d,      // sdc1
+}
+
+impl Display for Opcode {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        use Opcode::*;
+        f.write_str(match *self {
+            Special => "<special fn>",
+            RegisterImmediate => "<register immediate fn>",
+            Jump => "j",
+            JumpAndLink => "jal",
+            BranchEqual => "beq",
+            BranchNotEqual => "bne",
+            BranchLessEqualZero => "blez",
+            BranchGreaterThanZero => "bgtz",
+            AddImmediate => "addi",
+            AddImmediateUnsigned => "addiu",
+            SetLessThanImmediate => "slti",
+            SetLessThanImmediateUnsigned => "sltiu",
+            AndImmediate => "andi",
+            OrImmediate => "ori",
+            XorImmediate => "xori",
+            LoadUpperImmediate => "lui",
+            Coprocessor0 => "<coprocessor 0 fn>",
+            Coprocessor1 => "<coprocessor 1 fn>",
+            Special2 => "<special 2 fn>",
+            LoadByte => "lb",
+            LoadHalf => "lh",
+            LoadWordLeft => "lwl",
+            LoadWord => "lw",
+            LoadByteUnsigned => "lbu",
+            LoadHalfUnsigned => "lhu",
+            LoadWordRight => "lwr",
+            StoreByte => "sb",
+            StoreHalf => "sh",
+            StoreWordLeft => "swl",
+            StoreWord => "sw",
+            StoreConditional => "sc",
+            StoreWordRight => "swr",
+            LoadLinked => "ll",
+            LoadWordCoprocessor1 => "lwc1",
+            LoadDoubleCoprocessor1 => "ldc1",
+            StoreWordCoprocessor1 => "swc1",
+            StoreDoubleCoprocessor1 => "sdc1",
+        })
+    }
 }

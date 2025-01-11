@@ -1,6 +1,7 @@
 mod cmd_args;
 mod config;
 mod constants;
+mod disassembler;
 mod engine;
 mod interpreter;
 mod sign_extend;

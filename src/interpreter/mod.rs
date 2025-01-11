@@ -5,7 +5,6 @@ pub mod register_file;
 
 mod execute;
 mod file_handle;
-mod instruction;
 mod rng;
 mod syscalls;
 

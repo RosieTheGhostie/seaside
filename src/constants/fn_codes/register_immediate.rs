@@ -1,4 +1,5 @@
 use num_derive::FromPrimitive;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 
 #[derive(Clone, Copy, Debug, Eq, FromPrimitive, PartialEq)]
 pub enum RegisterImmediateFn {
@@ -12,4 +13,22 @@ pub enum RegisterImmediateFn {
     TrapNotEqualImmediate = 0x0e,             // tnei
     BranchLessThanZeroAndLink = 0x10,         // bltzal
     BranchGreaterEqualZeroAndLink = 0x11,     // bgezal
+}
+
+impl Display for RegisterImmediateFn {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        use RegisterImmediateFn::*;
+        f.write_str(match *self {
+            BranchLessThanZero => "bltz",
+            BranchGreaterEqualZero => "bgez",
+            TrapGreaterEqualImmediate => "tgei",
+            TrapGreaterEqualImmediateUnsigned => "tgeiu",
+            TrapLessThanImmediate => "tlti",
+            TrapLessThanImmediateUnsigned => "tltiu",
+            TrapEqualImmediate => "teqi",
+            TrapNotEqualImmediate => "tnei",
+            BranchLessThanZeroAndLink => "bltzal",
+            BranchGreaterEqualZeroAndLink => "bgezal",
+        })
+    }
 }
