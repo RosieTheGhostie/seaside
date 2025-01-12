@@ -147,7 +147,7 @@ impl DataRegion {
     }
 
     pub fn populate(&mut self, bytes: Vec<u8>) {
-        for (old, new) in zip(&mut self.data, bytes) {
+        for (old, new) in zip(self.data.iter_mut(), bytes) {
             *old = new;
         }
     }

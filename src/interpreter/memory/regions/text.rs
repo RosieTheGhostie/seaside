@@ -95,7 +95,7 @@ impl TextRegion {
 
     pub fn populate(&mut self, bytes: Vec<u8>, endian: Endian) {
         let byte_stream = ByteStream::<'_, u32>::new(&bytes, endian);
-        for (old, new) in zip(&mut self.instructions, byte_stream) {
+        for (old, new) in zip(self.instructions.iter_mut(), byte_stream) {
             *old = new;
         }
         self.num_instructions = bytes.len() >> 2;
