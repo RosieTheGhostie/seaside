@@ -25,18 +25,19 @@ pub fn destructure(opcode: Opcode, instruction: Instruction) -> Option<Destructu
         AddImmediate
         | AddImmediateUnsigned
         | SetLessThanImmediate
-        | SetLessThanImmediateUnsigned
-        | AndImmediate
-        | OrImmediate
-        | XorImmediate => {
+        | SetLessThanImmediateUnsigned => {
             components[0] = Component::Gpr(rt);
             components[1] = Component::Gpr(rs);
             components[2] = Component::Immediate(imm);
         }
+        AndImmediate | OrImmediate | XorImmediate => {
+            components[0] = Component::Gpr(rt);
+            components[1] = Component::Gpr(rs);
+            components[2] = Component::HexImmediate(imm);
+        }
         LoadUpperImmediate => {
             components[0] = Component::Gpr(rt);
-            // It's not an offset, but treating it as one makes the disassembler display it as hex.
-            components[1] = Component::Offset(imm);
+            components[1] = Component::HexImmediate(imm);
         }
         LoadByte
         | LoadHalf
@@ -62,10 +63,10 @@ pub fn destructure(opcode: Opcode, instruction: Instruction) -> Option<Destructu
         }
         _ => return None,
     }
-    Some(DestructuredInstruction {
-        operation: Operation::Opcode(opcode),
+    Some(DestructuredInstruction::new(
+        Operation::Opcode(opcode),
         components,
-    })
+    ))
 }
 
 fn destructure_regimm(rs: u8, rt: u8, imm: u16) -> Option<DestructuredInstruction> {
@@ -90,8 +91,8 @@ fn destructure_regimm(rs: u8, rt: u8, imm: u16) -> Option<DestructuredInstructio
         | TrapEqualImmediate
         | TrapNotEqualImmediate => Component::Immediate(imm),
     };
-    Some(DestructuredInstruction {
-        operation: Operation::RegisterImmediateFn(r#fn),
+    Some(DestructuredInstruction::new(
+        Operation::RegisterImmediateFn(r#fn),
         components,
-    })
+    ))
 }

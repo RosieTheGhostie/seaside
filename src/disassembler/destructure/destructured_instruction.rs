@@ -2,12 +2,29 @@ use super::{
     component::{Component, FprDisplayer, GprDisplayer},
     operation::Operation,
 };
+use crate::type_aliases::address::Address;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
 #[derive(Debug, Default)]
 pub struct DestructuredInstruction {
     pub operation: Operation,
     pub components: [Component; 5],
+    pub address: Address,
+}
+
+impl DestructuredInstruction {
+    pub fn new(operation: Operation, components: [Component; 5]) -> Self {
+        Self {
+            operation,
+            components,
+            address: 0x00000000,
+        }
+    }
+
+    pub fn with_address(mut self, address: Address) -> Self {
+        self.address = address;
+        self
+    }
 }
 
 impl Display for DestructuredInstruction {
@@ -38,9 +55,16 @@ impl Display for DestructuredInstruction {
                 Component::Condition(c) => write!(f, "{}", if c { 't' } else { 'f' }),
                 Component::Shamt(shamt) => write!(f, " {shamt}"),
                 Component::Immediate(imm) => write!(f, " {}", imm as i16),
-                Component::Offset(offset) => write!(f, " 0x{offset:04x}"),
+                Component::HexImmediate(imm) => write!(f, " 0x{imm:04x}"),
+                Component::Offset(offset) => {
+                    let address = self.address + 4 + ((offset as u32) << 2);
+                    write!(f, " 0x{address:08x}")
+                }
                 Component::Code(code) => write!(f, " {code}"),
-                Component::Index(index) => write!(f, " 0x{index:08x}"),
+                Component::Index(index) => {
+                    let address = ((self.address + 4) & 0xF0000000) | (index << 2);
+                    write!(f, " 0x{address:08x}")
+                }
             }?;
         }
         Ok(())

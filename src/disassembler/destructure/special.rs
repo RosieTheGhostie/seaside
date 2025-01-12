@@ -52,8 +52,8 @@ pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> 
         }
         SystemCall => {}
     };
-    Some(DestructuredInstruction {
-        operation: Operation::SpecialFn(r#fn),
+    Some(DestructuredInstruction::new(
+        Operation::SpecialFn(r#fn),
         components,
-    })
+    ))
 }

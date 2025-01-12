@@ -5,9 +5,9 @@ pub use error::{Error, ErrorKind};
 use crate::{
     byte_stream::ByteStream,
     cmd_args::CmdArgs,
-    config::{Config, Endian, Validate},
+    config::{Config, Validate},
     interpreter::Interpreter,
-    type_aliases::instruction::Instruction,
+    type_aliases::{address::Address, instruction::Instruction},
 };
 use std::{
     env::{current_exe, set_current_dir},
@@ -77,8 +77,12 @@ pub fn run(interpreter: &mut Interpreter) -> Result<Option<u8>, Error> {
     }
 }
 
-pub fn disassemble(instruction: Instruction) -> Result<(), Error> {
-    match crate::disassembler::disassemble(instruction) {
+pub fn disassemble(instruction: Instruction, address: Option<Address>) -> Result<(), Error> {
+    match crate::disassembler::disassemble_advanced(
+        instruction,
+        address.unwrap_or_default(),
+        address.is_some(),
+    ) {
         Some(disassembly) => {
             println!("{disassembly}");
             Ok(())
@@ -87,11 +91,25 @@ pub fn disassemble(instruction: Instruction) -> Result<(), Error> {
     }
 }
 
-pub fn disassemble_segment(segment: PathBuf, endian: Endian) -> Result<(), Error> {
+pub fn disassemble_segment(
+    config: Config,
+    segment: PathBuf,
+    start_address: Option<Address>,
+) -> Result<(), Error> {
+    let mut address = if let Some(address) = start_address {
+        address
+    } else if segment.ends_with("text") {
+        config.memory_map.segments.text.address_range.base
+    } else if segment.ends_with("ktext") {
+        config.memory_map.segments.ktext.address_range.base
+    } else {
+        0
+    };
     let bytes = std::fs::read(segment)
         .map_err(|_| Error::new(ErrorKind::NotFound, "couldn't find that segment"))?;
-    for instruction in ByteStream::<'_, u32>::new(&bytes, endian) {
-        disassemble(instruction)?;
+    for instruction in ByteStream::<'_, u32>::new(&bytes, config.endian) {
+        disassemble(instruction, Some(address))?;
+        address += 4;
     }
     Ok(())
 }

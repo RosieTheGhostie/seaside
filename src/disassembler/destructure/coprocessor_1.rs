@@ -14,10 +14,10 @@ pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> 
         components[0] = Component::Condition(fields::condition_from_index(ft));
         components[1] = Component::Cc(fields::cc_from_index(ft));
         components[2] = Component::Offset(fields::imm(instruction));
-        return Some(DestructuredInstruction {
-            operation: Operation::BranchCoprocessor1,
+        return Some(DestructuredInstruction::new(
+            Operation::BranchCoprocessor1,
             components,
-        });
+        ));
     }
     let fmt = NumberFormat::from_u8(fmt)?;
     let fs = fields::fs(instruction);
@@ -56,8 +56,8 @@ pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> 
             components[3] = Component::Fpr(ft);
         }
     }
-    Some(DestructuredInstruction {
-        operation: Operation::Coprocessor1Fn(r#fn),
+    Some(DestructuredInstruction::new(
+        Operation::Coprocessor1Fn(r#fn),
         components,
-    })
+    ))
 }

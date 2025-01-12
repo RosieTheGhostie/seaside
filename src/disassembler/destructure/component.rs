@@ -13,6 +13,7 @@ pub enum Component {
     Condition(bool),
     Shamt(u8),
     Immediate(u16),
+    HexImmediate(u16),
     Offset(u16),
     Code(u32),
     Index(u32),

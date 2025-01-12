@@ -15,22 +15,25 @@ pub use destructured_instruction::DestructuredInstruction;
 use super::fields;
 use crate::{
     constants::{instruction_format::InstructionFormat, opcodes::Opcode},
-    type_aliases::instruction::Instruction,
+    type_aliases::{address::Address, instruction::Instruction},
 };
 use num_traits::FromPrimitive;
 
-pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> {
+pub fn destructure(instruction: Instruction, address: Address) -> Option<DestructuredInstruction> {
     use InstructionFormat::*;
     let opcode = match Opcode::from_u8(fields::opcode(instruction)) {
         Some(opcode) => opcode,
         None => return None,
     };
-    match InstructionFormat::from(opcode) {
-        Special => special::destructure(instruction),
-        Immediate => immediate::destructure(opcode, instruction),
-        Jump => jump::destructure(opcode, instruction),
-        Coprocessor0 => coprocessor_0::destructure(instruction),
-        Coprocessor1 => coprocessor_1::destructure(instruction),
-        Special2 => special_2::destructure(instruction),
-    }
+    Some(
+        match InstructionFormat::from(opcode) {
+            Special => special::destructure(instruction),
+            Immediate => immediate::destructure(opcode, instruction),
+            Jump => jump::destructure(opcode, instruction),
+            Coprocessor0 => coprocessor_0::destructure(instruction),
+            Coprocessor1 => coprocessor_1::destructure(instruction),
+            Special2 => special_2::destructure(instruction),
+        }?
+        .with_address(address),
+    )
 }

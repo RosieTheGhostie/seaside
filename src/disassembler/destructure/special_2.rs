@@ -24,8 +24,8 @@ pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> 
             components[1] = Component::Gpr(rs);
         }
     }
-    Some(DestructuredInstruction {
-        operation: Operation::Special2Fn(r#fn),
+    Some(DestructuredInstruction::new(
+        Operation::Special2Fn(r#fn),
         components,
-    })
+    ))
 }

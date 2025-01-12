@@ -15,8 +15,8 @@ pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> 
         }
         ErrorReturn => {}
     }
-    Some(DestructuredInstruction {
-        operation: Operation::Coprocessor0Fn(r#fn),
+    Some(DestructuredInstruction::new(
+        Operation::Coprocessor0Fn(r#fn),
         components,
-    })
+    ))
 }

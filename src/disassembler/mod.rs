@@ -3,18 +3,24 @@ pub mod fields;
 
 mod destructure;
 
-use crate::type_aliases::instruction::Instruction;
+use crate::type_aliases::{address::Address, instruction::Instruction};
 use destructure::destructure;
 
-pub fn disassemble_all(instructions: &[Instruction]) -> Option<Vec<String>> {
-    instructions
-        .iter()
-        .map(|&instruction| disassemble(instruction))
-        .collect()
+pub fn disassemble_advanced(
+    instruction: Instruction,
+    address: Address,
+    prefix_with_address: bool,
+) -> Option<String> {
+    let destructured = destructure(instruction, address)?;
+    Some(if prefix_with_address {
+        format!("{address:08x} | {destructured}")
+    } else {
+        destructured.to_string()
+    })
 }
 
 pub fn disassemble(instruction: Instruction) -> Option<String> {
-    Some(destructure(instruction)?.to_string())
+    Some(destructure(instruction, 0x00000000)?.to_string())
 }
 
 #[cfg(test)]

@@ -27,17 +27,26 @@ pub enum Commands {
 }
 
 #[derive(Args, Debug)]
-#[group(required = true, multiple = false)]
 pub struct DisassemblyArgs {
+    #[command(flatten)]
+    pub target: DisassemblyTarget,
+    /// The starting address of the instruction(s) to disassemble.
+    #[arg(long, alias = "addr", value_parser = ValueParser::new(parse_u32))]
+    pub address: Option<u32>,
+}
+
+#[derive(Args, Debug)]
+#[group(required = true, multiple = false)]
+pub struct DisassemblyTarget {
     /// A machine code instruction.
-    #[arg(long, value_parser = ValueParser::new(parse_instruction))]
+    #[arg(long, value_parser = ValueParser::new(parse_u32))]
     pub instruction: Option<Instruction>,
     /// The path of a file containing machine code instructions.
     #[arg(long)]
     pub segment: Option<PathBuf>,
 }
 
-fn parse_instruction(input: &str) -> Result<Instruction, ParseIntError> {
+fn parse_u32(input: &str) -> Result<Instruction, ParseIntError> {
     if let Some(bits) = input.strip_prefix("0b") {
         Instruction::from_str_radix(bits, 2)
     } else if let Some(octits) = input.strip_prefix("0o") {

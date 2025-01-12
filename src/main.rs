@@ -9,7 +9,7 @@ mod sign_extend;
 mod type_aliases;
 
 use clap::Parser;
-use cmd_args::{CmdArgs, Commands, DisassemblyArgs};
+use cmd_args::{CmdArgs, Commands, DisassemblyArgs, DisassemblyTarget};
 use config::Config;
 use minimal_logging::macros::{fatalln, grayln, warnln};
 use std::env::current_exe;
@@ -35,13 +35,21 @@ fn main() {
             Err(error) => Err(error),
         },
         Commands::Disassemble(DisassemblyArgs {
-            instruction: Some(instruction),
-            segment: None,
-        }) => engine::disassemble(instruction),
+            target:
+                DisassemblyTarget {
+                    instruction: Some(instruction),
+                    segment: None,
+                },
+            address: start_address,
+        }) => engine::disassemble(instruction, start_address),
         Commands::Disassemble(DisassemblyArgs {
-            instruction: None,
-            segment: Some(segment),
-        }) => engine::disassemble_segment(segment, config.endian),
+            target:
+                DisassemblyTarget {
+                    instruction: None,
+                    segment: Some(segment),
+                },
+            address: start_address,
+        }) => engine::disassemble_segment(config, segment, start_address),
         Commands::ExePath => print_exe_path(),
         Commands::Experiment => experimental_code(),
         _ => unreachable!("disassemble subcommand will always have exactly one argument"),
