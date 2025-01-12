@@ -12,19 +12,15 @@ seaside is currently a huge work-in-progress, so there aren't many features yet;
 
 ### Assembler (*not implemented*)
 
+Assemble MIPS source code into raw binary files for execution.
+
 - [ ] Multi-file support
 - [ ] MARS-style macros
 - [ ] Support for `.set`
 
-### [Debug Adapter Protocol (DAP)](https://microsoft.github.io/debug-adapter-protocol/) Compatibility (*not implemented*)
+### Interpreter (*mostly implemented*)
 
-- [ ] Set breakpoints
-- [ ] Step through a program
-- [ ] Step over a procedure call
-- [ ] Inspect the contents of each register
-- [ ] View virtual memory in real-time
-
-### Interpreter (*partially implemented*)
+Run programs seamlessly with the power of the seaside interpreter.
 
 - [X] 136/136 basic instructions supported by MARS
 - [ ] 26/39 system calls supported by MARS
@@ -36,7 +32,16 @@ seaside is currently a huge work-in-progress, so there aren't many features yet;
   - [ ] 0/10 GUI services
 - [X] Control over user- and kernel-space
 
+### Disassembler
+
+Convert raw machine code into a human-readable representation using MIPS Assembly.
+
+- Single instruction disassembly
+- Full segment disassembly
+
 ### Configuration (*mostly implemented*)
+
+Change the behavior of the seaside engine to your preference.
 
 - [X] Byte order (a.k.a. endianness)
 - [X] Memory map
@@ -48,6 +53,16 @@ seaside is currently a huge work-in-progress, so there aren't many features yet;
 - [X] Toggle individual system calls
 - [ ] Toggle individual directives
 - [ ] + more!!!
+
+### [Debug Adapter Protocol (DAP)](https://microsoft.github.io/debug-adapter-protocol/) Compatibility (*not implemented*)
+
+Use with a complementary extension in your IDE to debug your programs.
+
+- [ ] Set breakpoints
+- [ ] Step through a program
+- [ ] Step over a procedure call
+- [ ] Inspect the contents of each register
+- [ ] View virtual memory in real-time
 
 ## Usage
 
