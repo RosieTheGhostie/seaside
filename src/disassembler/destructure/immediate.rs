@@ -29,13 +29,14 @@ pub fn destructure(opcode: Opcode, instruction: Instruction) -> Option<Destructu
         | AndImmediate
         | OrImmediate
         | XorImmediate => {
-            components[0] = Component::Gpr(rs);
-            components[1] = Component::Gpr(rt);
+            components[0] = Component::Gpr(rt);
+            components[1] = Component::Gpr(rs);
             components[2] = Component::Immediate(imm);
         }
         LoadUpperImmediate => {
-            components[0] = Component::Gpr(rs);
-            components[1] = Component::Immediate(imm);
+            components[0] = Component::Gpr(rt);
+            // It's not an offset, but treating it as one makes the disassembler display it as hex.
+            components[1] = Component::Offset(imm);
         }
         LoadByte
         | LoadHalf

@@ -41,8 +41,8 @@ mod tests {
 
     #[test]
     fn addiu() {
-        let disassembled = disassemble(0x27bdfffc).expect("disassembly failed");
-        assert_eq!(disassembled, "addiu $sp, $sp, -4");
+        let disassembled = disassemble(0x24020004).expect("disassembly failed");
+        assert_eq!(disassembled, "addiu $v0, $zero, 4");
     }
 
     #[test]
@@ -65,7 +65,7 @@ mod tests {
 
     #[test]
     fn lb() {
-        let disassembled = disassemble(0x83a80000).expect("disassembly failed");
-        assert_eq!(disassembled, "lb $t0, 0($sp)");
+        let disassembled = disassemble(0x83a80004).expect("disassembly failed");
+        assert_eq!(disassembled, "lb $t0, 4($sp)");
     }
 }

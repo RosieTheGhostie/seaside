@@ -3,9 +3,11 @@ pub mod error;
 pub use error::{Error, ErrorKind};
 
 use crate::{
+    byte_stream::ByteStream,
     cmd_args::CmdArgs,
-    config::{Config, Validate},
+    config::{Config, Endian, Validate},
     interpreter::Interpreter,
+    type_aliases::instruction::Instruction,
 };
 use std::{
     env::{current_exe, set_current_dir},
@@ -73,6 +75,25 @@ pub fn run(interpreter: &mut Interpreter) -> Result<Option<u8>, Error> {
             Err(Error::new(ErrorKind::MipsException, exception))
         }
     }
+}
+
+pub fn disassemble(instruction: Instruction) -> Result<(), Error> {
+    match crate::disassembler::disassemble(instruction) {
+        Some(disassembly) => {
+            println!("{disassembly}");
+            Ok(())
+        }
+        None => Err(Error::from(ErrorKind::MalformedMachineCode)),
+    }
+}
+
+pub fn disassemble_segment(segment: PathBuf, endian: Endian) -> Result<(), Error> {
+    let bytes = std::fs::read(segment)
+        .map_err(|_| Error::new(ErrorKind::NotFound, "couldn't find that segment"))?;
+    for instruction in ByteStream::<'_, u32>::new(&bytes, endian) {
+        disassemble(instruction)?;
+    }
+    Ok(())
 }
 
 fn find_seaside_toml() -> Result<PathBuf, Error> {
