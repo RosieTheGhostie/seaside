@@ -1,6 +1,4 @@
-# seaside: A modern tool to learn MIPS Assembly
-
-This tool rethinks the way educators and students write MIPS Assembly.
+![seaside: a modern tool to learn MIPS assembly](res/banner.png)
 
 ## Motivation
 
