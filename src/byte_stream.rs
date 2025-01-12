@@ -28,6 +28,16 @@ impl<'a> ByteStream<'a, u32> {
     }
 }
 
+impl<'a> ByteStream<'a, u64> {
+    pub fn new(bytes: &'a [u8], endian: Endian) -> Self {
+        Self {
+            marker: PhantomData,
+            chunks: bytes.chunks_exact(8),
+            endian,
+        }
+    }
+}
+
 impl Iterator for ByteStream<'_, u16> {
     type Item = u16;
 
@@ -50,6 +60,21 @@ impl Iterator for ByteStream<'_, u32> {
         Some(match self.endian {
             Endian::Little => u32::from_le_bytes(bytes),
             Endian::Big => u32::from_be_bytes(bytes),
+        })
+    }
+}
+
+impl Iterator for ByteStream<'_, u64> {
+    type Item = u64;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let chunk = self.chunks.next()?;
+        let bytes = [
+            chunk[0], chunk[1], chunk[2], chunk[3], chunk[4], chunk[5], chunk[6], chunk[7],
+        ];
+        Some(match self.endian {
+            Endian::Little => u64::from_le_bytes(bytes),
+            Endian::Big => u64::from_be_bytes(bytes),
         })
     }
 }
