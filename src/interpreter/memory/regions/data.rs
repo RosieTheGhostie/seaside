@@ -1,6 +1,6 @@
 use super::{super::super::Exception, Region};
 use crate::type_aliases::address::{is_aligned, Address};
-use std::ops::Range;
+use std::{iter::zip, ops::Range};
 
 pub struct DataRegion {
     addresses: Range<Address>,
@@ -147,8 +147,8 @@ impl DataRegion {
     }
 
     pub fn populate(&mut self, bytes: Vec<u8>) {
-        for (i, &byte) in bytes.iter().enumerate() {
-            self.data[i] = byte;
+        for (old, new) in zip(&mut self.data, bytes) {
+            *old = new;
         }
     }
 

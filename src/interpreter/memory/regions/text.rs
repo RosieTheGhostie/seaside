@@ -1,9 +1,10 @@
 use super::{super::super::Exception, Region};
 use crate::{
+    byte_stream::ByteStream,
     config::Endian,
     type_aliases::address::{is_aligned, Address},
 };
-use std::ops::Range;
+use std::{iter::zip, ops::Range};
 
 pub struct TextRegion {
     pub addresses: Range<Address>,
@@ -93,42 +94,12 @@ impl TextRegion {
     }
 
     pub fn populate(&mut self, bytes: Vec<u8>, endian: Endian) {
-        match endian {
-            Endian::Little => self.populate_from_le(bytes),
-            Endian::Big => self.populate_from_be(bytes),
+        let byte_stream = ByteStream::<'_, u32>::new(&bytes, endian);
+        for (old, new) in zip(&mut self.instructions, byte_stream) {
+            *old = new;
         }
-    }
-
-    fn populate_from_le(&mut self, bytes: Vec<u8>) {
-        let mut byte_index: usize = 0;
-        let num_instructions = bytes.len() >> 2;
-        for i in 0..num_instructions {
-            self.instructions[i] = u32::from_le_bytes([
-                bytes[byte_index],
-                bytes[byte_index + 1],
-                bytes[byte_index + 2],
-                bytes[byte_index + 3],
-            ]);
-            byte_index += 4;
-        }
-        self.num_instructions = num_instructions;
-        self.end_pc = Some(byte_index as u32 + self.addresses.start);
-    }
-
-    fn populate_from_be(&mut self, bytes: Vec<u8>) {
-        let mut byte_index: usize = 0;
-        let num_instructions = bytes.len() >> 2;
-        for i in 0..num_instructions {
-            self.instructions[i] = u32::from_be_bytes([
-                bytes[byte_index],
-                bytes[byte_index + 1],
-                bytes[byte_index + 2],
-                bytes[byte_index + 3],
-            ]);
-            byte_index += 4;
-        }
-        self.num_instructions = num_instructions;
-        self.end_pc = Some(byte_index as u32 + self.addresses.start);
+        self.num_instructions = bytes.len() >> 2;
+        self.end_pc = Some((self.num_instructions << 2) as u32 + self.addresses.start);
     }
 
     fn calculate_index(&self, address: Address, assert_aligned: bool) -> Option<usize> {
