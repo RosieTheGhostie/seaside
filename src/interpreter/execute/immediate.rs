@@ -27,6 +27,7 @@ impl Interpreter {
             RegisterImmediate => self.execute_regimm(rt, rs_value, imm),
             BranchEqual => self.beq(rs_value, rt_value, imm),
             BranchNotEqual => self.bne(rs_value, rt_value, imm),
+            BranchLessEqualZero => self.blez(rs_value, imm),
             BranchGreaterThanZero => self.bgtz(rs_value, imm),
             AddImmediate => self.addi(rt, rs_value, imm),
             AddImmediateUnsigned => self.addiu(rt, rs_value, imm),
@@ -74,6 +75,14 @@ impl Interpreter {
         Ok(())
     }
 
+    /// If `rs_value` is non-positive, branches `offset` instructions ahead.
+    fn blez(&mut self, rs_value: u32, offset: u16) -> Result<(), Exception> {
+        if rs_value as i32 <= 0 {
+            self.branch(offset);
+        }
+        Ok(())
+    }
+
     /// If `rs_value` is strictly positive, branches `offset` instructions ahead.
     fn bgtz(&mut self, rs_value: u32, offset: u16) -> Result<(), Exception> {
         if rs_value as i32 > 0 {
@@ -87,7 +96,7 @@ impl Interpreter {
     /// # Exceptions
     ///
     /// Raises an [integer overflow/underflow][Exception::IntegerOverflowOrUnderflow] exception if
-    /// the sum cannot be represented as a signed 32-bit integer.
+    /// the sum cannot be represented as an unsigned 32-bit integer.
     fn addi(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
         let imm: i32 = imm.sign_extend();
         match u32::checked_add_signed(rs_value, imm) {
@@ -514,26 +523,28 @@ impl Interpreter {
         }
     }
 
-    /// If `rs_value` is equal to `imm`, raises a [trap][Exception::Trap] exception.
+    /// If `rs_value` is equal to the sign-extended `imm`, raises a [trap][Exception::Trap] exception.
     ///
     /// # Exceptions
     ///
     /// Raises a [trap][Exception::Trap] exception when the condition described above passes.
     fn teqi(&mut self, rs_value: u32, imm: u16) -> Result<(), Exception> {
-        if rs_value == (imm as u32) {
+        let imm: i32 = imm.sign_extend();
+        if (rs_value as i32) == imm {
             Err(Exception::Trap)
         } else {
             Ok(())
         }
     }
 
-    /// If `rs_value` is not equal to `imm`, raises a [trap][Exception::Trap] exception.
+    /// If `rs_value` is not equal to the sign-extended `imm`, raises a [trap][Exception::Trap] exception.
     ///
     /// # Exceptions
     ///
     /// Raises a [trap][Exception::Trap] exception when the condition described above passes.
     fn tnei(&mut self, rs_value: u32, imm: u16) -> Result<(), Exception> {
-        if rs_value != (imm as u32) {
+        let imm: i32 = imm.sign_extend();
+        if (rs_value as i32) != imm {
             Err(Exception::Trap)
         } else {
             Ok(())
