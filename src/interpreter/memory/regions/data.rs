@@ -3,7 +3,7 @@ use crate::type_aliases::address::{is_aligned, Address};
 use std::{iter::zip, ops::Range};
 
 pub struct DataRegion {
-    addresses: Range<Address>,
+    pub addresses: Range<Address>,
     data: Box<[u8]>,
 }
 

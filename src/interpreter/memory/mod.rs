@@ -121,4 +121,24 @@ impl Memory {
     pub fn pc_past_end(&self, pc: Address) -> bool {
         self.instruction_memory.pc_past_end(pc)
     }
+
+    pub fn free_heap_space(&self) -> &u32 {
+        &self.data_memory.free_heap_space
+    }
+
+    pub fn free_heap_space_mut(&mut self) -> &mut u32 {
+        &mut self.data_memory.free_heap_space
+    }
+
+    pub fn used_heap_space(&self) -> u32 {
+        self.data_memory.used_heap_space()
+    }
+
+    pub fn next_heap_address(&self) -> &Address {
+        &self.data_memory.next_heap_address
+    }
+
+    pub fn next_heap_address_mut(&mut self) -> &mut Address {
+        &mut self.data_memory.next_heap_address
+    }
 }

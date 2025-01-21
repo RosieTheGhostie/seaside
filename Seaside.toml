@@ -6,6 +6,7 @@ project_directory_is_cwd = true
 kernel_space_accessible = true
 self_modifying_code = false
 delay_slot = false
+freeable_heap_allocations = true
 show_crash_handler = true
 
 [features.assembler]

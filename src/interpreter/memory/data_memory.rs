@@ -11,6 +11,8 @@ pub struct DataMemory {
     stack: DataRegion,
     kdata: DataRegion,
     mmio: DataRegion,
+    pub next_heap_address: Address,
+    pub free_heap_space: u32,
 }
 
 impl Region for DataMemory {
@@ -113,6 +115,8 @@ impl DataMemory {
         kdata: DataRegion,
         mmio: DataRegion,
     ) -> Self {
+        let next_heap_address: Address = heap.addresses.start;
+        let free_heap_space: u32 = heap.addresses.len() as u32;
         Self {
             r#extern,
             data,
@@ -120,7 +124,13 @@ impl DataMemory {
             stack,
             kdata,
             mmio,
+            next_heap_address,
+            free_heap_space,
         }
+    }
+
+    pub fn used_heap_space(&self) -> u32 {
+        self.heap.addresses.len() as u32 - self.free_heap_space
     }
 
     fn region_containing(&self, address: Address) -> Option<&DataRegion> {

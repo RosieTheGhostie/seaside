@@ -184,8 +184,35 @@ impl Interpreter {
     }
 
     fn sbrk(&mut self) -> Result<(), Exception> {
-        let _bytes_to_allocate: u32 = self.registers.read_u32_from_cpu(register::A0)?;
-        todo!("how does sbrk work???");
+        let n_bytes: i32 = self.registers.read_i32_from_cpu(register::A0)?;
+        // Adjust value of `n_bytes` to be a multiple of four.
+        let should_allocate: bool = n_bytes > 0;
+        let mut n_bytes: u32 = n_bytes.unsigned_abs();
+        if n_bytes & 0b11 != 0 {
+            n_bytes = ((n_bytes >> 2) + 1) << 2;
+        }
+
+        let address = if should_allocate {
+            let free_heap_space = self.memory.free_heap_space_mut();
+            if let Some(new_free_space) = free_heap_space.checked_sub(n_bytes) {
+                *free_heap_space = new_free_space;
+                let next_available = self.memory.next_heap_address_mut();
+                let address = *next_available;
+                *next_available += n_bytes;
+                address
+            } else {
+                0
+            }
+        } else if self.freeable_heap_allocations {
+            n_bytes = n_bytes.min(self.memory.used_heap_space());
+            *self.memory.free_heap_space_mut() += n_bytes;
+            *self.memory.next_heap_address_mut() -= n_bytes;
+            0
+        } else {
+            return Err(Exception::SyscallFailure);
+        };
+
+        self.registers.write_u32_to_cpu(register::V0, address)
     }
 
     fn exit(&mut self) -> Result<(), Exception> {

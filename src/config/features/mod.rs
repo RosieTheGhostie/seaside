@@ -23,6 +23,9 @@ pub struct Features {
     /// Simulate the delay slot.
     #[serde(default = "r#false")]
     pub delay_slot: bool,
+    /// Allow `sbrk` to free memory when given a negative argument.
+    #[serde(default = "r#false")]
+    pub freeable_heap_allocations: bool,
     /// Enables displaying a crash handler when an unhandled exception is thrown.
     #[serde(default = "r#true")]
     pub show_crash_handler: bool,
