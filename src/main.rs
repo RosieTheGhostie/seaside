@@ -11,7 +11,7 @@ mod type_aliases;
 use clap::Parser;
 use cmd_args::{CmdArgs, Commands, DisassemblyArgs, DisassemblyTarget};
 use config::Config;
-use minimal_logging::macros::{fatalln, grayln, warnln};
+use minimal_logging::macros::{fatalln, grayln};
 use std::env::current_exe;
 
 fn main() {
@@ -51,6 +51,7 @@ fn main() {
             address: start_address,
         }) => engine::disassemble_segment(config, segment, start_address),
         Commands::ExePath => print_exe_path(),
+        #[cfg(debug_assertions)]
         Commands::Experiment => experimental_code(),
         _ => unreachable!("disassemble subcommand will always have exactly one argument"),
     } {
@@ -71,7 +72,8 @@ fn print_exe_path() -> Result<(), engine::Error> {
     }
 }
 
+#[cfg(debug_assertions)]
 fn experimental_code() -> Result<(), engine::Error> {
-    warnln!("no experimental code to run");
+    minimal_logging::macros::warnln!("no experimental code to run");
     Ok(())
 }

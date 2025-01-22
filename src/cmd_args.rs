@@ -23,6 +23,7 @@ pub enum Commands {
     /// Prints the file path of the seaside executable.
     ExePath,
     /// Runs experimental code.
+    #[cfg(debug_assertions)]
     Experiment,
 }
 
