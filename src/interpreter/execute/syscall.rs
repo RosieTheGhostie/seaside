@@ -1,5 +1,5 @@
 use super::{
-    super::{memory::regions::Region, syscalls::Syscalls},
+    super::{memory::regions::Region, syscalls::Syscalls, SyscallFailureKind},
     Exception, Interpreter,
 };
 use crate::{
@@ -20,8 +20,15 @@ impl Interpreter {
         use service_codes::*;
         let service_code = self.registers.read_u32_from_cpu(register::V0)? as u8;
         let syscall_flag = Syscalls::from_bits_truncate(1 << service_code);
+        if !Syscalls::all().intersects(syscall_flag) {
+            return Err(Exception::SyscallFailure(
+                SyscallFailureKind::UnknownServiceCode(service_code),
+            ));
+        }
         if !self.syscalls.intersects(syscall_flag) {
-            return Err(Exception::SyscallFailure);
+            return Err(Exception::SyscallFailure(
+                SyscallFailureKind::ServiceDisabled(service_code),
+            ));
         }
         match service_code {
             PRINT_INT => self.print_int(),
@@ -63,7 +70,9 @@ impl Interpreter {
             MESSAGE_DIALOG_FLOAT => self.message_dialog_float(),
             MESSAGE_DIALOG_DOUBLE => self.message_dialog_double(),
             MESSAGE_DIALOG_STRING => self.message_dialog_string(),
-            _ => Err(Exception::SyscallFailure),
+            _ => Err(Exception::SyscallFailure(
+                SyscallFailureKind::UnknownServiceCode(service_code),
+            )),
         }
     }
 }
@@ -93,9 +102,9 @@ impl Interpreter {
     fn print_string(&mut self) -> Result<(), Exception> {
         let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let string = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
-            .map_err(|_| Exception::SyscallFailure)?
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
             .to_str()
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
         print!("{string}");
         self.stdout_pending_flush = true;
         Ok(())
@@ -104,42 +113,42 @@ impl Interpreter {
     fn read_int(&mut self) -> Result<(), Exception> {
         let mut buffer = String::new();
         self.flush_stdout_if_necessary()
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::StdoutFlushFailed))?;
         stdin()
             .read_line(&mut buffer)
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::StdinReadFailed))?;
         let parsed: i32 = buffer
             .trim()
             .parse()
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::ParseError))?;
         self.registers.write_i32_to_cpu(register::V0, parsed)
     }
 
     fn read_float(&mut self) -> Result<(), Exception> {
         let mut buffer = String::new();
         self.flush_stdout_if_necessary()
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::StdoutFlushFailed))?;
         stdin()
             .read_line(&mut buffer)
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::StdinReadFailed))?;
         let parsed: f32 = buffer
             .trim()
             .parse()
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::ParseError))?;
         self.registers.write_f32_to_fpu(0, parsed)
     }
 
     fn read_double(&mut self) -> Result<(), Exception> {
         let mut buffer = String::new();
         self.flush_stdout_if_necessary()
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::StdoutFlushFailed))?;
         stdin()
             .read_line(&mut buffer)
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::StdinReadFailed))?;
         let parsed: f64 = buffer
             .trim()
             .parse()
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::ParseError))?;
         self.registers.write_f64_to_fpu(0, parsed)
     }
 
@@ -147,7 +156,7 @@ impl Interpreter {
         // To appease the borrow checker, we must flush up here instead of directly before the read
         // from stdin like the other read services.
         self.flush_stdout_if_necessary()
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::StdoutFlushFailed))?;
         let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let buffer = self.memory.get_slice_mut(buffer_address)?;
         let max_bytes = usize::min(
@@ -161,7 +170,7 @@ impl Interpreter {
         let mut temp = String::new();
         stdin()
             .read_line(&mut temp)
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::StdinReadFailed))?;
         let slice = temp
             .strip_suffix('\n')
             .unwrap_or(&temp)
@@ -180,7 +189,7 @@ impl Interpreter {
         };
         buffer
             .write_all(&bytes)
-            .map_err(|_| Exception::SyscallFailure)
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::WriteFailed))
     }
 
     fn sbrk(&mut self) -> Result<(), Exception> {
@@ -209,7 +218,9 @@ impl Interpreter {
             *self.memory.next_heap_address_mut() -= n_bytes;
             0
         } else {
-            return Err(Exception::SyscallFailure);
+            return Err(Exception::SyscallFailure(
+                SyscallFailureKind::HeapFreeDisabled,
+            ));
         };
 
         self.registers.write_u32_to_cpu(register::V0, address)
@@ -223,7 +234,7 @@ impl Interpreter {
     fn print_char(&mut self) -> Result<(), Exception> {
         let c = match char::from_u32(self.registers.read_u32_from_cpu(register::A0)?) {
             Some(c) => c,
-            None => return Err(Exception::SyscallFailure),
+            None => return Err(Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8)),
         };
         print!("{c}");
         self.stdout_pending_flush = true;
@@ -232,11 +243,11 @@ impl Interpreter {
 
     fn read_char(&mut self) -> Result<(), Exception> {
         self.flush_stdout_if_necessary()
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::StdoutFlushFailed))?;
         // No idea why we're supposedly reading from stdout, but this works.
         let input = Term::buffered_stdout()
             .read_char()
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::StdinReadFailed))?;
         // `Term::read_char` hides what it reads, so we have to show it ourselves.
         print!("{input}");
         self.stdout_pending_flush = true;
@@ -246,9 +257,9 @@ impl Interpreter {
     fn open_file(&mut self) -> Result<(), Exception> {
         let file_name_address = self.registers.read_u32_from_cpu(register::A0)?;
         let file_name = CStr::from_bytes_until_nul(self.memory.get_slice(file_name_address)?)
-            .map_err(|_| Exception::SyscallFailure)?
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
             .to_str()
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
         let flags = self.registers.read_u32_from_cpu(register::A1)?;
         // The `mode` parameter is currently ignored by both MARS and seaside.
         let _mode = self.registers.read_u32_from_cpu(register::A2)?;
@@ -322,7 +333,11 @@ impl Interpreter {
     fn time(&mut self) -> Result<(), Exception> {
         let system_time: u64 = match SystemTime::UNIX_EPOCH.elapsed() {
             Ok(duration) => duration.as_millis() as u64,
-            Err(_) => return Err(Exception::SyscallFailure),
+            Err(_) => {
+                return Err(Exception::SyscallFailure(
+                    SyscallFailureKind::BeforeUnixEpoch,
+                ));
+            }
         };
         let upper_half: u32 = (system_time >> 32) as u32;
         let lower_half: u32 = (system_time & u32::MAX as u64) as u32;
@@ -399,7 +414,9 @@ impl Interpreter {
         };
         match rng.next_u32_from_range(upper_bound) {
             Some(x) => self.registers.write_u32_to_cpu(register::A0, x),
-            None => Err(Exception::SyscallFailure),
+            None => Err(Exception::SyscallFailure(
+                SyscallFailureKind::NoPossibleOutput,
+            )),
         }
     }
 
@@ -426,54 +443,54 @@ impl Interpreter {
     fn confirm_dialog(&mut self) -> Result<(), Exception> {
         let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
-            .map_err(|_| Exception::SyscallFailure)?
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
             .to_str()
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
         todo!("show the dialog and return the result");
     }
 
     fn input_dialog_int(&mut self) -> Result<(), Exception> {
         let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
-            .map_err(|_| Exception::SyscallFailure)?
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
             .to_str()
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
         todo!("show the dialog and return the result");
     }
 
     fn input_dialog_float(&mut self) -> Result<(), Exception> {
         let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
-            .map_err(|_| Exception::SyscallFailure)?
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
             .to_str()
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
         todo!("show the dialog and return the result");
     }
 
     fn input_dialog_double(&mut self) -> Result<(), Exception> {
         let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
-            .map_err(|_| Exception::SyscallFailure)?
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
             .to_str()
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
         todo!("show the dialog and return the result");
     }
 
     fn input_dialog_string(&mut self) -> Result<(), Exception> {
         let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
-            .map_err(|_| Exception::SyscallFailure)?
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
             .to_str()
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
         todo!("show the dialog and return the result");
     }
 
     fn message_dialog(&mut self) -> Result<(), Exception> {
         let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
-            .map_err(|_| Exception::SyscallFailure)?
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
             .to_str()
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
         let _message_type = self.registers.read_u32_from_cpu(register::A1)?;
         todo!("show the dialog");
     }
@@ -481,9 +498,9 @@ impl Interpreter {
     fn message_dialog_int(&mut self) -> Result<(), Exception> {
         let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
-            .map_err(|_| Exception::SyscallFailure)?
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
             .to_str()
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
         let _x = self.registers.read_u32_from_cpu(register::A1)?;
         todo!("show the dialog");
     }
@@ -491,9 +508,9 @@ impl Interpreter {
     fn message_dialog_float(&mut self) -> Result<(), Exception> {
         let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
-            .map_err(|_| Exception::SyscallFailure)?
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
             .to_str()
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
         let _x = self.registers.read_f32_from_fpu(12)?;
         todo!("show the dialog");
     }
@@ -501,9 +518,9 @@ impl Interpreter {
     fn message_dialog_double(&mut self) -> Result<(), Exception> {
         let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
-            .map_err(|_| Exception::SyscallFailure)?
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
             .to_str()
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
         let _x = self.registers.read_f64_from_fpu(12)?;
         todo!("show the dialog");
     }
@@ -511,14 +528,14 @@ impl Interpreter {
     fn message_dialog_string(&mut self) -> Result<(), Exception> {
         let buffer_address_0: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let _message_0 = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address_0)?)
-            .map_err(|_| Exception::SyscallFailure)?
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
             .to_str()
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
         let buffer_address_1: Address = self.registers.read_u32_from_cpu(register::A1)?;
         let _message_1 = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address_1)?)
-            .map_err(|_| Exception::SyscallFailure)?
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
             .to_str()
-            .map_err(|_| Exception::SyscallFailure)?;
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
         todo!("show the dialog");
     }
 }

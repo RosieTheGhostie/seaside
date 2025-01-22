@@ -2,6 +2,7 @@ use crate::{config::features::syscalls, constants::service_codes};
 use bitflags::bitflags;
 
 bitflags! {
+    #[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
     pub struct Syscalls: u64 {
         const PrintInt = 1 << service_codes::PRINT_INT;
         const PrintFloat = 1 << service_codes::PRINT_FLOAT;

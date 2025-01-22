@@ -2,6 +2,7 @@
 pub mod exception;
 pub mod memory;
 pub mod register_file;
+pub mod syscall_failure;
 
 mod execute;
 mod file_handle;
@@ -11,6 +12,7 @@ mod syscalls;
 pub use exception::Exception;
 pub use memory::Memory;
 pub use register_file::RegisterFile;
+pub use syscall_failure::SyscallFailureKind;
 pub use syscalls::Syscalls;
 
 use crate::{config::Config, engine::Error, type_aliases::address::Address};

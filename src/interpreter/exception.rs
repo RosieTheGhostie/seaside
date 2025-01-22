@@ -1,3 +1,4 @@
+use super::SyscallFailureKind;
 use crate::type_aliases::address::Address;
 use std::{
     error::Error as ErrorTrait,
@@ -9,7 +10,7 @@ pub enum Exception {
     MalformedInstruction,
     InvalidLoad(Address),
     InvalidStore(Address),
-    SyscallFailure,
+    SyscallFailure(SyscallFailureKind),
     Break,
     ReservedInstruction,
     IntegerOverflowOrUnderflow,
@@ -27,7 +28,7 @@ impl Exception {
             MalformedInstruction => "malformed instruction",
             InvalidLoad(_) => "invalid load",
             InvalidStore(_) => "invalid store",
-            SyscallFailure => "syscall failed to execute",
+            SyscallFailure(kind) => kind.as_str(),
             Break => "break exception raised",
             ReservedInstruction => "encountered a reserved instruction",
             IntegerOverflowOrUnderflow => "integer overflow/underflow",
@@ -45,7 +46,7 @@ impl Exception {
             MalformedInstruction => 0,
             InvalidLoad(_) => 4,
             InvalidStore(_) => 5,
-            SyscallFailure => 8,
+            SyscallFailure(_) => 8,
             Break => 9,
             ReservedInstruction => 10,
             IntegerOverflowOrUnderflow => 12,
@@ -64,12 +65,24 @@ impl Exception {
             None
         }
     }
+
+    pub const fn service_code(&self) -> Option<u8> {
+        if let Self::SyscallFailure(SyscallFailureKind::UnknownServiceCode(code))
+        | Self::SyscallFailure(SyscallFailureKind::ServiceDisabled(code)) = *self
+        {
+            Some(code)
+        } else {
+            None
+        }
+    }
 }
 
 impl Display for Exception {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
         if let Some(vaddr) = self.vaddr() {
             write!(fmt, "{} (address: 0x{vaddr:08x})", self.as_str())
+        } else if let Some(service_code) = self.service_code() {
+            write!(fmt, "{} (code: {service_code})", self.as_str())
         } else {
             fmt.write_str(self.as_str())
         }
