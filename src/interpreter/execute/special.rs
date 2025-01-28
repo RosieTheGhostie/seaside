@@ -176,7 +176,7 @@ impl Interpreter {
         let rt_value: i64 = rt_value.sign_extend();
         let product = i64::wrapping_mul(rs_value, rt_value) as u64;
         self.registers.hi = (product >> 32) as u32;
-        self.registers.lo = (product & 0xFFFFFFFF) as u32;
+        self.registers.lo = (product & 0xffffffff) as u32;
         Ok(())
     }
 
@@ -187,7 +187,7 @@ impl Interpreter {
         let rt_value = rt_value as u64;
         let product = u64::wrapping_mul(rs_value, rt_value);
         self.registers.hi = (product >> 32) as u32;
-        self.registers.lo = (product & 0xFFFFFFFF) as u32;
+        self.registers.lo = (product & 0xffffffff) as u32;
         Ok(())
     }
 

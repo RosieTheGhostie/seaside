@@ -180,7 +180,7 @@ impl Interpreter {
     fn lwl(&mut self, rt: u8, rs_value: u32, rt_value: u32, offset: u16) -> Result<(), Exception> {
         let offset: i32 = offset.sign_extend();
         let address = u32::wrapping_add_signed(rs_value, offset);
-        let word_address = address & 0xFFFFFFFC;
+        let word_address = address & 0xfffffffc;
         let shift: u32 = {
             let shift = (address % 4) << 3;
             match self.memory.endian() {
@@ -237,7 +237,7 @@ impl Interpreter {
     fn lwr(&mut self, rt: u8, rs_value: u32, rt_value: u32, offset: u16) -> Result<(), Exception> {
         let offset: i32 = offset.sign_extend();
         let address = u32::wrapping_add_signed(rs_value, offset);
-        let word_address = address & 0xFFFFFFFC;
+        let word_address = address & 0xfffffffc;
         let shift: u32 = {
             let shift = (address % 4) << 3;
             match self.memory.endian() {
@@ -282,7 +282,7 @@ impl Interpreter {
     fn swl(&mut self, rs_value: u32, rt_value: u32, offset: u16) -> Result<(), Exception> {
         let offset: i32 = offset.sign_extend();
         let address = u32::wrapping_add_signed(rs_value, offset);
-        let word_address = address & 0xFFFFFFFC;
+        let word_address = address & 0xfffffffc;
         let shift: u32 = {
             let shift = (address % 4) << 3;
             match self.memory.endian() {
@@ -331,7 +331,7 @@ impl Interpreter {
     fn swr(&mut self, rs_value: u32, rt_value: u32, offset: u16) -> Result<(), Exception> {
         let offset: i32 = offset.sign_extend();
         let address = u32::wrapping_add_signed(rs_value, offset);
-        let word_address = address & 0xFFFFFFFC;
+        let word_address = address & 0xfffffffc;
         let shift: u32 = {
             let shift = (address % 4) << 3;
             match self.memory.endian() {

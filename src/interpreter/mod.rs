@@ -95,7 +95,7 @@ impl Interpreter {
     pub fn trigger_exception(&mut self, exception: Exception, exception_handler: Address) {
         self.registers.vaddr = exception.vaddr().unwrap_or_default();
         self.registers.status |= 0x00000002; // sets bit 1
-        self.registers.cause &= 0xFFFFFF83; // clears bits 2-6
+        self.registers.cause &= 0xffffff83; // clears bits 2-6
         self.registers.cause |= exception.code() << 2;
         self.registers.epc = self.pc - 4;
         self.pc = exception_handler;

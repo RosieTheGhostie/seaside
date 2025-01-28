@@ -21,7 +21,7 @@ pub enum Opcode {
     LoadUpperImmediate = 0x0f,           // lui
     Coprocessor0 = 0x10,                 // <coprocessor 0 fn>
     Coprocessor1 = 0x11,                 // <coprocessor 1 fn>
-    Special2 = 0x1C,                     // <special 2 fn>
+    Special2 = 0x1c,                     // <special 2 fn>
     LoadByte = 0x20,                     // lb
     LoadHalf = 0x21,                     // lh
     LoadWordLeft = 0x22,                 // lwl

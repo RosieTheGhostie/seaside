@@ -21,7 +21,7 @@ pub fn shamt(instruction: Instruction) -> u8 {
 }
 
 pub fn r#fn(instruction: Instruction) -> u8 {
-    (instruction & 0x3F) as u8
+    (instruction & 0x3f) as u8
 }
 
 pub fn code(instruction: Instruction) -> u32 {

@@ -326,7 +326,7 @@ impl Interpreter {
 
     fn exit_2(&mut self) -> Result<(), Exception> {
         let exit_code = self.registers.read_u32_from_cpu(register::A0)?;
-        self.exit_code = Some((exit_code & 0xFF) as u8);
+        self.exit_code = Some((exit_code & 0xff) as u8);
         Ok(())
     }
 

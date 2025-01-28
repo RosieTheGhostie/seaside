@@ -240,7 +240,7 @@ impl Interpreter {
     fn bc1c(&mut self, ft: u8, instruction: Instruction) -> Result<(), Exception> {
         let cc = fields::cc_from_index(ft);
         let condition = fields::condition_from_index(ft);
-        let offset = (instruction & 0xFFFF) as u16;
+        let offset = (instruction & 0xffff) as u16;
         if self.registers.read_flag_from_fpu(cc)? == condition {
             self.branch(offset);
         }
