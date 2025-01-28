@@ -2,7 +2,7 @@ use super::{
     component::{Component, FprDisplayer, GprDisplayer},
     operation::Operation,
 };
-use crate::type_aliases::address::Address;
+use crate::{sign_extend::SignExtend, type_aliases::address::Address};
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
 #[derive(Debug, Default)]
@@ -57,12 +57,13 @@ impl Display for DestructuredInstruction {
                 Component::Immediate(imm) => write!(f, " {}", imm as i16),
                 Component::HexImmediate(imm) => write!(f, " 0x{imm:04x}"),
                 Component::Offset(offset) => {
-                    let address = self.address + 4 + ((offset as u32) << 2);
+                    let offset: i32 = <u16 as SignExtend<i32>>::sign_extend(&offset) << 2;
+                    let address = (self.address + 4).wrapping_add_signed(offset);
                     write!(f, " 0x{address:08x}")
                 }
                 Component::Code(code) => write!(f, " {code}"),
                 Component::Index(index) => {
-                    let address = ((self.address + 4) & 0xF0000000) | (index << 2);
+                    let address = ((self.address + 4) & 0xf0000000) | (index << 2);
                     write!(f, " 0x{address:08x}")
                 }
             }?;
