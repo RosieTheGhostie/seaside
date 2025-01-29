@@ -8,6 +8,7 @@ mod assemble;
 mod directives;
 mod macros;
 mod segment;
+mod string_literal;
 mod token;
 
 pub use assembly_error::AssemblyError;

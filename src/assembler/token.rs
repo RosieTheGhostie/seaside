@@ -1,9 +1,12 @@
+use std::str::Chars;
+
 use super::{
     directives::{DataTypeDirective, SegmentDirective},
     operation::{
         macros::{coprocessor_0, coprocessor_1, register_immediate, special, special_2},
         BasicOperator::{self, *},
     },
+    string_literal::StringLiteralParser,
 };
 use logos::Logos;
 
@@ -225,14 +228,10 @@ pub enum Token {
     FloatLiteral(f64),
 
     #[regex(
-        r#""([^"\\\x00-\x1F]|\\(["\\bnfrt/]|u[a-fA-F0-9]{4}))*""#,
-        |lex| strip_string_literal(lex.slice()).unwrap().to_owned(),
+        r#""([^"\\\x00-\x1f]|\\(['"?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]{2}|u[a-fA-F0-9]{4}))*""#,
+        |lex| StringLiteralParser::new(lex.slice()).collect::<String>(),
     )]
     StringLiteral(String),
-}
-
-fn strip_string_literal(literal: &str) -> Option<&str> {
-    literal.strip_prefix('"')?.strip_suffix('"')
 }
 
 #[cfg(test)]
@@ -249,7 +248,7 @@ kHello: .asciiz "Hello, World!\n""#;
             Token::Label("kHello".to_string()),
             Token::Colon,
             Token::DataTypeDirective(DataTypeDirective::AsciiZ),
-            Token::StringLiteral(r"Hello, World!\n".to_string()),
+            Token::StringLiteral("Hello, World!\n".to_string()),
         ];
         for (expected, got) in std::iter::zip(expected_tokens, Token::lexer(SOURCE)) {
             assert_eq!(
