@@ -19,6 +19,7 @@ pub struct AssemblerOptions {
 
 bitflags! {
     /// Nontrivial assembler directives that can be enabled or disabled.
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     pub struct SpecialDirectives: u8 {
         /// `.asciiz`
         const Asciiz = 0x1;

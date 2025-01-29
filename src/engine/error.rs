@@ -3,6 +3,8 @@ use std::{
     fmt::{Display, Formatter, Result as FmtResult},
 };
 
+use crate::assembler::Error as AssemblyError;
+
 #[derive(Debug)]
 pub struct Error {
     pub kind: ErrorKind,
@@ -23,6 +25,42 @@ impl From<ErrorKind> for Error {
         Self {
             kind,
             message: String::new(),
+        }
+    }
+}
+
+impl From<AssemblyError> for Error {
+    fn from(value: AssemblyError) -> Self {
+        match value {
+            AssemblyError::Parse(error) => Self::new(ErrorKind::SyntaxError, error),
+            AssemblyError::Io(error) => match error.kind() {
+                std::io::ErrorKind::NotFound => Self::new(ErrorKind::NotFound, error),
+                _ => Self::new(ErrorKind::ExternalFailure, error),
+            },
+            AssemblyError::MultipleDefinitions => Self::new(
+                ErrorKind::SemanticError,
+                "found duplicate definitions of a symbol",
+            ),
+            AssemblyError::UndefinedSymbol => Self::new(
+                ErrorKind::SemanticError,
+                "no definition provided for an implicitly declared symbol",
+            ),
+            AssemblyError::JumpBehind => Self::new(
+                ErrorKind::SemanticError,
+                "segment directives cannot skip to a previous address",
+            ),
+            AssemblyError::BranchTooLarge => Self::new(
+                ErrorKind::SemanticError,
+                "attempted to assemble a branch to an instruction that was too far away",
+            ),
+            AssemblyError::WrongSegment => Self::new(
+                ErrorKind::SemanticError,
+                "found a set of symbols in a segment where it is not permitted",
+            ),
+            AssemblyError::InternalLogicIssue => Self::new(
+                ErrorKind::InternalLogicIssue,
+                "something went wrong in the assembler's internal logic",
+            ),
         }
     }
 }
@@ -49,7 +87,8 @@ pub enum ErrorKind {
     MipsException,
     NotFound,
     OutdatedVersion,
-    InvalidSyntax,
+    SemanticError,
+    SyntaxError,
 }
 
 impl ErrorKind {
@@ -64,7 +103,8 @@ impl ErrorKind {
             MipsException => "unhandled exception thrown in MIPS interpreter",
             NotFound => "engine expected a resource, but couldn't find it",
             OutdatedVersion => "this version of seaside is incompatible with the config provided",
-            InvalidSyntax => "the source code provided is syntactically incorrect",
+            SemanticError => "the source code provided is semantically incorrect",
+            SyntaxError => "the source code provided is syntactically incorrect",
         }
     }
 }

@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 #![allow(unused_imports)]
-pub mod assembly_error;
+pub mod error;
 pub mod operation;
 pub mod parser;
 
@@ -11,9 +11,9 @@ mod segment;
 mod string_literal;
 mod token;
 
-pub use assembly_error::AssemblyError;
+pub use error::Error;
 pub use operation::BasicOperator;
-pub use parser::ParseError;
+pub use parser::{Error as ParseError, ErrorKind as ParseErrorKind};
 
 pub(super) use assemble::assemble_instruction;
 pub(super) use operation::Operand;
@@ -46,9 +46,10 @@ pub struct Assembler<'source> {
 impl<'source> Assembler<'source> {
     pub fn init(config: &Config, source: &'source str) -> Self {
         let endian = config.endian;
+        let directives = config.features.assembler.directives;
         let segments = &config.memory_map.segments;
         Self {
-            parser: Parser::new(Token::lexer(source)),
+            parser: Parser::new(Token::lexer(source), directives),
             segments: [
                 SegmentBuildInfo::new(segments.data.address_range.base),
                 SegmentBuildInfo::new(segments.r#extern.address_range.base),
@@ -63,13 +64,13 @@ impl<'source> Assembler<'source> {
         }
     }
 
-    pub fn build(&mut self) -> Result<(), AssemblyError> {
+    pub fn build(&mut self) -> Result<(), Error> {
         while self.build_next()? {}
         while self.resolve_next()? {}
         Ok(())
     }
 
-    pub fn export(&self, directory: &Path) -> Result<(), AssemblyError> {
+    pub fn export(&self, directory: &Path) -> Result<(), Error> {
         for (segment, name) in zip(&self.segments, SegmentDirective::names())
             .filter(|(segment, _)| !segment.is_empty())
         {
@@ -90,10 +91,10 @@ impl<'source> Assembler<'source> {
         self.this_segment().next
     }
 
-    fn build_next(&mut self) -> Result<bool, AssemblyError> {
+    fn build_next(&mut self) -> Result<bool, Error> {
         let node = match self.parser.next() {
             Some(Ok(node)) => node,
-            Some(Err(error)) => return Err(AssemblyError::ParseError(error)),
+            Some(Err(error)) => return Err(Error::Parse(error)),
             None => return Ok(false),
         };
         if !node.can_resolve() {
@@ -140,22 +141,22 @@ impl<'source> Assembler<'source> {
             Node::String(string) if self.current_segment.is_data_segment() => {
                 self.this_segment_mut().append(&mut string.into_bytes());
             }
-            _ => return Err(AssemblyError::WrongSegment),
+            _ => return Err(Error::WrongSegment),
         }
         Ok(true)
     }
 
-    fn resolve_next(&mut self) -> Result<bool, AssemblyError> {
+    fn resolve_next(&mut self) -> Result<bool, Error> {
         let (pc, operator, mut operands) = match self.unresolved.pop_front() {
             Some((pc, Node::Instruction(operator, operands))) => (pc, operator, operands),
-            Some((_, _)) => return Err(AssemblyError::InternalLogicIssue),
+            Some((_, _)) => return Err(Error::InternalLogicIssue),
             None => return Ok(false),
         };
         for operand in &mut operands {
             if let Some(Operand::Label(label)) = operand {
                 match self.symbol_table.get(label) {
                     Some(address) => *operand = Some(convert_address(operator, *address, pc)?),
-                    None => return Err(AssemblyError::UndefinedSymbol),
+                    None => return Err(Error::UndefinedSymbol),
                 }
             }
         }
@@ -164,18 +165,14 @@ impl<'source> Assembler<'source> {
         Ok(true)
     }
 
-    fn add_symbol(&mut self, label: String) -> Result<(), AssemblyError> {
+    fn add_symbol(&mut self, label: String) -> Result<(), Error> {
         match self.symbol_table.insert(label, self.next_address()) {
-            Some(_) => Err(AssemblyError::MultipleDefinitions),
+            Some(_) => Err(Error::MultipleDefinitions),
             None => Ok(()),
         }
     }
 
-    fn replace_instruction(
-        &mut self,
-        address: Address,
-        instruction: u32,
-    ) -> Result<(), AssemblyError> {
+    fn replace_instruction(&mut self, address: Address, instruction: u32) -> Result<(), Error> {
         let text_diff = address.checked_sub(self.segments[SegmentDirective::Text as usize].base);
         let ktext_diff = address.checked_sub(self.segments[SegmentDirective::KText as usize].base);
         let segment = match (text_diff, ktext_diff) {
@@ -188,7 +185,7 @@ impl<'source> Assembler<'source> {
             }
             (Some(_), None) => SegmentDirective::Text,
             (None, Some(_)) => SegmentDirective::KText,
-            (None, None) => return Err(AssemblyError::WrongSegment),
+            (None, None) => return Err(Error::WrongSegment),
         };
         self.segments[segment as usize].overwrite_u32(address, instruction, self.endian)
     }

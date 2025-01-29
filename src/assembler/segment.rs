@@ -1,4 +1,4 @@
-use super::AssemblyError;
+use super::error::Error;
 use crate::{config::Endian, type_aliases::address::Address};
 use std::{fs::write, path::PathBuf};
 
@@ -17,17 +17,17 @@ impl SegmentBuildInfo {
         }
     }
 
-    pub fn export(&self, path: PathBuf) -> Result<(), AssemblyError> {
-        write(path, &self.bytes).map_err(AssemblyError::IoError)
+    pub fn export(&self, path: PathBuf) -> Result<(), Error> {
+        write(path, &self.bytes).map_err(Error::Io)
     }
 
-    pub fn jump_ahead_to(&mut self, address: Address) -> Result<(), AssemblyError> {
+    pub fn jump_ahead_to(&mut self, address: Address) -> Result<(), Error> {
         match address.checked_sub(self.next) {
             Some(n) => {
                 self.jump_ahead_by(n);
                 Ok(())
             }
-            None => Err(AssemblyError::JumpBehind),
+            None => Err(Error::JumpBehind),
         }
     }
 
@@ -116,14 +116,14 @@ impl SegmentBuildInfo {
         address: Address,
         word: u32,
         endian: Endian,
-    ) -> Result<(), AssemblyError> {
+    ) -> Result<(), Error> {
         let index = address
             .checked_sub(self.base)
-            .ok_or(AssemblyError::InternalLogicIssue)? as usize;
+            .ok_or(Error::InternalLogicIssue)? as usize;
         let old_bytes = self
             .bytes
             .get_mut(index..index + 4)
-            .ok_or(AssemblyError::InternalLogicIssue)?;
+            .ok_or(Error::InternalLogicIssue)?;
         let new_bytes = match endian {
             Endian::Little => word.to_le_bytes(),
             Endian::Big => word.to_be_bytes(),

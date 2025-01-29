@@ -5,18 +5,14 @@ pub mod operand;
 pub use basic_operator::BasicOperator;
 pub use operand::Operand;
 
-use super::AssemblyError;
+use super::Error;
 use macros::register_immediate;
 
-pub fn convert_address(
-    operator: BasicOperator,
-    address: u32,
-    pc: u32,
-) -> Result<Operand, AssemblyError> {
+pub fn convert_address(operator: BasicOperator, address: u32, pc: u32) -> Result<Operand, Error> {
     use BasicOperator::*;
     match operator {
         Jump | JumpAndLink => Ok(Operand::JumpIndex(
-            address_to_index(address, pc).ok_or(AssemblyError::BranchTooLarge)?,
+            address_to_index(address, pc).ok_or(Error::BranchTooLarge)?,
         )),
         register_immediate![
             BranchLessThanZero,
@@ -46,9 +42,9 @@ pub fn convert_address(
         | LoadDoubleCoprocessor1
         | StoreWordCoprocessor1
         | StoreDoubleCoprocessor1 => Ok(Operand::I16(
-            address_to_offset(address, pc).ok_or(AssemblyError::BranchTooLarge)?,
+            address_to_offset(address, pc).ok_or(Error::BranchTooLarge)?,
         )),
-        _ => Err(AssemblyError::InternalLogicIssue),
+        _ => Err(Error::InternalLogicIssue),
     }
 }
 

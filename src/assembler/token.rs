@@ -39,7 +39,7 @@ pub enum Token {
 
     #[token(".align", |_| DataTypeDirective::Align)]
     #[token(".ascii", |_| DataTypeDirective::Ascii)]
-    #[token(".asciiz", |_| DataTypeDirective::AsciiZ)]
+    #[token(".asciiz", |_| DataTypeDirective::Asciiz)]
     #[token(".byte", |_| DataTypeDirective::Byte)]
     #[token(".double", |_| DataTypeDirective::Double)]
     #[token(".float", |_| DataTypeDirective::Float)]
@@ -249,7 +249,7 @@ kHello: .asciiz "Hello, World!\n""#;
             Token::NewLine,
             Token::Label("kHello".to_string()),
             Token::Colon,
-            Token::DataTypeDirective(DataTypeDirective::AsciiZ),
+            Token::DataTypeDirective(DataTypeDirective::Asciiz),
             Token::StringLiteral("Hello, World!\n".to_string()),
         ];
         for (expected, got) in std::iter::zip(expected_tokens, Token::lexer(SOURCE)) {

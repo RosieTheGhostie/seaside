@@ -11,7 +11,7 @@ pub enum SegmentDirective {
 pub enum DataTypeDirective {
     Align,
     Ascii,
-    AsciiZ,
+    Asciiz,
     Byte,
     Double,
     Float,
