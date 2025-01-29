@@ -1,3 +1,5 @@
+#![recursion_limit = "256"]
+mod assembler;
 mod byte_stream;
 mod cmd_args;
 mod config;
@@ -9,7 +11,7 @@ mod sign_extend;
 mod type_aliases;
 
 use clap::Parser;
-use cmd_args::{CmdArgs, Commands, DisassemblyArgs, DisassemblyTarget};
+use cmd_args::{AssemblyArgs, CmdArgs, Commands, DisassemblyArgs, DisassemblyTarget};
 use config::Config;
 use minimal_logging::macros::{fatalln, grayln};
 use std::env::current_exe;
@@ -34,6 +36,10 @@ fn main() {
             }),
             Err(error) => Err(error),
         },
+        Commands::Assemble(AssemblyArgs {
+            source,
+            output_directory,
+        }) => engine::assemble(config, source, output_directory),
         Commands::Disassemble(DisassemblyArgs {
             target:
                 DisassemblyTarget {

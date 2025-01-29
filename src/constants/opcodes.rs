@@ -1,3 +1,4 @@
+use crate::assembler::BasicOperator;
 use num_derive::FromPrimitive;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
@@ -40,6 +41,51 @@ pub enum Opcode {
     LoadDoubleCoprocessor1 = 0x35,       // ldc1
     StoreWordCoprocessor1 = 0x39,        // swc1
     StoreDoubleCoprocessor1 = 0x3d,      // sdc1
+}
+
+impl From<BasicOperator> for Opcode {
+    fn from(value: BasicOperator) -> Self {
+        use BasicOperator::*;
+        match value {
+            Special(_, _) => Self::Special,
+            RegisterImmediate(_) => Self::RegisterImmediate,
+            Jump => Self::Jump,
+            JumpAndLink => Self::JumpAndLink,
+            BranchEqual => Self::BranchEqual,
+            BranchNotEqual => Self::BranchNotEqual,
+            BranchLessEqualZero => Self::BranchLessEqualZero,
+            BranchGreaterThanZero => Self::BranchGreaterThanZero,
+            AddImmediate => Self::AddImmediate,
+            AddImmediateUnsigned => Self::AddImmediateUnsigned,
+            SetLessThanImmediate => Self::SetLessThanImmediate,
+            SetLessThanImmediateUnsigned => Self::SetLessThanImmediateUnsigned,
+            AndImmediate => Self::AndImmediate,
+            OrImmediate => Self::OrImmediate,
+            XorImmediate => Self::XorImmediate,
+            LoadUpperImmediate => Self::LoadUpperImmediate,
+            Coprocessor0(_) => Self::Coprocessor0,
+            Coprocessor1(_, _, _) => Self::Coprocessor1,
+            Special2(_) => Self::Special2,
+            LoadByte => Self::LoadByte,
+            LoadHalf => Self::LoadHalf,
+            LoadWordLeft => Self::LoadWordLeft,
+            LoadWord => Self::LoadWord,
+            LoadByteUnsigned => Self::LoadByteUnsigned,
+            LoadHalfUnsigned => Self::LoadHalfUnsigned,
+            LoadWordRight => Self::LoadWordRight,
+            StoreByte => Self::StoreByte,
+            StoreHalf => Self::StoreHalf,
+            StoreWordLeft => Self::StoreWordLeft,
+            StoreWord => Self::StoreWord,
+            StoreConditional => Self::StoreConditional,
+            StoreWordRight => Self::StoreWordRight,
+            LoadLinked => Self::LoadLinked,
+            LoadWordCoprocessor1 => Self::LoadWordCoprocessor1,
+            LoadDoubleCoprocessor1 => Self::LoadDoubleCoprocessor1,
+            StoreWordCoprocessor1 => Self::StoreWordCoprocessor1,
+            StoreDoubleCoprocessor1 => Self::StoreDoubleCoprocessor1,
+        }
+    }
 }
 
 impl Display for Opcode {

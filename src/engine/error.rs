@@ -49,6 +49,7 @@ pub enum ErrorKind {
     MipsException,
     NotFound,
     OutdatedVersion,
+    InvalidSyntax,
 }
 
 impl ErrorKind {
@@ -63,6 +64,7 @@ impl ErrorKind {
             MipsException => "unhandled exception thrown in MIPS interpreter",
             NotFound => "engine expected a resource, but couldn't find it",
             OutdatedVersion => "this version of seaside is incompatible with the config provided",
+            InvalidSyntax => "the source code provided is syntactically incorrect",
         }
     }
 }

@@ -16,6 +16,7 @@ incremental = true
 bitflags = "2.6"
 console = "0.15"
 convert_case = "0.6"
+logos = "0.15"
 num-derive = "0.4"
 num-traits = "0.2"
 rand = "0.8"

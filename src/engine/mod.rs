@@ -1,8 +1,10 @@
 pub mod error;
 
 pub use error::{Error, ErrorKind};
+use minimal_logging::macros::grayln;
 
 use crate::{
+    assembler::{Assembler, AssemblyError},
     byte_stream::ByteStream,
     cmd_args::CmdArgs,
     config::{Config, Validate},
@@ -13,6 +15,8 @@ use std::{
     env::{current_exe, set_current_dir},
     fs::read_to_string,
     path::{Path, PathBuf},
+    str::FromStr,
+    time::Instant,
 };
 
 pub fn get_config(args: &CmdArgs) -> Result<Config, Error> {
@@ -75,6 +79,32 @@ pub fn run(interpreter: &mut Interpreter) -> Result<Option<u8>, Error> {
             Err(Error::new(ErrorKind::MipsException, exception))
         }
     }
+}
+
+pub fn assemble(
+    config: Config,
+    source: PathBuf,
+    output_directory: Option<PathBuf>,
+) -> Result<(), Error> {
+    let start_time = Instant::now();
+    let output_directory = output_directory.unwrap_or_else(|| PathBuf::from_str(".").unwrap());
+    let source_code = read_to_string(&source)
+        .map_err(|_| Error::new(ErrorKind::ExternalFailure, "failed to read source file"))?;
+    let mut assembler = Assembler::init(&config, &source_code);
+    assembler.build().map_err(|error| match error {
+        AssemblyError::InternalLogicIssue => Error::from(ErrorKind::InternalLogicIssue),
+        AssemblyError::IoError(error) => Error::new(ErrorKind::ExternalFailure, error),
+        _ => Error::from(ErrorKind::InvalidSyntax),
+    })?;
+    assembler
+        .export(&output_directory)
+        .map_err(|error| match error {
+            AssemblyError::IoError(error) => Error::new(ErrorKind::ExternalFailure, error),
+            _ => Error::from(ErrorKind::InternalLogicIssue),
+        })?;
+    let elapsed = start_time.elapsed();
+    grayln!("assembled {source:?} in {elapsed:#?}");
+    Ok(())
 }
 
 pub fn disassemble(instruction: Instruction, address: Option<Address>) -> Result<(), Error> {

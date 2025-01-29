@@ -18,6 +18,8 @@ pub struct CmdArgs {
 pub enum Commands {
     /// Runs an assembled MIPS program in the specified project directory.
     Run { directory: PathBuf },
+    /// Assembles the specified assembly file.
+    Assemble(AssemblyArgs),
     /// Disassembles the input machine code into human-readable assembly.
     Disassemble(DisassemblyArgs),
     /// Prints the file path of the seaside executable.
@@ -25,6 +27,15 @@ pub enum Commands {
     /// Runs experimental code.
     #[cfg(debug_assertions)]
     Experiment,
+}
+
+#[derive(Args, Debug)]
+pub struct AssemblyArgs {
+    /// The path of a file containing MIPS assembly code.
+    pub source: PathBuf,
+    /// The directory to generate the assembled data and machine code in.
+    #[arg(short, long, alias = "out")]
+    pub output_directory: Option<PathBuf>,
 }
 
 #[derive(Args, Debug)]
