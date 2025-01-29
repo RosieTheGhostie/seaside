@@ -32,12 +32,14 @@ impl Iterator for Parser<'_> {
             Token::BasicOperator(operator) => self.parse_instruction(operator),
             Token::Label(label) => self.parse_label(label),
             Token::SegmentDirective(directive) => self.parse_segment_header(directive),
+            Token::DataTypeDirective(DataTypeDirective::Align) => self.parse_align_command(),
             Token::DataTypeDirective(DataTypeDirective::Ascii) => self.parse_string(false),
             Token::DataTypeDirective(DataTypeDirective::AsciiZ) => self.parse_string(true),
             Token::DataTypeDirective(DataTypeDirective::Byte) => self.parse_byte_array(),
             Token::DataTypeDirective(DataTypeDirective::Double) => self.parse_double_array(),
             Token::DataTypeDirective(DataTypeDirective::Float) => self.parse_float_array(),
             Token::DataTypeDirective(DataTypeDirective::Half) => self.parse_half_array(),
+            Token::DataTypeDirective(DataTypeDirective::Space) => self.parse_space_command(),
             Token::DataTypeDirective(DataTypeDirective::Word) => self.parse_word_array(),
             _ => Err(ParseError::UnexpectedToken(token)),
         })
@@ -228,7 +230,7 @@ impl Parser<'_> {
                 }
                 Some(Ok(Token::IntLiteral(int))) => match <i32 as TryInto<i8>>::try_into(int) {
                     Ok(byte) => bytes.push(byte),
-                    Err(_) => return Err(ParseError::ValueTooLarge),
+                    Err(_) => return Err(ParseError::ValueOutsideRange),
                 },
                 Some(Ok(Token::Comma)) if needs_comma => {}
                 Some(Ok(Token::Comma)) => return Err(ParseError::UnexpectedToken(Token::Comma)),
@@ -255,7 +257,7 @@ impl Parser<'_> {
                 }
                 Some(Ok(Token::IntLiteral(int))) => match <i32 as TryInto<i16>>::try_into(int) {
                     Ok(half) => halves.push(half),
-                    Err(_) => return Err(ParseError::ValueTooLarge),
+                    Err(_) => return Err(ParseError::ValueOutsideRange),
                 },
                 Some(Ok(Token::Comma)) if needs_comma => {}
                 Some(Ok(Token::Comma)) => return Err(ParseError::UnexpectedToken(Token::Comma)),
@@ -351,6 +353,28 @@ impl Parser<'_> {
                 Ok(Node::String(string))
             }
             Some(Ok(Token::NewLine)) => self.parse_string(append_nul),
+            Some(Ok(token)) => Err(ParseError::UnexpectedToken(token)),
+            Some(Err(_)) => Err(ParseError::UnknownToken),
+            None => Err(ParseError::PrematureEof),
+        }
+    }
+
+    fn parse_align_command(&mut self) -> Result<Node, ParseError> {
+        match self.next_token() {
+            Some(Ok(Token::IntLiteral(x))) if (0..4).contains(&x) => {
+                Ok(Node::AlignCommand(x as u8))
+            }
+            Some(Ok(Token::IntLiteral(_))) => Err(ParseError::ValueOutsideRange),
+            Some(Ok(token)) => Err(ParseError::UnexpectedToken(token)),
+            Some(Err(_)) => Err(ParseError::UnknownToken),
+            None => Err(ParseError::PrematureEof),
+        }
+    }
+
+    fn parse_space_command(&mut self) -> Result<Node, ParseError> {
+        match self.next_token() {
+            Some(Ok(Token::IntLiteral(x))) if x >= 0 => Ok(Node::ByteArray(vec![0; x as usize])),
+            Some(Ok(Token::IntLiteral(_))) => Err(ParseError::ValueOutsideRange),
             Some(Ok(token)) => Err(ParseError::UnexpectedToken(token)),
             Some(Err(_)) => Err(ParseError::UnknownToken),
             None => Err(ParseError::PrematureEof),

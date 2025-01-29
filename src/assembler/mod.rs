@@ -119,6 +119,9 @@ impl<'source> Assembler<'source> {
                 .to_vec();
                 self.this_segment_mut().append(&mut bytes);
             }
+            Node::AlignCommand(alignment) if self.current_segment.is_data_segment() => {
+                self.this_segment_mut().align(alignment)
+            }
             Node::ByteArray(bytes) if self.current_segment.is_data_segment() => {
                 self.this_segment_mut().append_i8(bytes);
             }

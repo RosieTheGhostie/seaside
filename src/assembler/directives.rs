@@ -9,12 +9,14 @@ pub enum SegmentDirective {
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum DataTypeDirective {
+    Align,
     Ascii,
     AsciiZ,
     Byte,
     Double,
     Float,
     Half,
+    Space,
     Word,
 }
 

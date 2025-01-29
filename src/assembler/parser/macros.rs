@@ -194,14 +194,14 @@ macro_rules! get_operand {
         let __int__ = $crate::assembler::parser::macros::token_contents_or_err!($self, IntLiteral);
         match <i32 as TryInto<u8>>::try_into(__int__) {
             Ok(__cc__) if __cc__ < 8 => Operand::Cc(__cc__),
-            _ => return Err(ParseError::ValueTooLarge),
+            _ => return Err(ParseError::ValueOutsideRange),
         }
     }};
     ($self:ident, cc?) => {{
         match $crate::assembler::parser::macros::maybe_token_contents!($self, IntLiteral) {
             Some(__int__) => match <i32 as TryInto<u8>>::try_into(__int__) {
                 Ok(__cc__) if __cc__ < 8 => Some(Operand::Cc(__cc__)),
-                _ => return Err(ParseError::ValueTooLarge),
+                _ => return Err(ParseError::ValueOutsideRange),
             },
             None => None,
         }
@@ -210,14 +210,14 @@ macro_rules! get_operand {
         let __int__ = $crate::assembler::parser::macros::token_contents_or_err!($self, IntLiteral);
         match <i32 as TryInto<u8>>::try_into(__int__) {
             Ok(__shamt__) if __shamt__ < 32 => Operand::Shamt(__shamt__),
-            _ => return Err(ParseError::ValueTooLarge),
+            _ => return Err(ParseError::ValueOutsideRange),
         }
     }};
     ($self:ident, shamt?) => {{
         match $crate::assembler::parser::macros::maybe_token_contents!($self, IntLiteral) {
             Some(__int__) match <i32 as TryInto<u8>>::try_into(__int__) {
                 Ok(__shamt__) if __shamt__ < 32 => Some(Operand::Shamt(__shamt__)),
-                _ => return Err(ParseError::ValueTooLarge),
+                _ => return Err(ParseError::ValueOutsideRange),
             },
             None => None,
         }
@@ -226,14 +226,14 @@ macro_rules! get_operand {
         let __int__ = $crate::assembler::parser::macros::token_contents_or_err!($self, IntLiteral);
         match <i32 as TryInto<i16>>::try_into(__int__) {
             Ok(__i16__) => Operand::I16(__i16__),
-            Err(_) => return Err(ParseError::ValueTooLarge),
+            Err(_) => return Err(ParseError::ValueOutsideRange),
         }
     }};
     ($self:ident, i16?) => {{
         match $crate::assembler::parser::macros::maybe_token_contents!($self, IntLiteral) {
             Some(__int__) match <i32 as TryInto<i16>>::try_into(__int__) {
                 Ok(__i16__) => Some(Operand::I16(__i16__)),
-                Err(_) => return Err(ParseError::ValueTooLarge),
+                Err(_) => return Err(ParseError::ValueOutsideRange),
             },
             None => None,
         }
@@ -242,14 +242,14 @@ macro_rules! get_operand {
         let __int__ = $crate::assembler::parser::macros::token_contents_or_err!($self, IntLiteral);
         match <i32 as TryInto<u16>>::try_into(__int__) {
             Ok(__u16__) => Operand::U16(__u16__),
-            Err(_) => return Err(ParseError::ValueTooLarge),
+            Err(_) => return Err(ParseError::ValueOutsideRange),
         }
     }};
     ($self:ident, u16?) => {{
         match $crate::assembler::parser::macros::maybe_token_contents!($self, IntLiteral) {
             Some(__int__) match <i32 as TryInto<u16>>::try_into(__int__) {
                 Ok(__u16__) => Some(Operand::U16(__u16__)),
-                Err(_) => return Err(ParseError::ValueTooLarge),
+                Err(_) => return Err(ParseError::ValueOutsideRange),
             },
             None => None,
         }
@@ -259,7 +259,7 @@ macro_rules! get_operand {
         if __code__ < (1 << 20) {
             Operand::Code(__code__)
         } else {
-            return Err(ParseError::ValueTooLarge);
+            return Err(ParseError::ValueOutsideRange);
         }
     }};
     ($self:ident, code?) => {{
@@ -269,7 +269,7 @@ macro_rules! get_operand {
                 if __code__ < (1 << 20) {
                     Some(Operand::Code(__code__))
                 } else {
-                    return Err(ParseError::ValueTooLarge);
+                    return Err(ParseError::ValueOutsideRange);
                 }
             }
             None => None,

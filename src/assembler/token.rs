@@ -37,12 +37,14 @@ pub enum Token {
     #[token(".text", |_| SegmentDirective::Text)]
     SegmentDirective(SegmentDirective),
 
+    #[token(".align", |_| DataTypeDirective::Align)]
     #[token(".ascii", |_| DataTypeDirective::Ascii)]
     #[token(".asciiz", |_| DataTypeDirective::AsciiZ)]
     #[token(".byte", |_| DataTypeDirective::Byte)]
     #[token(".double", |_| DataTypeDirective::Double)]
     #[token(".float", |_| DataTypeDirective::Float)]
     #[token(".half", |_| DataTypeDirective::Half)]
+    #[token(".space", |_| DataTypeDirective::Space)]
     #[token(".word", |_| DataTypeDirective::Word)]
     DataTypeDirective(DataTypeDirective),
 

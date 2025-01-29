@@ -5,6 +5,6 @@ pub enum ParseError {
     UnexpectedToken(Token),
     UnexpectedTokenNoContext,
     PrematureEof,
-    ValueTooLarge,
+    ValueOutsideRange,
     InternalLogicIssue,
 }

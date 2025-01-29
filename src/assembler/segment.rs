@@ -132,6 +132,17 @@ impl SegmentBuildInfo {
         Ok(())
     }
 
+    pub fn align(&mut self, alignment: u8) {
+        if alignment == 0 {
+            return;
+        }
+        let divisor = (1 << alignment) as usize;
+        let modulus = self.next as usize & (divisor - 1);
+        if modulus != 0 {
+            self.append_i8(vec![0; divisor - modulus]);
+        }
+    }
+
     pub fn is_empty(&self) -> bool {
         self.bytes.is_empty()
     }
