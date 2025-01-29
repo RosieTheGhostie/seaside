@@ -174,22 +174,22 @@ impl Parser<'_> {
         Ok(Node::Instruction(operator, operands))
     }
 
-    fn parse_load_or_store_to_gpr(&mut self) -> Result<[Option<Operand>; 4], ParseError> {
+    fn parse_load_or_store_to_gpr(&mut self) -> Result<[Option<Operand>; 3], ParseError> {
         let r0 = get_operand!(self, gpr);
         assert_token!(self, Comma);
         let offset = get_operand!(self, i16);
         let r1 = get_operand!(self, wrapped_gpr);
         assert_token_or_none!(self, NewLine);
-        Ok([Some(r0), Some(offset), Some(r1), None])
+        Ok([Some(r0), Some(offset), Some(r1)])
     }
 
-    fn parse_load_or_store_to_fpr(&mut self) -> Result<[Option<Operand>; 4], ParseError> {
+    fn parse_load_or_store_to_fpr(&mut self) -> Result<[Option<Operand>; 3], ParseError> {
         let r0 = get_operand!(self, fpr);
         assert_token!(self, Comma);
         let offset = get_operand!(self, i16);
         let r1 = get_operand!(self, wrapped_gpr);
         assert_token_or_none!(self, NewLine);
-        Ok([Some(r0), Some(offset), Some(r1), None])
+        Ok([Some(r0), Some(offset), Some(r1)])
     }
 }
 

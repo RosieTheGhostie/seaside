@@ -288,24 +288,24 @@ pub(crate) use get_operand;
 macro_rules! parse_ops {
     ($self:ident) => {{
         $crate::assembler::parser::macros::assert_token_or_none!($self, NewLine);
-        [None, None, None, None]
+        [None, None, None]
     }};
     ($self:ident, $op0:ident) => {{
         let __op0__ = $crate::assembler::parser::macros::get_operand!($self, $op0);
         $crate::assembler::parser::macros::assert_token_or_none!($self, NewLine);
-        [Some(__op0__), None, None, None]
+        [Some(__op0__), None, None]
     }};
     ($self:ident, $op0:ident?) => {{
         let __op0__ = $crate::assembler::parser::macros::get_operand!($self, $op0?);
         $crate::assembler::parser::macros::assert_token_or_none!($self, NewLine);
-        [__op0__, None, None, None]
+        [__op0__, None, None]
     }};
     ($self:ident, $op0:ident, $op1:ident) => {{
         let __op0__ = $crate::assembler::parser::macros::get_operand!($self, $op0);
         $crate::assembler::parser::macros::assert_token!($self, Comma);
         let __op1__ = $crate::assembler::parser::macros::get_operand!($self, $op1);
         $crate::assembler::parser::macros::assert_token_or_none!($self, NewLine);
-        [Some(__op0__), Some(__op1__), None, None]
+        [Some(__op0__), Some(__op1__), None]
     }};
     ($self:ident, $op0:ident?, $op1:ident) => {{
         let __op0__ = $crate::assembler::parser::macros::get_operand!($self, $op0?);
@@ -314,7 +314,7 @@ macro_rules! parse_ops {
         }
         let __op1__ = $crate::assembler::parser::macros::get_operand!($self, $op1);
         $crate::assembler::parser::macros::assert_token_or_none!($self, NewLine);
-        [__op0__, Some(__op1__), None, None]
+        [__op0__, Some(__op1__), None]
     }};
     ($self:ident, $op0:ident, $op1:ident?) => {{
         let __op0__ = $crate::assembler::parser::macros::get_operand!($self, $op0);
@@ -324,7 +324,7 @@ macro_rules! parse_ops {
             return Err(ParseError::UnexpectedTokenNoContext);
         }
         $crate::assembler::parser::macros::assert_token_or_none!($self, NewLine);
-        [Some(__op0__), __op1__, None, None]
+        [Some(__op0__), __op1__, None]
     }};
     ($self:ident, $op0:ident, $op1:ident, $op2:ident) => {{
         let __op0__ = $crate::assembler::parser::macros::get_operand!($self, $op0);
@@ -333,7 +333,7 @@ macro_rules! parse_ops {
         $crate::assembler::parser::macros::assert_token!($self, Comma);
         let __op2__ = $crate::assembler::parser::macros::get_operand!($self, $op2);
         $crate::assembler::parser::macros::assert_token_or_none!($self, NewLine);
-        [Some(__op0__), Some(__op1__), Some(__op2__), None]
+        [Some(__op0__), Some(__op1__), Some(__op2__)]
     }};
     ($self:ident, $op0:ident?, $op1:ident, $op2:ident) => {{
         let __op0__ = $crate::assembler::parser::macros::get_operand!($self, $op0?);
@@ -344,7 +344,7 @@ macro_rules! parse_ops {
         $crate::assembler::parser::macros::assert_token!($self, Comma);
         let __op2__ = $crate::assembler::parser::macros::get_operand!($self, $op2);
         $crate::assembler::parser::macros::assert_token_or_none!($self, NewLine);
-        [__op0__, Some(__op1__), Some(__op2__), None]
+        [__op0__, Some(__op1__), Some(__op2__)]
     }};
     ($self:ident, $op0:ident, $op1:ident, $op2:ident?) => {{
         let __op0__ = $crate::assembler::parser::macros::get_operand!($self, $op0);
@@ -356,45 +356,7 @@ macro_rules! parse_ops {
             return Err(ParseError::UnexpectedTokenNoContext);
         }
         $crate::assembler::parser::macros::assert_token_or_none!($self, NewLine);
-        [Some(__op0__), Some(__op1__), __op2__, None]
-    }};
-    ($self:ident, $op0:ident, $op1:ident, $op2:ident, $op3:ident) => {{
-        let __op0__ = $crate::assembler::parser::macros::get_operand!($self, $op0);
-        $crate::assembler::parser::macros::assert_token!($self, Comma);
-        let __op1__ = $crate::assembler::parser::macros::get_operand!($self, $op1);
-        $crate::assembler::parser::macros::assert_token!($self, Comma);
-        let __op2__ = $crate::assembler::parser::macros::get_operand!($self, $op2);
-        $crate::assembler::parser::macros::assert_token!($self, Comma);
-        let __op3__ = $crate::assembler::parser::macros::get_operand!($self, $op3);
-        $crate::assembler::parser::macros::assert_token_or_none!($self, NewLine);
-        [Some(__op0__), Some(__op1__), Some(__op2__), Some(__op3__)]
-    }};
-    ($self:ident, $op0:ident?, $op1:ident, $op2:ident, $op3:ident) => {{
-        let __op0__ = $crate::assembler::parser::macros::get_operand!($self, $op0?);
-        if __op0__.is_some() {
-            $crate::assembler::parser::macros::assert_token!($self, Comma);
-        }
-        let __op1__ = $crate::assembler::parser::macros::get_operand!($self, $op1);
-        $crate::assembler::parser::macros::assert_token!($self, Comma);
-        let __op2__ = $crate::assembler::parser::macros::get_operand!($self, $op2);
-        $crate::assembler::parser::macros::assert_token!($self, Comma);
-        let __op3__ = $crate::assembler::parser::macros::get_operand!($self, $op3);
-        $crate::assembler::parser::macros::assert_token_or_none!($self, NewLine);
-        [__op0__, Some(__op1__), Some(__op2__), Some(__op3__)]
-    }};
-    ($self:ident, $op0:ident, $op1:ident, $op2:ident, $op3:ident?) => {{
-        let __op0__ = $crate::assembler::parser::macros::get_operand!($self, $op0);
-        $crate::assembler::parser::macros::assert_token!($self, Comma);
-        let __op1__ = $crate::assembler::parser::macros::get_operand!($self, $op1);
-        $crate::assembler::parser::macros::assert_token!($self, Comma);
-        let __op2__ = $crate::assembler::parser::macros::get_operand!($self, $op2);
-        let __comma_exists__ = $crate::assembler::parser::macros::token_is!($self, Comma);
-        let __op3__ = $crate::assembler::parser::macros::get_operand!($self, $op3?);
-        if __op3__.is_some() ^ __comma_exists__ {
-            return Err(ParseError::UnexpectedTokenNoContext);
-        }
-        $crate::assembler::parser::macros::assert_token_or_none!($self, NewLine);
-        [Some(__op0__), Some(__op1__), Some(__op2__), __op3__]
+        [Some(__op0__), Some(__op1__), __op2__]
     }};
 }
 pub(crate) use parse_ops;

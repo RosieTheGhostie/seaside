@@ -10,7 +10,7 @@ use crate::constants::{number_fmt::NumberFormat, opcodes::Opcode};
 
 pub fn assemble_instruction(
     operator: BasicOperator,
-    operands: [Option<Operand>; 4],
+    operands: [Option<Operand>; 3],
 ) -> Result<u32, AssemblyError> {
     use BasicOperator::*;
     use Operand::*;
@@ -21,7 +21,7 @@ pub fn assemble_instruction(
     match operator {
         // sll $rd, $rt, shamt
         special![ShiftLeftLogical, ShiftRightLogical, ShiftRightArithmetic] => match operands {
-            [Some(Register(rd)), Some(Register(rt)), Some(Shamt(shamt)), None] => assemble_r_type(
+            [Some(Register(rd)), Some(Register(rt)), Some(Shamt(shamt))] => assemble_r_type(
                 &mut machine_code,
                 None,
                 Some(rt),
@@ -33,7 +33,7 @@ pub fn assemble_instruction(
         },
         // movt $rd, $rs, cc
         special!(MoveConditional, Some(condition)) => match operands {
-            [Some(Register(rd)), Some(Register(rs)), Some(Cc(cc)), None] => {
+            [Some(Register(rd)), Some(Register(rs)), Some(Cc(cc))] => {
                 assemble_movc(&mut machine_code, rs, cc, condition, rd, fn_code);
             }
             _ => return Err(AssemblyError::InternalLogicIssue),
@@ -44,7 +44,7 @@ pub fn assemble_instruction(
             ShiftRightLogicalVariable,
             ShiftRightArithmeticVariable,
         ] => match operands {
-            [Some(Register(rd)), Some(Register(rt)), Some(Register(rs)), None] => assemble_r_type(
+            [Some(Register(rd)), Some(Register(rt)), Some(Register(rs))] => assemble_r_type(
                 &mut machine_code,
                 Some(rs),
                 Some(rt),
@@ -57,17 +57,17 @@ pub fn assemble_instruction(
         // jr $rs
         // jalr $rd, $rs
         special![JumpRegister, JumpAndLinkRegister, MoveToHigh, MoveToLow] => match operands {
-            [Some(Register(rs)), None, None, None] => {
+            [Some(Register(rs)), None, None] => {
                 assemble_r_type(&mut machine_code, Some(rs), None, None, None, fn_code);
             }
-            [Some(Register(rd)), Some(Register(rs)), None, None] => {
+            [Some(Register(rd)), Some(Register(rs)), None] => {
                 assemble_r_type(&mut machine_code, Some(rs), None, Some(rd), None, fn_code);
             }
             _ => return Err(AssemblyError::InternalLogicIssue),
         },
         // syscall
         special!(SystemCall) => match operands {
-            [None, None, None, None] => {
+            [None, None, None] => {
                 assemble_r_type(&mut machine_code, None, None, None, None, fn_code);
             }
             _ => return Err(AssemblyError::InternalLogicIssue),
@@ -76,12 +76,12 @@ pub fn assemble_instruction(
         // break code
         special!(Break) => match operands {
             // break
-            [None, None, None, None] => {
+            [None, None, None] => {
                 assemble_field!(0 (20 bits) -> machine_code);
                 assemble_field!(fn_code (6 bits) -> machine_code);
             }
             // break code
-            [Some(Code(code)), None, None, None] => {
+            [Some(Code(code)), None, None] => {
                 assemble_field!(code (20 bits) -> machine_code);
                 assemble_field!(fn_code (6 bits) -> machine_code);
             }
@@ -89,7 +89,7 @@ pub fn assemble_instruction(
         },
         // mfhi $rd
         special![MoveFromHigh, MoveFromLow] => match operands {
-            [Some(Register(rd)), None, None, None] => {
+            [Some(Register(rd)), None, None] => {
                 assemble_r_type(&mut machine_code, None, None, Some(rd), None, fn_code)
             }
             _ => return Err(AssemblyError::InternalLogicIssue),
@@ -113,7 +113,7 @@ pub fn assemble_instruction(
             MultiplySubtract,
             MultiplySubtractUnsigned
         ] => match operands {
-            [Some(Register(rs)), Some(Register(rt)), None, None] => {
+            [Some(Register(rs)), Some(Register(rt)), None] => {
                 assemble_r_type(&mut machine_code, Some(rs), Some(rt), None, None, fn_code);
             }
             _ => return Err(AssemblyError::InternalLogicIssue),
@@ -134,7 +134,7 @@ pub fn assemble_instruction(
             SetLessThanUnsigned,
         ]
         | special_2!(Multiply) => match operands {
-            [Some(Register(rd)), Some(Register(rs)), Some(Register(rt)), None] => assemble_r_type(
+            [Some(Register(rd)), Some(Register(rs)), Some(Register(rt))] => assemble_r_type(
                 &mut machine_code,
                 Some(rs),
                 Some(rt),
@@ -146,28 +146,28 @@ pub fn assemble_instruction(
         },
         // bltz $rs, imm_i16
         RegisterImmediate(_) => match operands {
-            [Some(Register(rs)), Some(I16(imm)), None, None] => {
+            [Some(Register(rs)), Some(I16(imm)), None] => {
                 assemble_regimm(&mut machine_code, rs, fn_code, imm);
             }
             _ => return Err(AssemblyError::InternalLogicIssue),
         },
         // j index
         Jump | JumpAndLink => match operands {
-            [Some(JumpIndex(index)), None, None, None] => {
+            [Some(JumpIndex(index)), None, None] => {
                 assemble_field!(index (26 bits) -> machine_code);
             }
             _ => return Err(AssemblyError::InternalLogicIssue),
         },
         // beq $rs, $rt, imm_i16
         BranchEqual | BranchNotEqual => match operands {
-            [Some(Register(rs)), Some(Register(rt)), Some(I16(imm)), None] => {
+            [Some(Register(rs)), Some(Register(rt)), Some(I16(imm))] => {
                 assemble_i_type(&mut machine_code, Some(rs), Some(rt), imm);
             }
             _ => return Err(AssemblyError::InternalLogicIssue),
         },
         // blez $rs, imm_i16
         BranchLessEqualZero | BranchGreaterThanZero => match operands {
-            [Some(Register(rs)), Some(I16(imm)), None, None] => {
+            [Some(Register(rs)), Some(I16(imm)), None] => {
                 assemble_i_type(&mut machine_code, Some(rs), None, imm);
             }
             _ => return Err(AssemblyError::InternalLogicIssue),
@@ -177,42 +177,42 @@ pub fn assemble_instruction(
         | AddImmediateUnsigned
         | SetLessThanImmediate
         | SetLessThanImmediateUnsigned => match operands {
-            [Some(Register(rt)), Some(Register(rs)), Some(I16(imm)), None] => {
+            [Some(Register(rt)), Some(Register(rs)), Some(I16(imm))] => {
                 assemble_i_type(&mut machine_code, Some(rs), Some(rt), imm);
             }
             _ => return Err(AssemblyError::InternalLogicIssue),
         },
         // andi $rt, $rs, imm_u16
         AndImmediate | OrImmediate | XorImmediate => match operands {
-            [Some(Register(rt)), Some(Register(rs)), Some(U16(imm)), None] => {
+            [Some(Register(rt)), Some(Register(rs)), Some(U16(imm))] => {
                 assemble_i_type(&mut machine_code, Some(rs), Some(rt), imm as i16);
             }
             _ => return Err(AssemblyError::InternalLogicIssue),
         },
         // lui $rt, imm_i16
         LoadUpperImmediate => match operands {
-            [Some(Register(rt)), Some(I16(imm)), None, None] => {
+            [Some(Register(rt)), Some(I16(imm)), None] => {
                 assemble_i_type(&mut machine_code, None, Some(rt), imm);
             }
             _ => return Err(AssemblyError::InternalLogicIssue),
         },
         // mfc0 $rt, $rd
         coprocessor_0![MoveFromCoprocessor0, MoveToCoprocessor0] => match operands {
-            [Some(Register(rt)), Some(Register(rd)), None, None] => {
+            [Some(Register(rt)), Some(Register(rd)), None] => {
                 assemble_coprocessor_0(&mut machine_code, fn_code, Some(rt), Some(rd), None)
             }
             _ => return Err(AssemblyError::InternalLogicIssue),
         },
         // eret
         coprocessor_0!(ErrorReturn) => match operands {
-            [None, None, None, None] => {
+            [None, None, None] => {
                 assemble_coprocessor_0(&mut machine_code, fn_code, None, None, Some(0x18))
             }
             _ => return Err(AssemblyError::InternalLogicIssue),
         },
         // add.s $fd, $fs, $ft
         coprocessor_1![{fmt} Add, Subtract, Multiply, Divide] => match operands {
-            [Some(Register(fd)), Some(Register(fs)), Some(Register(ft)), None] => {
+            [Some(Register(fd)), Some(Register(fs)), Some(Register(ft))] => {
                 assemble_coprocessor_1(
                     &mut machine_code,
                     fmt,
@@ -239,7 +239,7 @@ pub fn assemble_instruction(
             ConvertToDouble,
             ConvertToWord,
         ] => match operands {
-            [Some(Register(fd)), Some(Register(fs)), None, None] => {
+            [Some(Register(fd)), Some(Register(fs)), None] => {
                 assemble_coprocessor_1(&mut machine_code, fmt, None, Some(fs), Some(fd), fn_code);
             }
             _ => return Err(AssemblyError::InternalLogicIssue),
@@ -248,11 +248,11 @@ pub fn assemble_instruction(
         // movt.s $fd, $fs, cc
         coprocessor_1!({fmt} MoveConditional, Some(condition)) => match operands {
             // movt.s $fd, $fs
-            [Some(Register(fd)), Some(Register(fs)), None, None] => {
+            [Some(Register(fd)), Some(Register(fs)), None] => {
                 assemble_coprocessor_1_cc_c(&mut machine_code, fmt, 0, condition, fd, fs, fn_code);
             }
             // movt.s $fd, $fs, cc
-            [Some(Register(fd)), Some(Register(fs)), Some(Cc(cc)), None] => {
+            [Some(Register(fd)), Some(Register(fs)), Some(Cc(cc))] => {
                 assemble_coprocessor_1_cc_c(&mut machine_code, fmt, cc, condition, fd, fs, fn_code);
             }
             _ => return Err(AssemblyError::InternalLogicIssue),
@@ -260,7 +260,7 @@ pub fn assemble_instruction(
         // movz.s $fd, $fs, $rt
         coprocessor_1![{fmt} MoveZero, MoveNotZero] => match operands {
             // movz.s $fd, $fs, $rt
-            [Some(Register(fd)), Some(Register(fs)), Some(Register(rt)), None] => {
+            [Some(Register(fd)), Some(Register(fs)), Some(Register(rt))] => {
                 assemble_coprocessor_1(
                     &mut machine_code,
                     fmt,
@@ -276,11 +276,11 @@ pub fn assemble_instruction(
         // c.eq.s cc, $fs, $ft
         coprocessor_1![{fmt} CompareEqual, CompareLessThan, CompareLessEqual] => match operands {
             // c.eq.s $fs, $ft
-            [Some(Register(fs)), Some(Register(ft)), None, None] => {
+            [Some(Register(fs)), Some(Register(ft)), None] => {
                 assemble_coprocessor_1(&mut machine_code, fmt, Some(ft), Some(fs), None, fn_code);
             }
             // c.eq.s cc, $fs, $ft
-            [Some(Cc(cc)), Some(Register(fs)), Some(Register(ft)), None] => {
+            [Some(Cc(cc)), Some(Register(fs)), Some(Register(ft))] => {
                 assemble_coprocessor_1(
                     &mut machine_code,
                     fmt,
@@ -294,7 +294,7 @@ pub fn assemble_instruction(
         },
         // clz $rd, $rs
         special_2![CountLeadingZeroes, CountLeadingOnes] => match operands {
-            [Some(Register(rd)), Some(Register(rs)), None, None] => {
+            [Some(Register(rd)), Some(Register(rs)), None] => {
                 assemble_r_type(&mut machine_code, Some(rs), None, Some(rd), None, fn_code);
             }
             _ => return Err(AssemblyError::InternalLogicIssue),
@@ -318,7 +318,7 @@ pub fn assemble_instruction(
         | LoadDoubleCoprocessor1
         | StoreWordCoprocessor1
         | StoreDoubleCoprocessor1 => match operands {
-            [Some(Register(rt)), Some(I16(imm)), Some(WrappedRegister(rs)), None] => {
+            [Some(Register(rt)), Some(I16(imm)), Some(WrappedRegister(rs))] => {
                 assemble_i_type(&mut machine_code, Some(rs), Some(rt), imm);
             }
             _ => return Err(AssemblyError::InternalLogicIssue),

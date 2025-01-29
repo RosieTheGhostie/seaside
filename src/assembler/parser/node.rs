@@ -4,7 +4,7 @@ use super::super::{directives::SegmentDirective, BasicOperator, Operand};
 pub enum Node {
     SegmentHeader(SegmentDirective, Option<u32>),
     LabelDefinition(String),
-    Instruction(BasicOperator, [Option<Operand>; 4]),
+    Instruction(BasicOperator, [Option<Operand>; 3]),
     ByteArray(Vec<i8>),
     HalfArray(Vec<i16>),
     WordArray(Vec<i32>),
