@@ -17,7 +17,7 @@ pub struct CmdArgs {
 #[derive(Subcommand)]
 pub enum Commands {
     /// Runs an assembled MIPS program in the specified project directory.
-    Run { directory: PathBuf },
+    Run(RunArgs),
     /// Assembles the specified assembly file.
     Assemble(AssemblyArgs),
     /// Disassembles the input machine code into human-readable assembly.
@@ -27,6 +27,14 @@ pub enum Commands {
     /// Runs experimental code.
     #[cfg(debug_assertions)]
     Experiment,
+}
+
+#[derive(Args, Debug)]
+pub struct RunArgs {
+    /// The project directory containing the MIPS program to run.
+    pub directory: PathBuf,
+    /// A list of arguments to the program.
+    pub argv: Vec<String>,
 }
 
 #[derive(Args, Debug)]

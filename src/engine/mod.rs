@@ -1,6 +1,7 @@
 pub mod error;
 
 pub use error::{Error, ErrorKind};
+
 use minimal_logging::macros::grayln;
 
 use crate::{
@@ -35,7 +36,11 @@ pub fn get_config(args: &CmdArgs) -> Result<Config, Error> {
     config.validate().map(|_| config)
 }
 
-pub fn init_interpreter(config: Config, mut directory: PathBuf) -> Result<Interpreter, Error> {
+pub fn init_interpreter(
+    config: Config,
+    mut directory: PathBuf,
+    argv: Vec<String>,
+) -> Result<Interpreter, Error> {
     if !directory.is_dir() {
         return Err(Error::new(
             ErrorKind::InvalidProjectDirectory,
@@ -66,7 +71,7 @@ pub fn init_interpreter(config: Config, mut directory: PathBuf) -> Result<Interp
     let data = get_file(&directory, "data");
     let ktext = get_file(&directory, "ktext");
     let kdata = get_file(&directory, "kdata");
-    Interpreter::init(&config, text, r#extern, data, ktext, kdata)
+    Interpreter::init(&config, text, r#extern, data, ktext, kdata, argv)
 }
 
 pub fn run(interpreter: &mut Interpreter) -> Result<Option<u8>, Error> {

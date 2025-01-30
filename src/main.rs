@@ -11,7 +11,7 @@ mod sign_extend;
 mod type_aliases;
 
 use clap::Parser;
-use cmd_args::{AssemblyArgs, CmdArgs, Commands, DisassemblyArgs, DisassemblyTarget};
+use cmd_args::{AssemblyArgs, CmdArgs, Commands, DisassemblyArgs, DisassemblyTarget, RunArgs};
 use config::Config;
 use minimal_logging::macros::{fatalln, grayln};
 use std::env::current_exe;
@@ -26,16 +26,18 @@ fn main() {
         }
     };
     if let Err(error) = match args.command {
-        Commands::Run { directory } => match engine::init_interpreter(config, directory) {
-            Ok(mut interpreter) => engine::run(&mut interpreter).map(|exit_code| {
-                if let Some(exit_code) = exit_code {
-                    grayln!("program terminated with exit code {exit_code}")
-                } else {
-                    grayln!("program dropped off the bottom")
-                }
-            }),
-            Err(error) => Err(error),
-        },
+        Commands::Run(RunArgs { directory, argv }) => {
+            match engine::init_interpreter(config, directory, argv) {
+                Ok(mut interpreter) => engine::run(&mut interpreter).map(|exit_code| {
+                    if let Some(exit_code) = exit_code {
+                        grayln!("program terminated with exit code {exit_code}")
+                    } else {
+                        grayln!("program dropped off the bottom")
+                    }
+                }),
+                Err(error) => Err(error),
+            }
+        }
         Commands::Assemble(AssemblyArgs {
             source,
             output_directory,
