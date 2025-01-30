@@ -6,15 +6,18 @@ use super::{
         BasicOperator, Operand,
     },
 };
-use crate::constants::{number_fmt::NumberFormat, opcodes::Opcode};
+use crate::{
+    constants::{number_fmt::NumberFormat, opcodes::Opcode},
+    type_aliases::Instruction,
+};
 
 pub fn assemble_instruction(
     operator: BasicOperator,
     operands: [Option<Operand>; 3],
-) -> Result<u32, Error> {
+) -> Result<Instruction, Error> {
     use BasicOperator::*;
     use Operand::*;
-    let mut machine_code: u32 = 0;
+    let mut machine_code: Instruction = 0;
     let opcode = Opcode::from(operator);
     let fn_code = operator.op_or_fn_code();
     assemble_field!(opcode as u8; (6 bits) -> machine_code);
@@ -329,7 +332,7 @@ pub fn assemble_instruction(
 }
 
 fn assemble_r_type(
-    machine_code: &mut u32,
+    machine_code: &mut Instruction,
     rs: Option<u8>,
     rt: Option<u8>,
     rd: Option<u8>,
@@ -344,7 +347,7 @@ fn assemble_r_type(
 }
 
 fn assemble_coprocessor_1(
-    machine_code: &mut u32,
+    machine_code: &mut Instruction,
     fmt: NumberFormat,
     ft: Option<u8>,
     fs: Option<u8>,
@@ -358,19 +361,26 @@ fn assemble_coprocessor_1(
     assemble_field!(fn_code (6 bits) -> *machine_code);
 }
 
-fn assemble_i_type(machine_code: &mut u32, rs: Option<u8>, rt: Option<u8>, imm: i16) {
+fn assemble_i_type(machine_code: &mut Instruction, rs: Option<u8>, rt: Option<u8>, imm: i16) {
     assemble_field!(rs.unwrap_or(0); (5 bits) -> *machine_code);
     assemble_field!(rt.unwrap_or(0); (5 bits) -> *machine_code);
     assemble_field!(imm #(16 bits) -> *machine_code);
 }
 
-fn assemble_movc(machine_code: &mut u32, rs: u8, cc: u8, condition: bool, rd: u8, fn_code: u8) {
+fn assemble_movc(
+    machine_code: &mut Instruction,
+    rs: u8,
+    cc: u8,
+    condition: bool,
+    rd: u8,
+    fn_code: u8,
+) {
     let rt = (cc << 2) | if condition { 1 } else { 0 };
     assemble_r_type(machine_code, Some(rs), Some(rt), Some(rd), None, fn_code);
 }
 
 fn assemble_coprocessor_1_cc_c(
-    machine_code: &mut u32,
+    machine_code: &mut Instruction,
     fmt: NumberFormat,
     cc: u8,
     condition: bool,
@@ -382,14 +392,14 @@ fn assemble_coprocessor_1_cc_c(
     assemble_coprocessor_1(machine_code, fmt, Some(ft), Some(fs), Some(fd), fn_code);
 }
 
-fn assemble_regimm(machine_code: &mut u32, rs: u8, fn_code: u8, imm: i16) {
+fn assemble_regimm(machine_code: &mut Instruction, rs: u8, fn_code: u8, imm: i16) {
     assemble_field!(rs (5 bits) -> *machine_code);
     assemble_field!(fn_code (5 bits) -> *machine_code);
     assemble_field!(imm #(16 bits) -> *machine_code);
 }
 
 fn assemble_coprocessor_0(
-    machine_code: &mut u32,
+    machine_code: &mut Instruction,
     fn_code: u8,
     rt: Option<u8>,
     rd: Option<u8>,
