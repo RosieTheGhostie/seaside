@@ -10,11 +10,14 @@ The other major motivation for making seaside is that I, Rose Thorne, needed a C
 
 seaside is currently a huge work-in-progress, so there aren't many features yet; however, I aim to make this as good (if not better) than MARS in the coming years.
 
-### Assembler (*not implemented*)
+### Assembler (*partially implemented*)
 
 Assemble MIPS source code into raw binary files for execution.
 
+- [X] Single-file support
 - [ ] Multi-file support
+- [X] Basic instruction formats
+- [ ] Pseudo-instructions and extended formats
 - [ ] MARS-style macros
 - [ ] Support for `.set`
 
@@ -27,7 +30,7 @@ Run programs seamlessly with the power of the seaside interpreter.
   - [X] 8/8 printing services
   - [X] 5/5 user input services
   - [X] 4/4 file services
-  - [ ] 4/7 misc. system services
+  - [ ] 5/7 misc. system services
   - [X] 5/5 RNG services
   - [ ] 0/10 GUI services
 - [X] Control over user- and kernel-space
@@ -51,7 +54,7 @@ Change the behavior of the seaside engine to your preference.
 - [X] Current working directory for file IO
 - [X] Toggle self-modifying code
 - [X] Toggle individual system calls
-- [ ] Toggle individual directives
+- [X] Toggle individual directives
 - [ ] + more!!!
 
 ### [Debug Adapter Protocol (DAP)](https://microsoft.github.io/debug-adapter-protocol/) Compatibility (*not implemented*)
@@ -76,7 +79,7 @@ When running a program, the seaside engine expects you to provide a directory wi
 
 Each of these files directly corresponds to their respective segments in the MIPS assembly code.
 
-Seeing as how there is currently no assembler built into seaside, you'll likely want to keep a tool like MARS lying around to assemble and dump the necessary segments. MARS only supports dumping `.text` and `.data`, though, so other segments might need to be dumped by hand...
+As of v1.2, seaside can assemble programs itself, so external tools like MARS are unnecessary; however, seaside's assembler is in its infancy and therefore lacks some features. If you want to use pseudo-instructions, macros, multiple source files, etc., MARS may be a better choice for the time being.
 
 ## Installation
 
