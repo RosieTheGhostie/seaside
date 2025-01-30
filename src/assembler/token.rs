@@ -259,6 +259,32 @@ kHello: .asciiz "Hello, World!\n""#;
     }
 
     #[test]
+    fn byte_array() {
+        const SOURCE: &str = r#".data
+kLocalHost: .byte 1, 0, 0, 127"#;
+        let expected_tokens: [Token; 12] = [
+            Token::SegmentDirective(SegmentDirective::Data),
+            Token::NewLine,
+            Token::Label("kLocalHost".to_string()),
+            Token::Colon,
+            Token::DataTypeDirective(DataTypeDirective::Byte),
+            Token::IntLiteral(1),
+            Token::Comma,
+            Token::IntLiteral(0),
+            Token::Comma,
+            Token::IntLiteral(0),
+            Token::Comma,
+            Token::IntLiteral(127),
+        ];
+        for (expected, got) in std::iter::zip(expected_tokens, Token::lexer(SOURCE)) {
+            assert_eq!(
+                expected,
+                got.unwrap_or_else(|_| panic!("lexing failed (expected: {expected:?})"))
+            );
+        }
+    }
+
+    #[test]
     fn smallest_possible_program() {
         const SOURCE: &str = r#".text
 addiu $v0, $0, 10

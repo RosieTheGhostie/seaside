@@ -463,3 +463,82 @@ impl Parser<'_> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn segment_header_no_address() {
+        use logos::Logos;
+
+        const SOURCE: &str = r#".text"#;
+        let expected: Node = Node::SegmentHeader(SegmentDirective::Text, None);
+        let mut parser = Parser::new(Token::lexer(SOURCE), SpecialDirectives::all());
+        match parser.next() {
+            Some(Ok(got)) => assert_eq!(expected, got),
+            Some(Err(_)) => panic!("parsing failed (expected: {expected:?})"),
+            None => panic!("parsing ended unexpectedly"),
+        }
+        assert!(parser.next().is_none(), "parser had leftover nodes");
+    }
+
+    #[test]
+    fn segment_header_with_address() {
+        use logos::Logos;
+
+        const SOURCE: &str = r#".text 0x00400000"#;
+        let expected: Node = Node::SegmentHeader(SegmentDirective::Text, Some(0x00400000));
+        let mut parser = Parser::new(Token::lexer(SOURCE), SpecialDirectives::all());
+        match parser.next() {
+            Some(Ok(got)) => assert_eq!(expected, got),
+            Some(Err(_)) => panic!("parsing failed (expected: {expected:?})"),
+            None => panic!("parsing ended unexpectedly"),
+        }
+        assert!(parser.next().is_none(), "parser had leftover nodes");
+    }
+
+    #[test]
+    fn small_procedure() {
+        use crate::constants::register;
+        use logos::Logos;
+
+        const SOURCE: &str = r#".text
+Square:
+    mult $a0, $a1
+    mflo $v0
+    mfhi $v1
+    jr $ra"#;
+        let expected_nodes: [Node; 6] = [
+            Node::SegmentHeader(SegmentDirective::Text, None),
+            Node::LabelDefinition("Square".to_string()),
+            Node::Instruction(
+                special!(Multiply),
+                [
+                    Some(Operand::Register(register::A0)),
+                    Some(Operand::Register(register::A1)),
+                    None,
+                ],
+            ),
+            Node::Instruction(
+                special!(MoveFromLow),
+                [Some(Operand::Register(register::V0)), None, None],
+            ),
+            Node::Instruction(
+                special!(MoveFromHigh),
+                [Some(Operand::Register(register::V1)), None, None],
+            ),
+            Node::Instruction(
+                special!(JumpRegister),
+                [Some(Operand::Register(register::RA)), None, None],
+            ),
+        ];
+        let parser = Parser::new(Token::lexer(SOURCE), SpecialDirectives::all());
+        for (expected, got) in std::iter::zip(expected_nodes, parser) {
+            assert_eq!(
+                expected,
+                got.unwrap_or_else(|_| panic!("parsing failed (expected: {expected:?})"))
+            );
+        }
+    }
+}
