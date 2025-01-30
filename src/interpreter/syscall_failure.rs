@@ -5,6 +5,8 @@ pub enum SyscallFailureKind {
     UnknownServiceCode(u8),
     /// The requested service exists, but is currently disabled in the provided config.
     ServiceDisabled(u8),
+    /// The requested service exists and is enabled, but no implementation for it exists yet.
+    ServiceUnimplemented(u8),
     /// No nul byte was found at the end of the provided string.
     NulNotFound,
     /// The provided character/string is not valid UTF-8.
@@ -32,6 +34,7 @@ impl SyscallFailureKind {
         match *self {
             UnknownServiceCode(_) => "requested an unknown service",
             ServiceDisabled(_) => "requested a disabled service",
+            ServiceUnimplemented(_) => "requested an unimplemented service",
             NulNotFound => "couldn't find nul byte at end of string",
             InvalidUtf8 => "input is invalid UTF-8",
             StdoutFlushFailed => "failed to flush stdout",

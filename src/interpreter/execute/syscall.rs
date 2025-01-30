@@ -49,9 +49,7 @@ impl Interpreter {
             CLOSE_FILE => self.close_file(),
             EXIT_2 => self.exit_2(),
             TIME => self.time(),
-            MIDI_OUT => self.midi_out(),
             SLEEP => self.sleep(),
-            MIDI_OUT_SYNC => self.midi_out_sync(),
             PRINT_HEX => self.print_hex(),
             PRINT_BIN => self.print_bin(),
             PRINT_UINT => self.print_uint(),
@@ -60,16 +58,20 @@ impl Interpreter {
             RAND_INT_RANGE => self.rand_int_range(),
             RAND_FLOAT => self.rand_float(),
             RAND_DOUBLE => self.rand_double(),
-            CONFIRM_DIALOG => self.confirm_dialog(),
-            INPUT_DIALOG_INT => self.input_dialog_int(),
-            INPUT_DIALOG_FLOAT => self.input_dialog_float(),
-            INPUT_DIALOG_DOUBLE => self.input_dialog_double(),
-            INPUT_DIALOG_STRING => self.input_dialog_string(),
-            MESSAGE_DIALOG => self.message_dialog(),
-            MESSAGE_DIALOG_INT => self.message_dialog_int(),
-            MESSAGE_DIALOG_FLOAT => self.message_dialog_float(),
-            MESSAGE_DIALOG_DOUBLE => self.message_dialog_double(),
-            MESSAGE_DIALOG_STRING => self.message_dialog_string(),
+            MIDI_OUT
+            | MIDI_OUT_SYNC
+            | CONFIRM_DIALOG
+            | INPUT_DIALOG_INT
+            | INPUT_DIALOG_FLOAT
+            | INPUT_DIALOG_DOUBLE
+            | INPUT_DIALOG_STRING
+            | MESSAGE_DIALOG
+            | MESSAGE_DIALOG_INT
+            | MESSAGE_DIALOG_FLOAT
+            | MESSAGE_DIALOG_DOUBLE
+            | MESSAGE_DIALOG_STRING => Err(Exception::SyscallFailure(
+                SyscallFailureKind::ServiceUnimplemented(service_code),
+            )),
             _ => Err(Exception::SyscallFailure(
                 SyscallFailureKind::UnknownServiceCode(service_code),
             )),
