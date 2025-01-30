@@ -1,5 +1,5 @@
 use super::{Contains, Overlapping};
-use crate::type_aliases::address::Address;
+use crate::type_aliases::Address;
 use serde::{Deserialize, Serialize};
 
 /// An inclusive range of [`Address`]es.

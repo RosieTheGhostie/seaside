@@ -1,4 +1,4 @@
-use crate::type_aliases::instruction::Instruction;
+use crate::type_aliases::Instruction;
 use clap::{arg, builder::ValueParser, command, Args, Parser, Subcommand};
 use std::{num::ParseIntError, path::PathBuf};
 

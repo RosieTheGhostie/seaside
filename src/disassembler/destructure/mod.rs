@@ -15,7 +15,7 @@ pub use destructured_instruction::DestructuredInstruction;
 use super::fields;
 use crate::{
     constants::{instruction_format::InstructionFormat, opcodes::Opcode},
-    type_aliases::{address::Address, instruction::Instruction},
+    type_aliases::{Address, Instruction},
 };
 use num_traits::FromPrimitive;
 

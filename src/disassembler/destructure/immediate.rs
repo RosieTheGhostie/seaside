@@ -1,7 +1,7 @@
 use super::{component::Component, fields, operation::Operation, DestructuredInstruction};
 use crate::{
     constants::{fn_codes::RegisterImmediateFn, opcodes::Opcode},
-    type_aliases::instruction::Instruction,
+    type_aliases::Instruction,
 };
 use num_traits::FromPrimitive;
 

@@ -2,7 +2,7 @@ use super::super::{Exception, Interpreter};
 use crate::{
     constants::{fn_codes::Coprocessor0Fn, register},
     disassembler::fields,
-    type_aliases::instruction::Instruction,
+    type_aliases::Instruction,
 };
 use num_traits::FromPrimitive;
 

@@ -2,16 +2,15 @@ pub mod error;
 
 pub use error::{Error, ErrorKind};
 
-use minimal_logging::macros::grayln;
-
 use crate::{
     assembler::Assembler,
     byte_stream::ByteStream,
     cmd_args::CmdArgs,
     config::{Config, Validate},
     interpreter::Interpreter,
-    type_aliases::{address::Address, instruction::Instruction},
+    type_aliases::{Address, Instruction},
 };
+use minimal_logging::macros::grayln;
 use std::{
     env::{current_exe, set_current_dir},
     fs::read_to_string,

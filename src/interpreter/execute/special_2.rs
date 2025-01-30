@@ -1,7 +1,7 @@
 use super::super::{Exception, Interpreter};
 use crate::{
     constants::fn_codes::Special2Fn, disassembler::fields, sign_extend::SignExtend,
-    type_aliases::instruction::Instruction,
+    type_aliases::Instruction,
 };
 use num_traits::FromPrimitive;
 

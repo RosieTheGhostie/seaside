@@ -6,7 +6,7 @@ pub mod regions;
 use super::Exception;
 use crate::{
     config::Endian,
-    type_aliases::{address::Address, instruction::Instruction},
+    type_aliases::{Address, Instruction},
 };
 use data_memory::DataMemory;
 use instruction_memory::InstructionMemory;

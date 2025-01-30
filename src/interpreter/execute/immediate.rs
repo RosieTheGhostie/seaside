@@ -1,7 +1,7 @@
 use super::super::{memory::regions::Region, Exception, Interpreter};
 use crate::{
     config::Endian, constants::opcodes::Opcode, disassembler::fields, sign_extend::SignExtend,
-    type_aliases::instruction::Instruction,
+    type_aliases::Instruction,
 };
 use num_traits::FromPrimitive;
 

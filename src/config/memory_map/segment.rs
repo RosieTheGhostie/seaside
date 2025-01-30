@@ -1,8 +1,8 @@
 use super::{AddressRange, Contains, Overlapping};
 use serde::{Deserialize, Serialize};
 
-/// Specifies the memory [`Address`][crate::type_aliases::address::Address]es associated with a
-/// given segment.
+/// Specifies the memory [`Address`][crate::type_aliases::Address]es associated with a given
+/// segment.
 #[derive(Serialize, Deserialize)]
 pub struct Segment {
     /// The inclusive range of addresses within this segment.

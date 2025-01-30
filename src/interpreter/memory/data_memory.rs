@@ -2,7 +2,7 @@ use super::{
     super::Exception,
     regions::{DataRegion, Region},
 };
-use crate::type_aliases::address::Address;
+use crate::type_aliases::Address;
 
 pub struct DataMemory {
     r#extern: DataRegion,

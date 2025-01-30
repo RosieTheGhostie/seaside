@@ -1,4 +1,4 @@
-use crate::type_aliases::instruction::Instruction;
+use crate::type_aliases::Instruction;
 
 pub fn opcode(instruction: Instruction) -> u8 {
     (instruction >> 26) as u8

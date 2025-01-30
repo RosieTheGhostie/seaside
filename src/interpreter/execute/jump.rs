@@ -3,7 +3,7 @@ use crate::{
     constants::{opcodes::Opcode, register},
     disassembler::fields,
     sign_extend::SignExtend,
-    type_aliases::instruction::Instruction,
+    type_aliases::Instruction,
 };
 
 impl Interpreter {

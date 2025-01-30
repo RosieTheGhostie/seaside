@@ -1,9 +1,8 @@
+use crate::assembler::Error as AssemblyError;
 use std::{
     error::Error as ErrorTrait,
     fmt::{Display, Formatter, Result as FmtResult},
 };
-
-use crate::assembler::Error as AssemblyError;
 
 #[derive(Debug)]
 pub struct Error {

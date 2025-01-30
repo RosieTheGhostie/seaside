@@ -1,5 +1,5 @@
 use super::{component::Component, fields, operation::Operation, DestructuredInstruction};
-use crate::{constants::fn_codes::Special2Fn, type_aliases::instruction::Instruction};
+use crate::{constants::fn_codes::Special2Fn, type_aliases::Instruction};
 use num_traits::FromPrimitive;
 
 pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> {

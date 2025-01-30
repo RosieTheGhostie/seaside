@@ -1,5 +1,3 @@
-use std::str::Chars;
-
 use super::{
     directives::{DataTypeDirective, SegmentDirective},
     operation::{

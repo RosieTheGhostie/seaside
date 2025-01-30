@@ -22,7 +22,7 @@ pub(super) use token::Token;
 
 use crate::{
     config::{Config, Endian},
-    type_aliases::address::Address,
+    type_aliases::Address,
 };
 use directives::SegmentDirective;
 use logos::Logos;
@@ -31,7 +31,7 @@ use segment::SegmentBuildInfo;
 use std::{
     collections::{HashMap, VecDeque},
     iter::zip,
-    path::{Path, PathBuf},
+    path::Path,
 };
 
 pub struct Assembler<'source> {

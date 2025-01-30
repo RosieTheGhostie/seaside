@@ -10,7 +10,7 @@ pub use segment::Segment;
 use super::validate::Validate;
 use crate::{
     engine::{Error, ErrorKind},
-    type_aliases::address::Address,
+    type_aliases::Address,
 };
 use serde::{Deserialize, Serialize};
 use traits::{Contains, Overlapping};

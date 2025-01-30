@@ -1,5 +1,5 @@
 use super::Exception;
-use crate::{config::RegisterDefaults, constants::register, type_aliases::address::Address};
+use crate::{config::RegisterDefaults, constants::register, type_aliases::Address};
 use std::{
     fmt::{Display, Formatter, Result as FmtResult},
     mem::transmute,

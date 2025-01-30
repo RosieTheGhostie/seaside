@@ -3,7 +3,7 @@ pub mod fields;
 
 mod destructure;
 
-use crate::type_aliases::{address::Address, instruction::Instruction};
+use crate::type_aliases::{Address, Instruction};
 use destructure::destructure;
 
 pub fn disassemble_advanced(

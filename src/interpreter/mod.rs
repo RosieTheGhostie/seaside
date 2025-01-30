@@ -19,7 +19,7 @@ use crate::{
     config::Config,
     constants::register,
     engine::{Error, ErrorKind},
-    type_aliases::address::Address,
+    type_aliases::Address,
 };
 use file_handle::FileHandle;
 use memory::regions::Region;

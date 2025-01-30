@@ -2,7 +2,7 @@ use super::{
     super::Exception,
     regions::{Region, TextRegion},
 };
-use crate::type_aliases::address::Address;
+use crate::type_aliases::Address;
 
 pub struct InstructionMemory {
     text: TextRegion,

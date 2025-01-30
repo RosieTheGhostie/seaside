@@ -10,7 +10,7 @@ use super::{Exception, Interpreter};
 use crate::{
     constants::{instruction_format::InstructionFormat, opcodes::Opcode},
     disassembler::fields,
-    type_aliases::instruction::Instruction,
+    type_aliases::Instruction,
 };
 use num_traits::FromPrimitive;
 

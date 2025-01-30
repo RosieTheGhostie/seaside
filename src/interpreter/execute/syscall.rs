@@ -4,7 +4,7 @@ use super::{
 };
 use crate::{
     constants::{register, service_codes},
-    type_aliases::address::Address,
+    type_aliases::Address,
 };
 use console::Term;
 use std::{

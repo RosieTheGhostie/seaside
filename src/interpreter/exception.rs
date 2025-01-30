@@ -1,5 +1,5 @@
 use super::SyscallFailureKind;
-use crate::type_aliases::address::Address;
+use crate::type_aliases::Address;
 use std::{
     error::Error as ErrorTrait,
     fmt::{Display, Formatter, Result as FmtResult},
