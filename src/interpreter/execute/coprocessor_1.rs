@@ -11,15 +11,15 @@ impl Interpreter {
     ///
     /// ```text
     /// 010001 x0x0x xxxxx xxxxx xxxxx xxxxxx
-    /// opcode  fmt   $ft   $fd   $fs    fn
+    /// opcode  fmt   $ft   $fs   $fd    fn
     /// ```
     ///
     /// Some instructions specify a condition flag (`cc`). If the instruction only writes to the
-    /// flag, `cc` is found in the field `$fd` as shown:
+    /// flag, `cc` is found in the field `$fs` as shown:
     ///
     /// ```text
     /// 010001 10x0x xxxxx xxx 00 xxxxx 0xx00x
-    /// opcode  fmt   $ft  cc      $fs    fn
+    /// opcode  fmt   $ft  cc      $fd    fn
     /// ```
     ///
     /// If the instruction needs a boolean condition to compare with the condition flag, `cc` and
@@ -27,7 +27,7 @@ impl Interpreter {
     ///
     /// ```text
     /// 010001 10x0x xxx 0 x xxxxx xxxxx 11xxx0
-    /// opcode  fmt  cc    c  $fd   $fs    fn
+    /// opcode  fmt  cc    c  $fs   $fd    fn
     /// ```
     pub fn execute_coprocessor_1(&mut self, instruction: Instruction) -> Result<(), Exception> {
         use NumberFormat::*;
