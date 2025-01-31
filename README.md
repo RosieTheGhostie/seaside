@@ -26,7 +26,7 @@ Assemble MIPS source code into raw binary files for execution.
 Run programs seamlessly with the power of the seaside interpreter.
 
 - [X] 136/136 basic instructions supported by MARS
-- [ ] 26/39 system calls supported by MARS
+- [ ] 27/39 system calls supported by MARS
   - [X] 8/8 printing services
   - [X] 5/5 user input services
   - [X] 4/4 file services
