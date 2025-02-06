@@ -1,7 +1,15 @@
-use super::{get_file, Error, ErrorKind};
+//! Wraps the [`interpreter`] module.
+//!
+//! Provides the wrapper functions [`init_interpreter`] and [`run`], which initialize and run the
+//! interpreter, respectively.
+//!
+//! [`interpreter`]: crate::interpreter
+
+use super::{resolve_if_exists, Error, ErrorKind};
 use crate::{interpreter::Interpreter, Config};
 use std::{env::set_current_dir, path::PathBuf};
 
+/// Initializes the interpreter in preparation for execution via the [`run`] function.
 pub fn init_interpreter(
     config: Config,
     mut directory: PathBuf,
@@ -24,19 +32,25 @@ pub fn init_interpreter(
             }
         };
     }
-    let text = get_file(&directory, "text").ok_or_else(|| {
+    let text = resolve_if_exists(&directory, "text").ok_or_else(|| {
         Error::new(
             ErrorKind::InvalidProjectDirectory,
             "missing 'text' file in project directory",
         )
     })?;
-    let r#extern = get_file(&directory, "extern");
-    let data = get_file(&directory, "data");
-    let ktext = get_file(&directory, "ktext");
-    let kdata = get_file(&directory, "kdata");
+    let r#extern = resolve_if_exists(&directory, "extern");
+    let data = resolve_if_exists(&directory, "data");
+    let ktext = resolve_if_exists(&directory, "ktext");
+    let kdata = resolve_if_exists(&directory, "kdata");
     Interpreter::init(&config, text, r#extern, data, ktext, kdata, argv)
 }
 
+/// Runs `interpreter`.
+///
+/// Upon success, this returns the exit code. If the interpreter raises an [`Exception`], this wraps
+/// it in an [`Error`] and, if enabled in the config, prints the crash handler.
+///
+/// [`Exception`]: crate::interpreter::Exception
 pub fn run(interpreter: &mut Interpreter) -> Result<Option<u8>, Error> {
     match interpreter.run() {
         Ok(()) => Ok(interpreter.exit_code),

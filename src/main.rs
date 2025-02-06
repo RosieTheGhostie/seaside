@@ -49,7 +49,7 @@ fn main() {
                     segment: None,
                 },
             address: start_address,
-        }) => engine::disassemble(instruction, start_address),
+        }) => engine::disassemble_instruction(instruction, start_address),
         Commands::Disassemble(DisassemblyArgs {
             target:
                 DisassemblyTarget {

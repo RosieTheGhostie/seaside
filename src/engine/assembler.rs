@@ -1,8 +1,17 @@
+//! Wraps the [`assembler`] module.
+//!
+//! Provides the wrapper function [`assemble`], which runs the assembler routine.
+//!
+//! [`assembler`]: crate::assembler
+
 use super::{Error, ErrorKind};
 use crate::{assembler::Assembler, Config};
 use minimal_logging::macros::grayln;
 use std::{fs::read_to_string, path::PathBuf, str::FromStr, time::Instant};
 
+/// Assembles `source` into a format usable by the seaside interpreter.
+///
+/// If `output_directory` is [`None`], it defaults to the current working directory.
 pub fn assemble(
     config: Config,
     source: PathBuf,

@@ -1,3 +1,10 @@
+//! Wraps the [`disassembler`] module.
+//!
+//! Provides the wrapper functions [`disassemble_instruction`] and [`disassemble_segment`],
+//! which disassemble their respective objects into a human-readable assembly representation.
+//!
+//! [`disassembler`]: crate::disassembler
+
 use super::{Error, ErrorKind};
 use crate::{
     byte_stream::ByteStream,
@@ -6,7 +13,14 @@ use crate::{
 };
 use std::path::PathBuf;
 
-pub fn disassemble(instruction: Instruction, address: Option<Address>) -> Result<(), Error> {
+/// Prints the human-readable assembly form of `instruction`.
+///
+/// If `address` is not [`None`], that value is interpreted as the instruction's address for the
+/// purposes of branches and jumps.
+pub fn disassemble_instruction(
+    instruction: Instruction,
+    address: Option<Address>,
+) -> Result<(), Error> {
     match crate::disassembler::disassemble_advanced(
         instruction,
         address.unwrap_or_default(),
@@ -37,7 +51,7 @@ pub fn disassemble_segment(
     let bytes = std::fs::read(segment)
         .map_err(|_| Error::new(ErrorKind::NotFound, "couldn't find that segment"))?;
     for instruction in ByteStream::<'_, u32>::new(&bytes, config.endian) {
-        disassemble(instruction, Some(address))?;
+        disassemble_instruction(instruction, Some(address))?;
         address += 4;
     }
     Ok(())
