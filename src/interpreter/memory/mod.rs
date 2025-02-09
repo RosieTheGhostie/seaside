@@ -4,13 +4,11 @@ pub mod instruction_memory;
 pub mod regions;
 
 use super::Exception;
-use crate::{
-    config::Endian,
-    type_aliases::{Address, Instruction},
-};
+use crate::type_aliases::{Address, Instruction};
 use data_memory::DataMemory;
 use instruction_memory::InstructionMemory;
 use regions::Region;
+use serdendian::Endian;
 
 pub struct Memory {
     instruction_memory: InstructionMemory,

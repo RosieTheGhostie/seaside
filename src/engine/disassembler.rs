@@ -7,10 +7,10 @@
 
 use super::{Error, ErrorKind};
 use crate::{
-    byte_stream::ByteStream,
     type_aliases::{Address, Instruction},
     Config,
 };
+use serdendian::byte_stream::ByteStream;
 use std::path::PathBuf;
 
 /// Prints the human-readable assembly form of `instruction`.

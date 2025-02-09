@@ -20,14 +20,12 @@ pub(super) use operation::Operand;
 pub(super) use parser::{Node, Parser};
 pub(super) use token::Token;
 
-use crate::{
-    config::{Config, Endian},
-    type_aliases::Address,
-};
+use crate::{config::Config, type_aliases::Address};
 use directives::SegmentDirective;
 use logos::Logos;
 use operation::convert_address;
 use segment::SegmentBuildInfo;
+use serdendian::Endian;
 use std::{
     collections::{HashMap, VecDeque},
     iter::zip,

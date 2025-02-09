@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-pub mod endian;
 pub mod features;
 pub mod memory_map;
 pub mod register_defaults;
@@ -10,7 +9,6 @@ mod presets;
 mod primitive_defaults;
 mod version;
 
-pub use endian::Endian;
 pub use features::Features;
 pub use memory_map::MemoryMap;
 pub use register_defaults::RegisterDefaults;
@@ -20,6 +18,7 @@ use crate::engine::{Error, ErrorKind};
 use clap::crate_version;
 use semver::Version;
 use serde::{Deserialize, Serialize};
+use serdendian::Endian;
 use std::str::FromStr;
 use version::VersionComparison;
 

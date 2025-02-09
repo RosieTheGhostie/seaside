@@ -1,6 +1,5 @@
 #![recursion_limit = "256"]
 mod assembler;
-mod byte_stream;
 mod cmd_args;
 mod config;
 mod constants;

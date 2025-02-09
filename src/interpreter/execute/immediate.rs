@@ -1,9 +1,10 @@
 use super::super::{memory::regions::Region, Exception, Interpreter};
 use crate::{
-    config::Endian, constants::opcodes::Opcode, disassembler::fields, sign_extend::SignExtend,
+    constants::opcodes::Opcode, disassembler::fields, sign_extend::SignExtend,
     type_aliases::Instruction,
 };
 use num_traits::FromPrimitive;
+use serdendian::Endian;
 
 impl Interpreter {
     /// Executes `instruction`, which must follow the "immediate" instruction format:

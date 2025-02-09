@@ -5,10 +5,11 @@ use super::{
 use crate::{
     config::{
         memory_map::{RuntimeData, Segment},
-        Config, Endian,
+        Config,
     },
     engine::{Error, ErrorKind},
 };
+use serdendian::Endian;
 use std::path::PathBuf;
 
 impl Memory {

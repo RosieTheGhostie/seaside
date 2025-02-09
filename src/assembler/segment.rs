@@ -1,5 +1,6 @@
 use super::error::Error;
-use crate::{config::Endian, type_aliases::Address};
+use crate::type_aliases::Address;
+use serdendian::Endian;
 use std::{fs::write, path::PathBuf};
 
 pub struct SegmentBuildInfo {
