@@ -6,7 +6,6 @@ mod constants;
 mod disassembler;
 mod engine;
 mod interpreter;
-mod sign_extend;
 mod type_aliases;
 
 use clap::Parser;

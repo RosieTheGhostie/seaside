@@ -37,7 +37,7 @@ git = "https://github.com/RosieTheGhostie/minimal-logging.git"
 version = "1.0"
 features = ["derive"]
 
-[dependencies.serdendian]
-version = "0.2"
-features = ["byte_stream"]
-git = "https://github.com/RosieTheGhostie/serdendian.git"
+[dependencies.seaside-int-utils]
+version = "0.3"
+features = ["full"]
+git = "https://github.com/RosieTheGhostie/seaside-int-utils.git"

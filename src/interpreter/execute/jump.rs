@@ -2,9 +2,9 @@ use super::super::{Exception, Interpreter};
 use crate::{
     constants::{opcodes::Opcode, register},
     disassembler::fields,
-    sign_extend::SignExtend,
     type_aliases::Instruction,
 };
+use seaside_int_utils::SignExtend;
 
 impl Interpreter {
     pub fn execute_jump_format(

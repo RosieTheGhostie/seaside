@@ -2,7 +2,8 @@ use super::{
     component::{Component, FprDisplayer, GprDisplayer},
     operation::Operation,
 };
-use crate::{sign_extend::SignExtend, type_aliases::Address};
+use crate::type_aliases::Address;
+use seaside_int_utils::SignExtend;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
 #[derive(Debug, Default)]

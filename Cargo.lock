@@ -459,10 +459,18 @@ dependencies = [
  "num-derive",
  "num-traits",
  "rand",
+ "seaside-int-utils",
  "semver",
  "serde",
- "serdendian",
  "toml",
+]
+
+[[package]]
+name = "seaside-int-utils"
+version = "0.3.0"
+source = "git+https://github.com/RosieTheGhostie/seaside-int-utils.git#b21fe8542e2092860071b2a2a9c8903d5583a99f"
+dependencies = [
+ "serde",
 ]
 
 [[package]]
@@ -496,14 +504,6 @@ name = "serde_spanned"
 version = "0.6.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "87607cb1398ed59d48732e575a4c28a7a8ebf2454b964fe3f224f2afc07909e1"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "serdendian"
-version = "0.2.0"
-source = "git+https://github.com/RosieTheGhostie/serdendian.git#cb382813f24b2e03be01dbefe62c304eba9c0d75"
 dependencies = [
  "serde",
 ]

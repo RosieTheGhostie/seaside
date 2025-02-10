@@ -1,9 +1,7 @@
 use super::super::{Exception, Interpreter};
-use crate::{
-    constants::fn_codes::SpecialFn, disassembler::fields, sign_extend::SignExtend,
-    type_aliases::Instruction,
-};
+use crate::{constants::fn_codes::SpecialFn, disassembler::fields, type_aliases::Instruction};
 use num_traits::FromPrimitive;
+use seaside_int_utils::SignExtend;
 
 impl Interpreter {
     /// Executes `instruction`, which must follow the "special" instruction format:

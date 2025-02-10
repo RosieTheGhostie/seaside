@@ -9,7 +9,7 @@ use crate::{
     },
     engine::{Error, ErrorKind},
 };
-use serdendian::Endian;
+use seaside_int_utils::Endian;
 use std::path::PathBuf;
 
 impl Memory {

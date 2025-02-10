@@ -24,8 +24,8 @@ use crate::{config::Config, type_aliases::Address};
 use directives::SegmentDirective;
 use logos::Logos;
 use operation::convert_address;
+use seaside_int_utils::Endian;
 use segment::SegmentBuildInfo;
-use serdendian::Endian;
 use std::{
     collections::{HashMap, VecDeque},
     iter::zip,

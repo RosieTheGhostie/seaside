@@ -1,6 +1,6 @@
 use super::{super::super::Exception, Region};
 use crate::type_aliases::address::{is_aligned, Address};
-use serdendian::{byte_stream::ByteStream, Endian};
+use seaside_int_utils::{byte_stream::ByteStream, Endian};
 use std::{iter::zip, ops::Range};
 
 pub struct TextRegion {

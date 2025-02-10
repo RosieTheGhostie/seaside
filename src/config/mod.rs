@@ -16,9 +16,9 @@ pub use validate::Validate;
 
 use crate::engine::{Error, ErrorKind};
 use clap::crate_version;
+use seaside_int_utils::Endian;
 use semver::Version;
 use serde::{Deserialize, Serialize};
-use serdendian::Endian;
 use std::str::FromStr;
 use version::VersionComparison;
 

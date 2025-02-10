@@ -10,7 +10,7 @@ use crate::{
     type_aliases::{Address, Instruction},
     Config,
 };
-use serdendian::byte_stream::ByteStream;
+use seaside_int_utils::byte_stream::ByteStream;
 use std::path::PathBuf;
 
 /// Prints the human-readable assembly form of `instruction`.

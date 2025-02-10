@@ -8,7 +8,7 @@ use crate::type_aliases::{Address, Instruction};
 use data_memory::DataMemory;
 use instruction_memory::InstructionMemory;
 use regions::Region;
-use serdendian::Endian;
+use seaside_int_utils::Endian;
 
 pub struct Memory {
     instruction_memory: InstructionMemory,
