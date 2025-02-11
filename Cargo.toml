@@ -15,15 +15,15 @@ incremental = true
 [dependencies]
 anyhow = "1.0"
 directories = "5.0"
-seaside-assembler = { version = "0.1", path = "crates/seaside-assembler" }
-seaside-bitflags-addons = { version = "0.1", path = "crates/seaside-bitflags-addons" }
-seaside-config = { version = "0.1", path = "crates/seaside-config" }
-seaside-constants = { version = "0.1", path = "crates/seaside-constants" }
-seaside-disassembler = { version = "0.1", path = "crates/seaside-disassembler" }
-seaside-error = { version = "0.1", path = "crates/seaside-error" }
-seaside-int-utils = { version = "0.3", path = "crates/seaside-int-utils" }
-seaside-interpreter = { version = "0.1", path = "crates/seaside-interpreter" }
-seaside-type-aliases = { version = "0.1", path = "crates/seaside-type-aliases" }
+seaside-assembler = { version = "*", path = "crates/seaside-assembler" }
+seaside-bitflags-addons = { version = "*", path = "crates/seaside-bitflags-addons" }
+seaside-config = { version = "*", path = "crates/seaside-config" }
+seaside-constants = { version = "*", path = "crates/seaside-constants" }
+seaside-disassembler = { version = "*", path = "crates/seaside-disassembler" }
+seaside-error = { version = "*", path = "crates/seaside-error" }
+seaside-int-utils = { version = "*", path = "crates/seaside-int-utils" }
+seaside-interpreter = { version = "*", path = "crates/seaside-interpreter" }
+seaside-type-aliases = { version = "*", path = "crates/seaside-type-aliases" }
 toml = "0.8"
 
 [dependencies.clap]
