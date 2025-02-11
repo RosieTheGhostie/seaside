@@ -6,10 +6,10 @@ macro_rules! if_enabled {
         {
             $callback
         } else {
-            Err($crate::parser::Error::new(
-                $crate::parser::ErrorKind::DirectiveDisabled,
-                format!("{} is disabled in the config", $directive_repr),
+            Err(anyhow::Error::new(
+                $crate::parser::ParseError::DirectiveDisabled,
             ))
+            .with_context(|| format!("{} is disabled in the config", $directive_repr))
         }
     };
 }
@@ -20,19 +20,15 @@ macro_rules! assert_token {
         match $self.next_token() {
             Some(Ok(Token::$variant)) => {}
             Some(Ok(_)) => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::UnexpectedToken,
+                return Err(anyhow::Error::new(
+                    $crate::parser::ParseError::UnexpectedToken,
                 ));
             }
             Some(Err(_)) => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::UnknownToken,
-                ));
+                return Err(anyhow::Error::new($crate::parser::ParseError::UnknownToken));
             }
             None => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::PrematureEof,
-                ));
+                return Err(anyhow::Error::new($crate::parser::ParseError::PrematureEof));
             }
         }
     };
@@ -40,19 +36,15 @@ macro_rules! assert_token {
         match $self.next_token() {
             Some(Ok(Token::$variant0 | Token::$variant1)) => {}
             Some(Ok(_)) => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::UnexpectedToken,
+                return Err(anyhow::Error::new(
+                    $crate::parser::ParseError::UnexpectedToken,
                 ));
             }
             Some(Err(_)) => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::UnknownToken,
-                ));
+                return Err(anyhow::Error::new($crate::parser::ParseError::UnknownToken));
             }
             None => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::PrematureEof,
-                ));
+                return Err(anyhow::Error::new($crate::parser::ParseError::PrematureEof));
             }
         }
     };
@@ -60,19 +52,15 @@ macro_rules! assert_token {
         match $self.next_token() {
             Some(Ok(Token::$variant0 | Token::$variant1 | Token::$variant2)) => {}
             Some(Ok(_)) => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::UnexpectedToken,
+                return Err(anyhow::Error::new(
+                    $crate::parser::ParseError::UnexpectedToken,
                 ));
             }
             Some(Err(_)) => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::UnknownToken,
-                ));
+                return Err(anyhow::Error::new($crate::parser::ParseError::UnknownToken));
             }
             None => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::PrematureEof,
-                ));
+                return Err(anyhow::Error::new($crate::parser::ParseError::PrematureEof));
             }
         }
     };
@@ -84,14 +72,12 @@ macro_rules! assert_token_or_none {
         match $self.next_token() {
             Some(Ok(Token::$variant)) | None => {}
             Some(Ok(_)) => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::UnexpectedToken,
+                return Err(anyhow::Error::new(
+                    $crate::parser::ParseError::UnexpectedToken,
                 ));
             }
             Some(Err(_)) => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::UnknownToken,
-                ));
+                return Err(anyhow::Error::new($crate::parser::ParseError::UnknownToken));
             }
         }
     };
@@ -99,14 +85,12 @@ macro_rules! assert_token_or_none {
         match $self.next_token() {
             Some(Ok(Token::$variant0 | Token::$variant1)) | None => {}
             Some(Ok(_)) => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::UnexpectedToken,
+                return Err(anyhow::Error::new(
+                    $crate::parser::ParseError::UnexpectedToken,
                 ));
             }
             Some(Err(_)) => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::UnknownToken,
-                ));
+                return Err(anyhow::Error::new($crate::parser::ParseError::UnknownToken));
             }
         }
     };
@@ -114,14 +98,12 @@ macro_rules! assert_token_or_none {
         match $self.next_token() {
             Some(Ok(Token::$variant0 | Token::$variant1 | Token::$variant2)) | None => {}
             Some(Ok(_)) => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::UnexpectedToken,
+                return Err(anyhow::Error::new(
+                    $crate::parser::ParseError::UnexpectedToken,
                 ));
             }
             Some(Err(_)) => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::UnknownToken,
-                ));
+                return Err(anyhow::Error::new($crate::parser::ParseError::UnknownToken));
             }
         }
     };
@@ -137,14 +119,10 @@ macro_rules! token_is {
                 false
             }
             Some(Err(_)) => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::UnknownToken,
-                ));
+                return Err(anyhow::Error::new($crate::parser::ParseError::UnknownToken));
             }
             None => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::PrematureEof,
-                ));
+                return Err(anyhow::Error::new($crate::parser::ParseError::PrematureEof));
             }
         }
     };
@@ -156,14 +134,10 @@ macro_rules! token_is {
                 false
             }
             Some(Err(_)) => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::UnknownToken,
-                ));
+                return Err(anyhow::Error::new($crate::parser::ParseError::UnknownToken));
             }
             None => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::PrematureEof,
-                ));
+                return Err(anyhow::Error::new($crate::parser::ParseError::PrematureEof));
             }
         }
     };
@@ -175,14 +149,10 @@ macro_rules! token_is {
                 false
             }
             Some(Err(_)) => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::UnknownToken,
-                ));
+                return Err(anyhow::Error::new($crate::parser::ParseError::UnknownToken));
             }
             None => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::PrematureEof,
-                ));
+                return Err(anyhow::Error::new($crate::parser::ParseError::PrematureEof));
             }
         }
     };
@@ -194,19 +164,15 @@ macro_rules! token_contents_or_err {
         match $self.next_token() {
             Some(Ok(Token::$variant(x))) => x,
             Some(Ok(_)) => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::UnexpectedToken,
+                return Err(anyhow::Error::new(
+                    $crate::parser::ParseError::UnexpectedToken,
                 ));
             }
             Some(Err(_)) => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::UnknownToken,
-                ));
+                return Err(anyhow::Error::new($crate::parser::ParseError::UnknownToken));
             }
             None => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::PrematureEof,
-                ));
+                return Err(anyhow::Error::new($crate::parser::ParseError::PrematureEof));
             }
         }
     };
@@ -214,19 +180,15 @@ macro_rules! token_contents_or_err {
         match $self.next_token() {
             Some(Ok(Token::$variant0(x) | Token::$variant1(x))) => x,
             Some(Ok(_)) => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::UnexpectedToken,
+                return Err(anyhow::Error::new(
+                    $crate::parser::ParseError::UnexpectedToken,
                 ));
             }
             Some(Err(_)) => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::UnknownToken,
-                ));
+                return Err(anyhow::Error::new($crate::parser::ParseError::UnknownToken));
             }
             None => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::PrematureEof,
-                ));
+                return Err(anyhow::Error::new($crate::parser::ParseError::PrematureEof));
             }
         }
     };
@@ -234,19 +196,15 @@ macro_rules! token_contents_or_err {
         match $self.next_token() {
             Some(Ok(Token::$variant0(x) | Token::$variant1(x)) | Token::$variant2(x)) => x,
             Some(Ok(_)) => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::UnexpectedToken,
+                return Err(anyhow::Error::new(
+                    $crate::parser::ParseError::UnexpectedToken,
                 ));
             }
             Some(Err(_)) => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::UnknownToken,
-                ));
+                return Err(anyhow::Error::new($crate::parser::ParseError::UnknownToken));
             }
             None => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::PrematureEof,
-                ));
+                return Err(anyhow::Error::new($crate::parser::ParseError::PrematureEof));
             }
         }
     };
@@ -262,9 +220,7 @@ macro_rules! maybe_token_contents {
                 None
             }
             Some(Err(_)) => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::UnknownToken,
-                ));
+                return Err(anyhow::Error::new($crate::parser::ParseError::UnknownToken));
             }
             None => None,
         }
@@ -277,9 +233,7 @@ macro_rules! maybe_token_contents {
                 None
             }
             Some(Err(_)) => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::UnknownToken,
-                ));
+                return Err(anyhow::Error::new($crate::parser::ParseError::UnknownToken));
             }
             None => None,
         }
@@ -292,9 +246,7 @@ macro_rules! maybe_token_contents {
                 None
             }
             Some(Err(_)) => {
-                return Err($crate::parser::Error::from(
-                    $crate::parser::ErrorKind::UnknownToken,
-                ));
+                return Err(anyhow::Error::new($crate::parser::ParseError::UnknownToken));
             }
             None => None,
         }
@@ -343,20 +295,18 @@ macro_rules! get_operand {
         let __int__ = $crate::parser::macros::token_contents_or_err!($self, IntLiteral);
         match <i32 as TryInto<u8>>::try_into(__int__) {
             Ok(__cc__) if __cc__ < 8 => Operand::Cc(__cc__),
-            _ => return Err($crate::parser::Error::new(
-                $crate::parser::ErrorKind::ValueOutsideRange,
-                "cc must be on the range 0..=7",
-            )),
+            _ => return Err(anyhow::Error::new(
+                $crate::parser::ParseError::ValueOutsideRange,
+            )).with_context(|| "cc must be on the range 0..=7"),
         }
     }};
     ($self:ident, cc?) => {{
         match $crate::parser::macros::maybe_token_contents!($self, IntLiteral) {
             Some(__int__) => match <i32 as TryInto<u8>>::try_into(__int__) {
                 Ok(__cc__) if __cc__ < 8 => Some(Operand::Cc(__cc__)),
-                _ => return Err($crate::parser::Error::new(
-                    $crate::parser::ErrorKind::ValueOutsideRange,
-                    "cc must be on the range 0..=7",
-                )),
+                _ => return Err(anyhow::Error::new(
+                    $crate::parser::ParseError::ValueOutsideRange,
+                )).with_context(|| "cc must be on the range 0..=7"),
             },
             None => None,
         }
@@ -365,20 +315,18 @@ macro_rules! get_operand {
         let __int__ = $crate::parser::macros::token_contents_or_err!($self, IntLiteral);
         match <i32 as TryInto<u8>>::try_into(__int__) {
             Ok(__shamt__) if __shamt__ < 32 => Operand::Shamt(__shamt__),
-            _ => return Err($crate::parser::Error::new(
-                $crate::parser::ErrorKind::ValueOutsideRange,
-                "shamt must be on the range 0..=31",
-            )),
+            _ => return Err(anyhow::Error::new(
+                $crate::parser::ParseError::ValueOutsideRange,
+            )).with_context(|| "shamt must be on the range 0..=31"),
         }
     }};
     ($self:ident, shamt?) => {{
         match $crate::parser::macros::maybe_token_contents!($self, IntLiteral) {
             Some(__int__) match <i32 as TryInto<u8>>::try_into(__int__) {
                 Ok(__shamt__) if __shamt__ < 32 => Some(Operand::Shamt(__shamt__)),
-                _ => return Err($crate::parser::Error::new(
-                    $crate::parser::ErrorKind::ValueOutsideRange,
-                    "shamt must be on the range 0..=31",
-                )),
+                _ => return Err(anyhow::Error::new(
+                    $crate::parser::ParseError::ValueOutsideRange,
+                )).with_context(|| "shamt must be on the range 0..=31"),
             },
             None => None,
         }
@@ -387,20 +335,18 @@ macro_rules! get_operand {
         let __int__ = $crate::parser::macros::token_contents_or_err!($self, IntLiteral);
         match <i32 as TryInto<i16>>::try_into(__int__) {
             Ok(__i16__) => Operand::I16(__i16__),
-            Err(_) => return Err($crate::parser::Error::new(
-                $crate::parser::ErrorKind::ValueOutsideRange,
-                "immediate must be a valid i16",
-            )),
+            Err(_) => return Err(anyhow::Error::new(
+                $crate::parser::ParseError::ValueOutsideRange,
+            )).with_context(|| "immediate must be a valid i16"),
         }
     }};
     ($self:ident, i16?) => {{
         match $crate::parser::macros::maybe_token_contents!($self, IntLiteral) {
             Some(__int__) match <i32 as TryInto<i16>>::try_into(__int__) {
                 Ok(__i16__) => Some(Operand::I16(__i16__)),
-                Err(_) => return Err($crate::parser::Error::new(
-                    $crate::parser::ErrorKind::ValueOutsideRange,
-                    "immediate must be a valid i16",
-                )),
+                Err(_) => return Err(anyhow::Error::new(
+                    $crate::parser::ParseError::ValueOutsideRange,
+                )).with_context(|| "immediate must be a valid i16"),
             },
             None => None,
         }
@@ -409,20 +355,18 @@ macro_rules! get_operand {
         let __int__ = $crate::parser::macros::token_contents_or_err!($self, IntLiteral);
         match <i32 as TryInto<u16>>::try_into(__int__) {
             Ok(__u16__) => Operand::U16(__u16__),
-            Err(_) => return Err($crate::parser::Error::new(
-                $crate::parser::ErrorKind::ValueOutsideRange,
-                "immediate must be a valid u16",
-            )),
+            Err(_) => return Err(anyhow::Error::new(
+                $crate::parser::ParseError::ValueOutsideRange,
+            )).with_context(|| "immediate must be a valid u16"),
         }
     }};
     ($self:ident, u16?) => {{
         match $crate::parser::macros::maybe_token_contents!($self, IntLiteral) {
             Some(__int__) match <i32 as TryInto<u16>>::try_into(__int__) {
                 Ok(__u16__) => Some(Operand::U16(__u16__)),
-                Err(_) => return Err($crate::parser::Error::new(
-                    $crate::parser::ErrorKind::ValueOutsideRange,
-                    "immediate must be a valid u16",
-                )),
+                Err(_) => return Err(anyhow::Error::new(
+                    $crate::parser::ParseError::ValueOutsideRange,
+                )).with_context(|| "immediate must be a valid u16"),
             },
             None => None,
         }
@@ -432,10 +376,9 @@ macro_rules! get_operand {
         if __code__ < (1 << 20) {
             Operand::Code(__code__)
         } else {
-            return Err($crate::parser::Error::new(
-                $crate::parser::ErrorKind::ValueOutsideRange,
-                "code must be on the range 0..=1048575",
-            ));
+            return Err(anyhow::Error::new(
+                $crate::parser::ParseError::ValueOutsideRange,
+            )).with_context(|| "code must be on the range 0..=1048575");
         }
     }};
     ($self:ident, code?) => {{
@@ -445,10 +388,9 @@ macro_rules! get_operand {
                 if __code__ < (1 << 20) {
                     Some(Operand::Code(__code__))
                 } else {
-                    return Err($crate::parser::Error::new(
-                        $crate::parser::ErrorKind::ValueOutsideRange,
-                        "code must be on the range 0..=1048575",
-                    ));
+                    return Err(anyhow::Error::new(
+                        $crate::parser::ParseError::ValueOutsideRange,
+                    )).with_context(|| "code must be on the range 0..=1048575");
                 }
             }
             None => None,
@@ -500,8 +442,8 @@ macro_rules! parse_ops {
         let __comma_exists__ = $crate::parser::macros::token_is!($self, Comma);
         let __op1__ = $crate::parser::macros::get_operand!($self, $op1?);
         if __op1__.is_some() ^ __comma_exists__ {
-            return Err($crate::parser::Error::from(
-                $crate::parser::ErrorKind::UnexpectedToken,
+            return Err(anyhow::Error::new(
+                $crate::parser::ParseError::UnexpectedToken,
             ));
         }
         $crate::parser::macros::assert_token_or_none!($self, NewLine);
@@ -534,8 +476,8 @@ macro_rules! parse_ops {
         let __comma_exists__ = $crate::parser::macros::token_is!($self, Comma);
         let __op2__ = $crate::parser::macros::get_operand!($self, $op2?);
         if __op2__.is_some() ^ __comma_exists__ {
-            return Err($crate::parser::Error::from(
-                $crate::parser::ErrorKind::UnexpectedToken,
+            return Err(anyhow::Error::new(
+                $crate::parser::ParseError::UnexpectedToken,
             ));
         }
         $crate::parser::macros::assert_token_or_none!($self, NewLine);

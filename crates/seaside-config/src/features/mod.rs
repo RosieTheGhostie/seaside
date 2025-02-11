@@ -5,8 +5,8 @@ use super::{
     primitive_defaults::{r#false, r#true},
     validate::Validate,
 };
+use anyhow::Result;
 use assembler::AssemblerOptions;
-use seaside_error::Error;
 use serde::{Deserialize, Serialize};
 use syscalls::Syscalls;
 
@@ -35,7 +35,7 @@ pub struct Features {
 }
 
 impl Validate for Features {
-    fn validate(&self) -> Result<(), Error> {
+    fn validate(&self) -> Result<()> {
         self.syscalls.validate()
     }
 }

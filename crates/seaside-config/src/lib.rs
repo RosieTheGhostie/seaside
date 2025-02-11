@@ -12,8 +12,9 @@ pub use memory_map::MemoryMap;
 pub use register_defaults::RegisterDefaults;
 pub use validate::Validate;
 
+use anyhow::{Context, Error, Result};
 use clap::crate_version;
-use seaside_error::{Error, ErrorKind};
+use seaside_error::EngineError;
 use seaside_int_utils::Endian;
 use semver::Version;
 use serde::{Deserialize, Serialize};
@@ -35,30 +36,23 @@ pub struct Config {
 }
 
 impl Validate for Config {
-    fn validate(&self) -> Result<(), Error> {
+    fn validate(&self) -> Result<()> {
         use VersionComparison::*;
-        let seaside_version = Version::from_str(crate_version!()).map_err(|_| {
-            Error::new(
-                ErrorKind::InternalLogicIssue,
-                "failed to fetch version of seaside",
-            )
-        })?;
+        let seaside_version = Version::from_str(crate_version!())?;
         match VersionComparison::compare(&seaside_version, &self.version) {
             Compatible => Ok(()),
-            AIsAheadOfB => Err(Error::new(
-                ErrorKind::OutdatedVersion,
+            AIsAheadOfB => Err(Error::new(EngineError::OutdatedVersion)).with_context(|| {
                 format!(
                     "consider updating config (v{}) to match seaside (v{seaside_version})",
-                    self.version
-                ),
-            )),
-            BIsAheadOfA => Err(Error::new(
-                ErrorKind::OutdatedVersion,
+                    self.version,
+                )
+            }),
+            BIsAheadOfA => Err(Error::new(EngineError::OutdatedVersion)).with_context(|| {
                 format!(
                     "consider updating seaside (v{seaside_version}) to match config (v{})",
                     self.version,
-                ),
-            )),
+                )
+            }),
         }?;
         self.features.syscalls.validate()?;
         self.memory_map.validate()

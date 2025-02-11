@@ -13,6 +13,7 @@ overflow-checks = true
 incremental = true
 
 [dependencies]
+anyhow = "1.0"
 directories = "5.0"
 seaside-assembler = { version = "0.1", path = "crates/seaside-assembler" }
 seaside-bitflags-addons = { version = "0.1", path = "crates/seaside-bitflags-addons" }

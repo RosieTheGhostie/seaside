@@ -3,8 +3,9 @@
 //! Provides the wrapper functions [`disassemble_instruction`] and [`disassemble_segment`],
 //! which disassemble their respective objects into a human-readable assembly representation.
 
+use anyhow::{Error, Result};
 use seaside_config::Config;
-use seaside_error::{Error, ErrorKind};
+use seaside_error::EngineError;
 use seaside_int_utils::byte_stream::ByteStream;
 use seaside_type_aliases::{Address, Instruction};
 use std::path::PathBuf;
@@ -13,10 +14,7 @@ use std::path::PathBuf;
 ///
 /// If `address` is not [`None`], that value is interpreted as the instruction's address for the
 /// purposes of branches and jumps.
-pub fn disassemble_instruction(
-    instruction: Instruction,
-    address: Option<Address>,
-) -> Result<(), Error> {
+pub fn disassemble_instruction(instruction: Instruction, address: Option<Address>) -> Result<()> {
     match seaside_disassembler::disassemble_advanced(
         instruction,
         address.unwrap_or_default(),
@@ -26,7 +24,7 @@ pub fn disassemble_instruction(
             println!("{disassembly}");
             Ok(())
         }
-        None => Err(Error::from(ErrorKind::MalformedMachineCode)),
+        None => Err(Error::new(EngineError::MalformedMachineCode)),
     }
 }
 
@@ -44,8 +42,7 @@ pub fn disassemble_segment(
     } else {
         0
     };
-    let bytes = std::fs::read(segment)
-        .map_err(|_| Error::new(ErrorKind::NotFound, "couldn't find that segment"))?;
+    let bytes = std::fs::read(segment)?;
     for instruction in ByteStream::<'_, u32>::new(&bytes, config.endian) {
         disassemble_instruction(instruction, Some(address))?;
         address += 4;

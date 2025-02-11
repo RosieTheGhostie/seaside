@@ -1,5 +1,5 @@
-use seaside_error::Error;
+use anyhow::Result;
 
 pub trait Validate {
-    fn validate(&self) -> Result<(), Error>;
+    fn validate(&self) -> Result<()>;
 }

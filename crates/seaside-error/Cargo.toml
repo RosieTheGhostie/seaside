@@ -10,3 +10,4 @@ crate-type = ["lib"]
 path = "src/lib.rs"
 
 [dependencies]
+thiserror = "2.0"

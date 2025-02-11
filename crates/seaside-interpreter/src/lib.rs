@@ -14,13 +14,14 @@ pub use register_file::RegisterFile;
 pub use syscall_failure::SyscallFailureKind;
 pub use syscalls::Syscalls;
 
+use anyhow::{Error, Result};
 use file_handle::FileHandle;
 use memory::regions::Region;
 use minimal_logging::macros::debugln;
 use rng::Rng;
 use seaside_config::Config;
 use seaside_constants::register;
-use seaside_error::{Error, ErrorKind};
+use seaside_error::EngineError;
 use seaside_type_aliases::Address;
 use std::{
     collections::HashMap,
@@ -52,7 +53,7 @@ impl Interpreter {
         ktext: Option<PathBuf>,
         kdata: Option<PathBuf>,
         argv: Vec<String>,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self> {
         let memory = Memory::init(config, text, r#extern, data, ktext, kdata)?;
         let pc = memory.initial_pc();
         let syscalls = Syscalls::from(&config.features.syscalls);
@@ -132,7 +133,7 @@ impl Interpreter {
             for byte in arg.bytes().rev() {
                 self.memory
                     .write_u8(current, byte)
-                    .map_err(|_| Error::from(ErrorKind::InternalLogicIssue))?;
+                    .map_err(|_| Error::from(EngineError::InternalLogicIssue))?;
                 current -= 1;
             }
             arg_addresses.push(current + 1);
@@ -140,7 +141,7 @@ impl Interpreter {
         let mut stack_frame_base: Address = self
             .registers
             .read_u32_from_cpu(register::SP)
-            .map_err(|_| Error::from(ErrorKind::InternalLogicIssue))?;
+            .map_err(|_| Error::from(EngineError::InternalLogicIssue))?;
         if current < stack_frame_base {
             stack_frame_base = current - (current % 4) - 4;
         }
@@ -148,21 +149,21 @@ impl Interpreter {
         for &arg_address in arg_addresses.iter().rev() {
             self.memory
                 .write_u32(stack_frame_base, arg_address, true)
-                .map_err(|_| Error::from(ErrorKind::InternalLogicIssue))?;
+                .map_err(|_| Error::from(EngineError::InternalLogicIssue))?;
             stack_frame_base -= 4;
         }
         self.memory
             .write_u32(stack_frame_base, argc, true)
-            .map_err(|_| Error::from(ErrorKind::InternalLogicIssue))?;
+            .map_err(|_| Error::from(EngineError::InternalLogicIssue))?;
         self.registers
             .write_u32_to_cpu(register::SP, stack_frame_base)
-            .map_err(|_| Error::from(ErrorKind::InternalLogicIssue))?;
+            .map_err(|_| Error::from(EngineError::InternalLogicIssue))?;
         self.registers
             .write_u32_to_cpu(register::A0, argc)
-            .map_err(|_| Error::from(ErrorKind::InternalLogicIssue))?;
+            .map_err(|_| Error::from(EngineError::InternalLogicIssue))?;
         self.registers
             .write_u32_to_cpu(register::A1, stack_frame_base + 4)
-            .map_err(|_| Error::from(ErrorKind::InternalLogicIssue))
+            .map_err(|_| Error::from(EngineError::InternalLogicIssue))
     }
 
     fn make_file_handle(&mut self, file: File) -> &mut FileHandle {

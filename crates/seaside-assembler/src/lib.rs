@@ -11,13 +11,12 @@ mod string_literal;
 mod token;
 
 pub use assemble::assemble_instruction;
-pub use error::Error;
-pub use operation::BasicOperator;
-pub use operation::Operand;
-pub use parser::{Error as ParseError, ErrorKind as ParseErrorKind};
-pub use parser::{Node, Parser};
+pub use error::AssembleError;
+pub use operation::{BasicOperator, Operand};
+pub use parser::{Node, ParseError, Parser};
 pub use token::Token;
 
+use anyhow::{Error, Result};
 use directives::SegmentDirective;
 use logos::Logos;
 use operation::convert_address;
@@ -61,13 +60,13 @@ impl<'source> Assembler<'source> {
         }
     }
 
-    pub fn build(&mut self) -> Result<(), Error> {
+    pub fn build(&mut self) -> Result<()> {
         while self.build_next()? {}
         while self.resolve_next()? {}
         Ok(())
     }
 
-    pub fn export(&self, directory: &Path) -> Result<(), Error> {
+    pub fn export(&self, directory: &Path) -> Result<()> {
         for (segment, name) in zip(&self.segments, SegmentDirective::names())
             .filter(|(segment, _)| !segment.is_empty())
         {
@@ -88,10 +87,9 @@ impl<'source> Assembler<'source> {
         self.this_segment().next
     }
 
-    fn build_next(&mut self) -> Result<bool, Error> {
+    fn build_next(&mut self) -> Result<bool> {
         let node = match self.parser.next() {
-            Some(Ok(node)) => node,
-            Some(Err(error)) => return Err(Error::Parse(error)),
+            Some(maybe_node) => maybe_node?,
             None => return Ok(false),
         };
         if !node.can_resolve() {
@@ -138,22 +136,22 @@ impl<'source> Assembler<'source> {
             Node::String(string) if self.current_segment.is_data_segment() => {
                 self.this_segment_mut().append(&mut string.into_bytes());
             }
-            _ => return Err(Error::WrongSegment),
+            _ => return Err(Error::new(AssembleError::WrongSegment)),
         }
         Ok(true)
     }
 
-    fn resolve_next(&mut self) -> Result<bool, Error> {
+    fn resolve_next(&mut self) -> Result<bool> {
         let (pc, operator, mut operands) = match self.unresolved.pop_front() {
             Some((pc, Node::Instruction(operator, operands))) => (pc, operator, operands),
-            Some((_, _)) => return Err(Error::InternalLogicIssue),
+            Some((_, _)) => return Err(Error::new(AssembleError::InternalLogicIssue)),
             None => return Ok(false),
         };
         for operand in &mut operands {
             if let Some(Operand::Label(label)) = operand {
                 match self.symbol_table.get(label) {
                     Some(address) => *operand = Some(convert_address(operator, *address, pc)?),
-                    None => return Err(Error::UndefinedSymbol),
+                    None => return Err(Error::new(AssembleError::UndefinedSymbol)),
                 }
             }
         }
@@ -162,14 +160,14 @@ impl<'source> Assembler<'source> {
         Ok(true)
     }
 
-    fn add_symbol(&mut self, label: String) -> Result<(), Error> {
+    fn add_symbol(&mut self, label: String) -> Result<()> {
         match self.symbol_table.insert(label, self.next_address()) {
-            Some(_) => Err(Error::MultipleDefinitions),
+            Some(_) => Err(Error::new(AssembleError::MultipleDefinitions)),
             None => Ok(()),
         }
     }
 
-    fn replace_instruction(&mut self, address: Address, instruction: u32) -> Result<(), Error> {
+    fn replace_instruction(&mut self, address: Address, instruction: u32) -> Result<()> {
         let text_diff = address.checked_sub(self.segments[SegmentDirective::Text as usize].base);
         let ktext_diff = address.checked_sub(self.segments[SegmentDirective::KText as usize].base);
         let segment = match (text_diff, ktext_diff) {
@@ -182,7 +180,7 @@ impl<'source> Assembler<'source> {
             }
             (Some(_), None) => SegmentDirective::Text,
             (None, Some(_)) => SegmentDirective::KText,
-            (None, None) => return Err(Error::WrongSegment),
+            (None, None) => return Err(Error::new(AssembleError::WrongSegment)),
         };
         self.segments[segment as usize].overwrite_u32(address, instruction, self.endian)
     }

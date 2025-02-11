@@ -10,6 +10,7 @@ crate-type = ["lib"]
 path = "src/lib.rs"
 
 [dependencies]
+anyhow = "1.0"
 bitflags = "2.8"
 console = "0.15"
 num-traits = "0.2"
@@ -20,6 +21,7 @@ seaside-disassembler = { version = "*", path = "../seaside-disassembler" }
 seaside-error = { version = "*", path = "../seaside-error" }
 seaside-int-utils = { version = "*", path = "../seaside-int-utils" }
 seaside-type-aliases = { version = "*", path = "../seaside-type-aliases" }
+thiserror = "2.0"
 
 [dependencies.minimal-logging]
 version = "0.5"

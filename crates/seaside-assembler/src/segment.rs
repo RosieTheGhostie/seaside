@@ -1,7 +1,9 @@
-use super::error::Error;
+use anyhow::{Error, Result};
 use seaside_int_utils::Endian;
 use seaside_type_aliases::Address;
 use std::{fs::write, path::PathBuf};
+
+use crate::error::AssembleError;
 
 pub struct SegmentBuildInfo {
     pub base: Address,
@@ -18,17 +20,17 @@ impl SegmentBuildInfo {
         }
     }
 
-    pub fn export(&self, path: PathBuf) -> Result<(), Error> {
-        write(path, &self.bytes).map_err(Error::Io)
+    pub fn export(&self, path: PathBuf) -> Result<()> {
+        Ok(write(path, &self.bytes)?)
     }
 
-    pub fn jump_ahead_to(&mut self, address: Address) -> Result<(), Error> {
+    pub fn jump_ahead_to(&mut self, address: Address) -> Result<()> {
         match address.checked_sub(self.next) {
             Some(n) => {
                 self.jump_ahead_by(n);
                 Ok(())
             }
-            None => Err(Error::JumpBehind),
+            None => Err(Error::new(AssembleError::JumpBehind)),
         }
     }
 
@@ -112,19 +114,15 @@ impl SegmentBuildInfo {
         }
     }
 
-    pub fn overwrite_u32(
-        &mut self,
-        address: Address,
-        word: u32,
-        endian: Endian,
-    ) -> Result<(), Error> {
+    pub fn overwrite_u32(&mut self, address: Address, word: u32, endian: Endian) -> Result<()> {
         let index = address
             .checked_sub(self.base)
-            .ok_or(Error::InternalLogicIssue)? as usize;
+            .ok_or_else(|| Error::new(AssembleError::InternalLogicIssue))?
+            as usize;
         let old_bytes = self
             .bytes
             .get_mut(index..index + 4)
-            .ok_or(Error::InternalLogicIssue)?;
+            .ok_or_else(|| Error::new(AssembleError::InternalLogicIssue))?;
         let new_bytes = match endian {
             Endian::Little => word.to_le_bytes(),
             Endian::Big => word.to_be_bytes(),

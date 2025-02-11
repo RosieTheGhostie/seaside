@@ -1,45 +1,36 @@
 use super::SyscallFailureKind;
 use seaside_type_aliases::Address;
-use std::{
-    error::Error as ErrorTrait,
-    fmt::{Display, Formatter, Result as FmtResult},
-};
+use thiserror::Error;
 
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Eq, Error, Hash, Ord, PartialEq, PartialOrd)]
 pub enum Exception {
+    #[error("malformed instruction")]
     MalformedInstruction,
+    #[error("invalid load (address: 0x{0:08x})")]
     InvalidLoad(Address),
+    #[error("invalid load (address: 0x{0:08x})")]
     InvalidStore(Address),
-    SyscallFailure(SyscallFailureKind),
+    #[error("{0}")]
+    SyscallFailure(#[from] SyscallFailureKind),
+    #[error("break exception thrown")]
     Break,
+    #[error("encountered reserved instruction")]
     ReservedInstruction,
+    #[error("integer overflow/underflow")]
     IntegerOverflowOrUnderflow,
+    #[error("trapped")]
     Trap,
+    #[error("tried to divide by zero")]
     DivideByZero,
+    #[error("floating-point operation overflowed")]
     FloatOverflow,
+    #[error("floating-point operation underflowed")]
     FloatUnderflow,
+    #[error("the interpreter did a goof (pls contact rose)")]
     InterpreterFailure, // hopefully you never see this one
 }
 
 impl Exception {
-    pub const fn as_str(&self) -> &'static str {
-        use Exception::*;
-        match *self {
-            MalformedInstruction => "malformed instruction",
-            InvalidLoad(_) => "invalid load",
-            InvalidStore(_) => "invalid store",
-            SyscallFailure(kind) => kind.as_str(),
-            Break => "break exception raised",
-            ReservedInstruction => "encountered a reserved instruction",
-            IntegerOverflowOrUnderflow => "integer overflow/underflow",
-            Trap => "trapped",
-            DivideByZero => "tried to divide by zero",
-            FloatOverflow => "floating-point operation overflowed",
-            FloatUnderflow => "floating-point operation underflowed",
-            InterpreterFailure => "the interpreter did a goof (pls contact rose)",
-        }
-    }
-
     pub const fn code(&self) -> u32 {
         use Exception::*;
         match *self {
@@ -76,17 +67,3 @@ impl Exception {
         }
     }
 }
-
-impl Display for Exception {
-    fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
-        if let Some(vaddr) = self.vaddr() {
-            write!(fmt, "{} (address: 0x{vaddr:08x})", self.as_str())
-        } else if let Some(service_code) = self.service_code() {
-            write!(fmt, "{} (code: {service_code})", self.as_str())
-        } else {
-            fmt.write_str(self.as_str())
-        }
-    }
-}
-
-impl ErrorTrait for Exception {}

@@ -4,9 +4,10 @@
 
 use super::resolve_if_exists;
 use crate::CmdArgs;
+use anyhow::{Error, Result};
 use directories::ProjectDirs;
 use seaside_config::{Config, Validate};
-use seaside_error::{Error, ErrorKind};
+use seaside_error::EngineError;
 use std::{fs::read_to_string, path::PathBuf};
 
 /// Finds and parses a seaside configuration file.
@@ -14,7 +15,7 @@ use std::{fs::read_to_string, path::PathBuf};
 /// If the user does not specify an explicit path to the config file, it will search for a file
 /// called 'Seaside.toml' in the current working directory or seaside's config directory. The latter
 /// depends on the operating system.
-pub fn get_config(args: &CmdArgs) -> Result<Config, Error> {
+pub fn get_config(args: &CmdArgs) -> Result<Config> {
     // The borrow checker requires an explicit binding to the temporary produced by
     // `find_seaside_toml` to make a reference to it.
     let stupid_binding: PathBuf;
@@ -25,10 +26,8 @@ pub fn get_config(args: &CmdArgs) -> Result<Config, Error> {
         &stupid_binding
     };
 
-    let file_contents = read_to_string(config_path)
-        .map_err(|_| Error::new(ErrorKind::ExternalFailure, "failed to read config file"))?;
-    let config: Config = toml::from_str(&file_contents)
-        .map_err(|error| Error::new(ErrorKind::InvalidConfig, error))?;
+    let file_contents = read_to_string(config_path)?;
+    let config: Config = toml::from_str(&file_contents)?;
     config.validate().map(|_| config)
 }
 
@@ -42,11 +41,8 @@ fn find_seaside_toml() -> Result<PathBuf, Error> {
         return Ok(path);
     }
     let project_directories = ProjectDirs::from("", "", "seaside").ok_or_else(|| {
-        Error::new(
-            ErrorKind::NotFound,
-            "couldn't find seaside's project directories",
-        )
+        Error::new(EngineError::NotFound).context("couldn't find seaside's project directories")
     })?;
     resolve_if_exists(project_directories.config_dir(), path)
-        .ok_or_else(|| Error::new(ErrorKind::NotFound, "couldn't find 'Seaside.toml'"))
+        .ok_or_else(|| Error::new(EngineError::NotFound).context("couldn't find 'Seaside.toml'"))
 }

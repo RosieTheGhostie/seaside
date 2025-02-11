@@ -1,4 +1,4 @@
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum SegmentDirective {
     Data = 0,
     Extern = 1,
@@ -7,7 +7,7 @@ pub enum SegmentDirective {
     Text = 4,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum DataTypeDirective {
     Align,
     Ascii,

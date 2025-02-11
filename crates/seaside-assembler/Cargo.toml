@@ -10,9 +10,11 @@ crate-type = ["lib"]
 path = "src/lib.rs"
 
 [dependencies]
+anyhow = "1.0"
 logos = "0.15"
 seaside-constants = { version = "*", path = "../seaside-constants" }
 seaside-config = { version = "*", path = "../seaside-config" }
 seaside-error = { version = "*", path = "../seaside-error" }
 seaside-int-utils = { version = "*", path = "../seaside-int-utils" }
 seaside-type-aliases = { version = "*", path = "../seaside-type-aliases" }
+thiserror = "2.0"

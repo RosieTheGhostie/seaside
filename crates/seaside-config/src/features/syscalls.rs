@@ -5,9 +5,10 @@ use super::super::{
     },
     Validate,
 };
+use anyhow::{Error, Result};
 use bitflags::bitflags;
 use seaside_bitflags_addons::{impl_deserialize, impl_serialize};
-use seaside_error::{Error, ErrorKind};
+use seaside_error::EngineError;
 use serde::{Deserialize, Serialize};
 
 /// Controls which syscalls are available to the seaside engine.
@@ -151,14 +152,11 @@ impl HasPresets for Dialog {
 impl HasBasicPresets for Dialog {}
 
 impl Validate for Syscalls {
-    fn validate(&self) -> Result<(), Error> {
+    fn validate(&self) -> Result<()> {
         if self.system.intersects(System::Exit | System::Exit2) {
             Ok(())
         } else {
-            Err(Error::new(
-                ErrorKind::InvalidConfig,
-                "missing a syscall to exit program",
-            ))
+            Err(Error::new(EngineError::InvalidConfig).context("missing a syscall to exit program"))
         }
     }
 }

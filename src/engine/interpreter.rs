@@ -4,8 +4,9 @@
 //! interpreter, respectively.
 
 use super::resolve_if_exists;
+use anyhow::{Context, Error, Result};
 use seaside_config::Config;
-use seaside_error::{Error, ErrorKind};
+use seaside_error::EngineError;
 use seaside_interpreter::Interpreter;
 use std::{env::set_current_dir, path::PathBuf};
 
@@ -14,29 +15,24 @@ pub fn init_interpreter(
     config: Config,
     mut directory: PathBuf,
     argv: Vec<String>,
-) -> Result<Interpreter, Error> {
+) -> Result<Interpreter> {
     if !directory.is_dir() {
-        return Err(Error::new(
-            ErrorKind::InvalidProjectDirectory,
-            "expected project path to be a directory",
-        ));
+        return Err(Error::new(EngineError::InvalidProjectDirectory))
+            .with_context(|| "expected project path to be a directory");
     }
     if config.project_directory_is_cwd {
         directory = match set_current_dir(&directory) {
-            Ok(()) => ".".parse().unwrap(),
+            Ok(()) => ".".parse()?,
             Err(_) => {
-                return Err(Error::new(
-                    ErrorKind::ExternalFailure,
-                    format!("failed to change the cwd to {}", directory.display()),
-                ));
+                return Err(Error::new(EngineError::ExternalFailure)).with_context(|| {
+                    format!("failed to change the cwd to {}", directory.display())
+                });
             }
         };
     }
     let text = resolve_if_exists(&directory, "text").ok_or_else(|| {
-        Error::new(
-            ErrorKind::InvalidProjectDirectory,
-            "missing 'text' file in project directory",
-        )
+        Error::new(EngineError::InvalidProjectDirectory)
+            .context("missing 'text' file in project directory")
     })?;
     let r#extern = resolve_if_exists(&directory, "extern");
     let data = resolve_if_exists(&directory, "data");
@@ -51,14 +47,14 @@ pub fn init_interpreter(
 /// it in an [`Error`] and, if enabled in the config, prints the crash handler.
 ///
 /// [`Exception`]: crate::interpreter::Exception
-pub fn run(interpreter: &mut Interpreter) -> Result<Option<u8>, Error> {
+pub fn run(interpreter: &mut Interpreter) -> Result<Option<u8>> {
     match interpreter.run() {
         Ok(()) => Ok(interpreter.exit_code),
         Err(exception) => {
             if interpreter.show_crash_handler {
                 interpreter.print_crash_handler();
             }
-            Err(Error::new(ErrorKind::MipsException, exception))
+            Err(exception.into())
         }
     }
 }

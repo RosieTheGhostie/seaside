@@ -1,11 +1,11 @@
 mod cmd_args;
 mod engine;
 
+use anyhow::{Error, Result};
 use clap::Parser;
 use cmd_args::{AssemblyArgs, CmdArgs, Commands, DisassemblyArgs, DisassemblyTarget, RunArgs};
 use minimal_logging::macros::{fatalln, grayln};
 use seaside_config::Config;
-use seaside_error::{Error, ErrorKind};
 use std::env::current_exe;
 
 fn main() {
@@ -60,20 +60,12 @@ fn main() {
 }
 
 fn print_exe_path() -> Result<(), Error> {
-    match current_exe() {
-        Ok(path) => {
-            println!("{}", path.display());
-            Ok(())
-        }
-        Err(_) => Err(Error::new(
-            ErrorKind::ExternalFailure,
-            "'std::env::current_exe' failed",
-        )),
-    }
+    println!("{}", current_exe()?.display());
+    Ok(())
 }
 
 #[cfg(debug_assertions)]
-fn experimental_code() -> Result<(), Error> {
+fn experimental_code() -> Result<()> {
     minimal_logging::macros::warnln!("no experimental code to run");
     Ok(())
 }

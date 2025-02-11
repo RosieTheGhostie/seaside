@@ -2,11 +2,11 @@ use super::{
     regions::{DataRegion, TextRegion},
     DataMemory, InstructionMemory, Memory,
 };
+use anyhow::Result;
 use seaside_config::{
     memory_map::{RuntimeData, Segment},
     Config,
 };
-use seaside_error::{Error, ErrorKind};
 use seaside_int_utils::Endian;
 use std::path::PathBuf;
 
@@ -18,7 +18,7 @@ impl Memory {
         data: Option<PathBuf>,
         ktext: Option<PathBuf>,
         kdata: Option<PathBuf>,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self> {
         let segments = &config.memory_map.segments;
         let instruction_memory = InstructionMemory::new(
             init_text_region(&segments.text, Some(text), config.endian)?,
@@ -47,20 +47,18 @@ fn init_text_region(
     segment: &Segment,
     path: Option<PathBuf>,
     endian: Endian,
-) -> Result<TextRegion, Error> {
+) -> Result<TextRegion> {
     let mut region = TextRegion::new(segment.address_range.base, segment.allocate as usize);
     if let Some(path) = path {
-        let bytes = std::fs::read(path).map_err(|_| Error::from(ErrorKind::NotFound))?;
-        region.populate(bytes, endian);
+        region.populate(std::fs::read(path)?, endian);
     }
     Ok(region)
 }
 
-fn init_data_region(segment: &Segment, path: Option<PathBuf>) -> Result<DataRegion, Error> {
+fn init_data_region(segment: &Segment, path: Option<PathBuf>) -> Result<DataRegion> {
     let mut region = DataRegion::new(segment.address_range.base, segment.allocate as usize);
     if let Some(path) = path {
-        let bytes = std::fs::read(path).map_err(|_| Error::from(ErrorKind::NotFound))?;
-        region.populate(bytes);
+        region.populate(std::fs::read(path)?);
     }
     Ok(region)
 }
