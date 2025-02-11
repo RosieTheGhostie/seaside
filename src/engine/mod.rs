@@ -1,18 +1,16 @@
 //! Easy-to-use utilities for driving parts of the seaside engine.
 //!
-//! Provides wrapper functions for each major module in seaside. These wrappers set up the necessary
+//! Provides wrapper functions for each major crate in seaside. These wrappers set up the necessary
 //! state and drive the relevant routines.
 
 pub mod assembler;
 pub mod config;
 pub mod disassembler;
-pub mod error;
 pub mod interpreter;
 
 pub use assembler::assemble;
 pub use config::get_config;
 pub use disassembler::{disassemble_instruction, disassemble_segment};
-pub use error::{Error, ErrorKind};
 pub use interpreter::{init_interpreter, run};
 
 use std::path::{Path, PathBuf};

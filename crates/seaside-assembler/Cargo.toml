@@ -1,0 +1,18 @@
+[package]
+name = "seaside-assembler"
+description = "The MIPS32 assembler for seaside"
+version = "0.1.0"
+authors = ["RosieTheGhostie"]
+edition = "2021"
+
+[lib]
+crate-type = ["lib"]
+path = "src/lib.rs"
+
+[dependencies]
+logos = "0.15"
+seaside-constants = { version = "*", path = "../seaside-constants" }
+seaside-config = { version = "*", path = "../seaside-config" }
+seaside-error = { version = "*", path = "../seaside-error" }
+seaside-int-utils = { version = "*", path = "../seaside-int-utils" }
+seaside-type-aliases = { version = "*", path = "../seaside-type-aliases" }

@@ -1,5 +1,5 @@
-use crate::type_aliases::Instruction;
 use clap::{arg, builder::ValueParser, command, Args, Parser, Subcommand};
+use seaside_type_aliases::Instruction;
 use std::{num::ParseIntError, path::PathBuf};
 
 #[derive(Parser)]

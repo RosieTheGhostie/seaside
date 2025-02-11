@@ -1,12 +1,12 @@
-//! Wraps the [`interpreter`] module.
+//! Wraps the [`seaside_interpreter`] crate.
 //!
 //! Provides the wrapper functions [`init_interpreter`] and [`run`], which initialize and run the
 //! interpreter, respectively.
-//!
-//! [`interpreter`]: crate::interpreter
 
-use super::{resolve_if_exists, Error, ErrorKind};
-use crate::{interpreter::Interpreter, Config};
+use super::resolve_if_exists;
+use seaside_config::Config;
+use seaside_error::{Error, ErrorKind};
+use seaside_interpreter::Interpreter;
 use std::{env::set_current_dir, path::PathBuf};
 
 /// Initializes the interpreter in preparation for execution via the [`run`] function.

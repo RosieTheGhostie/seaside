@@ -1,0 +1,23 @@
+[package]
+name = "seaside-int-utils"
+description = "A small set of integer utilities for seaside"
+version = "0.3.0"
+authors = ["RosieTheGhostie"]
+edition = "2021"
+
+[lib]
+crate-type = ["lib"]
+path = "src/lib.rs"
+
+[dependencies.serde]
+version = "1.0"
+features = ["derive"]
+optional = true
+
+[features]
+default = ["byte_stream", "endian", "sign_extend"]
+full = ["byte_stream", "endian", "sign_extend"]
+
+byte_stream = ["endian"]
+endian = ["serde"]
+sign_extend = []

@@ -13,15 +13,16 @@ overflow-checks = true
 incremental = true
 
 [dependencies]
-bitflags = "2.6"
-console = "0.15"
-convert_case = "0.6"
 directories = "5.0"
-logos = "0.15"
-num-derive = "0.4"
-num-traits = "0.2"
-rand = "0.8"
-semver = "1.0"
+seaside-assembler = { version = "0.1", path = "crates/seaside-assembler" }
+seaside-bitflags-addons = { version = "0.1", path = "crates/seaside-bitflags-addons" }
+seaside-config = { version = "0.1", path = "crates/seaside-config" }
+seaside-constants = { version = "0.1", path = "crates/seaside-constants" }
+seaside-disassembler = { version = "0.1", path = "crates/seaside-disassembler" }
+seaside-error = { version = "0.1", path = "crates/seaside-error" }
+seaside-int-utils = { version = "0.3", path = "crates/seaside-int-utils" }
+seaside-interpreter = { version = "0.1", path = "crates/seaside-interpreter" }
+seaside-type-aliases = { version = "0.1", path = "crates/seaside-type-aliases" }
 toml = "0.8"
 
 [dependencies.clap]
@@ -32,12 +33,3 @@ features = ["cargo", "derive"]
 version = "0.5"
 features = ["full"]
 git = "https://github.com/RosieTheGhostie/minimal-logging.git"
-
-[dependencies.serde]
-version = "1.0"
-features = ["derive"]
-
-[dependencies.seaside-int-utils]
-version = "0.3"
-features = ["full"]
-git = "https://github.com/RosieTheGhostie/seaside-int-utils.git"

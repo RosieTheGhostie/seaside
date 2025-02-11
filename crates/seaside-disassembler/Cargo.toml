@@ -1,0 +1,16 @@
+[package]
+name = "seaside-disassembler"
+description = "The MIPS32 disassembler for seaside"
+version = "0.1.0"
+authors = ["RosieTheGhostie"]
+edition = "2021"
+
+[lib]
+crate-type = ["lib"]
+path = "src/lib.rs"
+
+[dependencies]
+num-traits = "0.2"
+seaside-constants = { version = "*", path = "../seaside-constants" }
+seaside-int-utils = { version = "*", path = "../seaside-int-utils" }
+seaside-type-aliases = { version = "*", path = "../seaside-type-aliases" }

@@ -1,16 +1,12 @@
-//! Wraps the [`disassembler`] module.
+//! Wraps the [`seaside_disassembler`] crate.
 //!
 //! Provides the wrapper functions [`disassemble_instruction`] and [`disassemble_segment`],
 //! which disassemble their respective objects into a human-readable assembly representation.
-//!
-//! [`disassembler`]: crate::disassembler
 
-use super::{Error, ErrorKind};
-use crate::{
-    type_aliases::{Address, Instruction},
-    Config,
-};
+use seaside_config::Config;
+use seaside_error::{Error, ErrorKind};
 use seaside_int_utils::byte_stream::ByteStream;
+use seaside_type_aliases::{Address, Instruction};
 use std::path::PathBuf;
 
 /// Prints the human-readable assembly form of `instruction`.
@@ -21,7 +17,7 @@ pub fn disassemble_instruction(
     instruction: Instruction,
     address: Option<Address>,
 ) -> Result<(), Error> {
-    match crate::disassembler::disassemble_advanced(
+    match seaside_disassembler::disassemble_advanced(
         instruction,
         address.unwrap_or_default(),
         address.is_some(),

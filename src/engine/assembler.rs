@@ -1,12 +1,11 @@
-//! Wraps the [`assembler`] module.
+//! Wraps the [`seaside_assembler`] crate.
 //!
 //! Provides the wrapper function [`assemble`], which runs the assembler routine.
-//!
-//! [`assembler`]: crate::assembler
 
-use super::{Error, ErrorKind};
-use crate::{assembler::Assembler, Config};
 use minimal_logging::macros::grayln;
+use seaside_assembler::Assembler;
+use seaside_config::Config;
+use seaside_error::{Error, ErrorKind};
 use std::{fs::read_to_string, path::PathBuf, str::FromStr, time::Instant};
 
 /// Assembles `source` into a format usable by the seaside interpreter.

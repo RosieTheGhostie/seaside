@@ -1,0 +1,15 @@
+[package]
+name = "seaside-bitflags-addons"
+description = "A few addons to the bitflags crate for seaside"
+version = "0.1.0"
+authors = ["RosieTheGhostie"]
+edition = "2021"
+
+[lib]
+crate-type = ["lib"]
+path = "src/lib.rs"
+
+[dependencies]
+bitflags = "2.8"
+convert_case = "0.7"
+serde = "1.0"

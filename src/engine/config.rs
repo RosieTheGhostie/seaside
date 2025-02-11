@@ -1,15 +1,12 @@
-//! Wraps the [`config`] module.
+//! Wraps the [`seaside_config`] crate.
 //!
 //! Provides the wrapper function [`get_config`], which finds and parses a configuration file.
-//!
-//! [`config`]: crate::config
 
-use super::{resolve_if_exists, Error, ErrorKind};
-use crate::{
-    config::{Config, Validate},
-    CmdArgs,
-};
+use super::resolve_if_exists;
+use crate::CmdArgs;
 use directories::ProjectDirs;
+use seaside_config::{Config, Validate};
+use seaside_error::{Error, ErrorKind};
 use std::{fs::read_to_string, path::PathBuf};
 
 /// Finds and parses a seaside configuration file.

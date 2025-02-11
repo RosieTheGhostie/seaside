@@ -1,0 +1,25 @@
+[package]
+name = "seaside-config"
+description = "Configuration support for seaside"
+version = "0.1.0"
+authors = ["RosieTheGhostie"]
+edition = "2021"
+
+[lib]
+crate-type = ["lib"]
+path = "src/lib.rs"
+
+[dependencies]
+bitflags = "2.8.0"
+clap = "4.5.28"
+convert_case = "0.7.1"
+num-traits = "0.2.19"
+seaside-bitflags-addons = { version = "*", path = "../seaside-bitflags-addons" }
+seaside-error = { version = "*", path = "../seaside-error" }
+seaside-int-utils = { version = "*", path = "../seaside-int-utils" }
+seaside-type-aliases = { version = "*", path = "../seaside-type-aliases" }
+semver = "1.0.25"
+
+[dependencies.serde]
+version = "1.0"
+features = ["derive"]

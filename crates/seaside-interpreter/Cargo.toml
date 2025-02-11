@@ -1,0 +1,27 @@
+[package]
+name = "seaside-interpreter"
+description = "The MIPS32 interpreter for seaside"
+version = "0.1.0"
+authors = ["RosieTheGhostie"]
+edition = "2021"
+
+[lib]
+crate-type = ["lib"]
+path = "src/lib.rs"
+
+[dependencies]
+bitflags = "2.8"
+console = "0.15"
+num-traits = "0.2"
+rand = "0.9"
+seaside-config = { version = "*", path = "../seaside-config" }
+seaside-constants = { version = "*", path = "../seaside-constants" }
+seaside-disassembler = { version = "*", path = "../seaside-disassembler" }
+seaside-error = { version = "*", path = "../seaside-error" }
+seaside-int-utils = { version = "*", path = "../seaside-int-utils" }
+seaside-type-aliases = { version = "*", path = "../seaside-type-aliases" }
+
+[dependencies.minimal-logging]
+version = "0.5"
+features = ["full"]
+git = "https://github.com/RosieTheGhostie/minimal-logging.git"
