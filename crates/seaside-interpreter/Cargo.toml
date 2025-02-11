@@ -17,7 +17,9 @@ num-traits = "0.2"
 rand = "0.9"
 seaside-config = { version = "*", path = "../seaside-config" }
 seaside-constants = { version = "*", path = "../seaside-constants" }
-seaside-disassembler = { version = "*", path = "../seaside-disassembler" }
+seaside-disassembler = { version = "*", default-features = false, features = [
+	"fields",
+], path = "../seaside-disassembler" }
 seaside-error = { version = "*", path = "../seaside-error" }
 seaside-int-utils = { version = "*", path = "../seaside-int-utils" }
 seaside-type-aliases = { version = "*", path = "../seaside-type-aliases" }

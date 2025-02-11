@@ -14,3 +14,14 @@ num-traits = "0.2"
 seaside-constants = { version = "*", path = "../seaside-constants" }
 seaside-int-utils = { version = "*", path = "../seaside-int-utils" }
 seaside-type-aliases = { version = "*", path = "../seaside-type-aliases" }
+
+[dependencies.attribute-pseudoblock]
+version = "0.1"
+git = "https://github.com/RosieTheGhostie/attribute-pseudoblock.git"
+
+[features]
+default = ["fields", "disassembler"]
+full = ["fields", "disassembler"]
+
+fields = []
+disassembler = ["fields"]

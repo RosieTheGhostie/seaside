@@ -58,6 +58,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "34ac096ce696dc2fcabef30516bb13c0a68a11d30131d3df6f04711467681b04"
 
 [[package]]
+name = "attribute-pseudoblock"
+version = "0.1.0"
+source = "git+https://github.com/RosieTheGhostie/attribute-pseudoblock.git#2d2a4d5d5afc62fe709a05d056276f8b7495f5e7"
+
+[[package]]
 name = "autocfg"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -536,6 +541,7 @@ dependencies = [
 name = "seaside-disassembler"
 version = "0.1.0"
 dependencies = [
+ "attribute-pseudoblock",
  "num-traits",
  "seaside-constants",
  "seaside-int-utils",

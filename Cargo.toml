@@ -19,7 +19,9 @@ seaside-assembler = { version = "*", path = "crates/seaside-assembler" }
 seaside-bitflags-addons = { version = "*", path = "crates/seaside-bitflags-addons" }
 seaside-config = { version = "*", path = "crates/seaside-config" }
 seaside-constants = { version = "*", path = "crates/seaside-constants" }
-seaside-disassembler = { version = "*", path = "crates/seaside-disassembler" }
+seaside-disassembler = { version = "*", features = [
+	"full",
+], path = "crates/seaside-disassembler" }
 seaside-error = { version = "*", path = "crates/seaside-error" }
 seaside-int-utils = { version = "*", path = "crates/seaside-int-utils" }
 seaside-interpreter = { version = "*", path = "crates/seaside-interpreter" }
