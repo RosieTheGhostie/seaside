@@ -1,0 +1,15 @@
+[package]
+name = "seaside-config-editor"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+cursive = "0.21"
+num-traits = "0.2"
+num-derive = "0.4"
+seaside-int-utils = { version = "*", default-features = false, features = [
+	"endian",
+], path = "../seaside-int-utils" }
+semver = "1.0"
+strum = "0.27"
+strum_macros = "0.27"
