@@ -5,6 +5,7 @@ pub mod validate;
 
 mod presets;
 mod primitive_defaults;
+mod properties;
 mod version;
 
 pub use features::Features;
