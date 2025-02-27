@@ -1,7 +1,6 @@
-use super::super::{Exception, InterpreterState};
-use crate::Interpreter;
+use crate::{Exception, Interpreter, InterpreterState};
 use num_traits::{FromPrimitive, Zero};
-use seaside_constants::{fn_codes::Coprocessor1Fn, number_fmt::NumberFormat};
+use seaside_constants::{fn_codes::Coprocessor1Fn, NumberFormat};
 use seaside_disassembler::fields;
 use seaside_type_aliases::Instruction;
 

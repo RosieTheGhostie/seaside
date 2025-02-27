@@ -1,6 +1,6 @@
 use super::{
-    component::{Component, FprDisplayer, GprDisplayer},
-    operation::Operation,
+    component::{FprDisplayer, GprDisplayer},
+    Component, Operation,
 };
 use seaside_int_utils::SignExtend;
 use seaside_type_aliases::Address;

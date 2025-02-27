@@ -1,4 +1,5 @@
-use super::{component::Component, fields, operation::Operation, DestructuredInstruction};
+use super::{Component, DestructuredInstruction, Operation};
+use crate::fields;
 use num_traits::FromPrimitive;
 use seaside_constants::fn_codes::Special2Fn;
 use seaside_type_aliases::Instruction;

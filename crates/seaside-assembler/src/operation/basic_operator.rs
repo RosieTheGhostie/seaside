@@ -1,7 +1,6 @@
 use seaside_constants::{
     fn_codes::{Coprocessor0Fn, Coprocessor1Fn, RegisterImmediateFn, Special2Fn, SpecialFn},
-    number_fmt::NumberFormat,
-    opcodes::Opcode,
+    NumberFormat, Opcode,
 };
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

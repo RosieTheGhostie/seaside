@@ -1,4 +1,4 @@
-use super::opcodes::Opcode;
+use crate::Opcode;
 
 pub enum InstructionFormat {
     Special,

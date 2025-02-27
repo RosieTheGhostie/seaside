@@ -1,6 +1,6 @@
-use super::{
-    super::Exception,
-    regions::{DataRegion, Region},
+use crate::{
+    memory::{DataRegion, Region},
+    Exception,
 };
 use seaside_type_aliases::Address;
 

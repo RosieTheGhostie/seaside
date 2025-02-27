@@ -1,7 +1,4 @@
-use super::{
-    regions::{DataRegion, TextRegion},
-    DataMemory, InstructionMemory, Memory,
-};
+use super::{DataMemory, DataRegion, InstructionMemory, Memory, TextRegion};
 use anyhow::Result;
 use seaside_config::{
     memory_map::{RuntimeData, Segment},

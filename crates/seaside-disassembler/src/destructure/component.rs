@@ -1,4 +1,4 @@
-use seaside_constants::number_fmt::NumberFormat;
+use seaside_constants::NumberFormat;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]

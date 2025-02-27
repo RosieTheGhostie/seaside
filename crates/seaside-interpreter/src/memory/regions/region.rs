@@ -1,4 +1,4 @@
-use super::super::super::Exception;
+use crate::Exception;
 use seaside_type_aliases::Address;
 
 pub trait Region {

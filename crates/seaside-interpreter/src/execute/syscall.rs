@@ -1,8 +1,4 @@
-use super::{
-    super::{memory::regions::Region, SyscallFailureKind},
-    Exception, InterpreterState,
-};
-use crate::Interpreter;
+use crate::{memory::Region, Exception, Interpreter, InterpreterState, SyscallFailureKind};
 use console::Term;
 use seaside_constants::register;
 use seaside_type_aliases::Address;

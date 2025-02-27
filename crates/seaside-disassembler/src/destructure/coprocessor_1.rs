@@ -1,6 +1,7 @@
-use super::{component::Component, fields, operation::Operation, DestructuredInstruction};
+use super::{Component, DestructuredInstruction, Operation};
+use crate::fields;
 use num_traits::FromPrimitive;
-use seaside_constants::{fn_codes::Coprocessor1Fn, number_fmt::NumberFormat};
+use seaside_constants::{fn_codes::Coprocessor1Fn, NumberFormat};
 use seaside_type_aliases::Instruction;
 
 pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> {

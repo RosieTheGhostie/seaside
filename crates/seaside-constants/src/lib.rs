@@ -4,3 +4,7 @@ pub mod number_fmt;
 pub mod opcodes;
 pub mod register;
 pub mod service_codes;
+
+pub use instruction_format::InstructionFormat;
+pub use number_fmt::NumberFormat;
+pub use opcodes::Opcode;

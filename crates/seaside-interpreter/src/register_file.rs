@@ -1,4 +1,4 @@
-use super::Exception;
+use crate::Exception;
 use seaside_config::RegisterDefaults;
 use seaside_constants::register;
 use seaside_type_aliases::Address;

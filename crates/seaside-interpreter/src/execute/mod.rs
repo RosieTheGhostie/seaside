@@ -6,10 +6,9 @@ mod special;
 mod special_2;
 mod syscall;
 
-use super::{Exception, InterpreterState};
-use crate::Interpreter;
+use crate::{Exception, Interpreter};
 use num_traits::FromPrimitive;
-use seaside_constants::{instruction_format::InstructionFormat, opcodes::Opcode};
+use seaside_constants::{InstructionFormat, Opcode};
 use seaside_disassembler::fields;
 use seaside_type_aliases::Instruction;
 

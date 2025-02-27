@@ -9,11 +9,13 @@ mod operation;
 mod special;
 mod special_2;
 
+pub use component::Component;
 pub use destructured_instruction::DestructuredInstruction;
+pub use operation::Operation;
 
-use super::fields;
+use crate::fields;
 use num_traits::FromPrimitive;
-use seaside_constants::{instruction_format::InstructionFormat, opcodes::Opcode};
+use seaside_constants::{InstructionFormat, Opcode};
 use seaside_type_aliases::{Address, Instruction};
 
 pub fn destructure(instruction: Instruction, address: Address) -> Option<DestructuredInstruction> {

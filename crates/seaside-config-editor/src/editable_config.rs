@@ -1,4 +1,4 @@
-use crate::versions::SeasideVersion;
+use crate::SeasideVersion;
 use seaside_int_utils::Endian;
 
 #[derive(Clone, Debug)]

@@ -1,5 +1,4 @@
-use super::super::{Exception, InterpreterState};
-use crate::Interpreter;
+use crate::{Exception, Interpreter, InterpreterState};
 use num_traits::FromPrimitive;
 use seaside_constants::fn_codes::SpecialFn;
 use seaside_disassembler::fields;

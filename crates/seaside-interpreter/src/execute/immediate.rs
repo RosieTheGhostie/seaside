@@ -1,7 +1,6 @@
-use super::super::{memory::regions::Region, Exception, InterpreterState};
-use crate::Interpreter;
+use crate::{memory::Region, Exception, Interpreter, InterpreterState};
 use num_traits::FromPrimitive;
-use seaside_constants::opcodes::Opcode;
+use seaside_constants::Opcode;
 use seaside_disassembler::fields;
 use seaside_int_utils::{Endian, SignExtend};
 use seaside_type_aliases::Instruction;

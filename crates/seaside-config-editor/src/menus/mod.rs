@@ -1,7 +1,7 @@
 pub mod features;
 pub mod register_defaults;
 
-use crate::{versions::SeasideVersion, EditableConfig};
+use crate::{EditableConfig, SeasideVersion};
 use cursive::{
     view::{Nameable, Resizable},
     views::{Dialog, LinearLayout, ListView, RadioGroup, SelectView, TextView},

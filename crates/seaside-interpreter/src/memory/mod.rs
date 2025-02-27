@@ -3,10 +3,11 @@ pub mod init;
 pub mod instruction_memory;
 pub mod regions;
 
-use super::Exception;
-use data_memory::DataMemory;
-use instruction_memory::InstructionMemory;
-use regions::Region;
+pub use data_memory::DataMemory;
+pub use instruction_memory::InstructionMemory;
+pub use regions::{DataRegion, Region, TextRegion};
+
+use crate::Exception;
 use seaside_int_utils::Endian;
 use seaside_type_aliases::{Address, Instruction};
 

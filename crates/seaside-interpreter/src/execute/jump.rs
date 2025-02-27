@@ -1,6 +1,5 @@
-use super::super::{Exception, InterpreterState};
-use crate::Interpreter;
-use seaside_constants::{opcodes::Opcode, register};
+use crate::{Exception, Interpreter, InterpreterState};
+use seaside_constants::{register, Opcode};
 use seaside_disassembler::fields;
 use seaside_int_utils::SignExtend;
 use seaside_type_aliases::Instruction;

@@ -1,6 +1,6 @@
 use seaside_constants::{
     fn_codes::{Coprocessor0Fn, Coprocessor1Fn, RegisterImmediateFn, Special2Fn, SpecialFn},
-    opcodes::Opcode,
+    Opcode,
 };
 
 #[derive(Clone, Copy, Debug)]

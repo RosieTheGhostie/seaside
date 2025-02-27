@@ -1,4 +1,4 @@
-use super::SyscallFailureKind;
+use crate::SyscallFailureKind;
 use seaside_type_aliases::Address;
 use thiserror::Error;
 

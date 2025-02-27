@@ -1,5 +1,6 @@
-use super::{component::Component, fields, operation::Operation, DestructuredInstruction};
-use seaside_constants::opcodes::Opcode;
+use super::{Component, DestructuredInstruction, Operation};
+use crate::fields;
+use seaside_constants::Opcode;
 use seaside_type_aliases::Instruction;
 
 pub fn destructure(opcode: Opcode, instruction: Instruction) -> Option<DestructuredInstruction> {

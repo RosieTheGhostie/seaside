@@ -6,7 +6,7 @@
 use anyhow::{Error, Result};
 use seaside_config::Config;
 use seaside_error::EngineError;
-use seaside_int_utils::byte_stream::ByteStream;
+use seaside_int_utils::ByteStream;
 use seaside_type_aliases::{Address, Instruction};
 use std::path::PathBuf;
 

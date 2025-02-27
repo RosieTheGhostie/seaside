@@ -1,7 +1,5 @@
-use super::{
-    super::Exception,
-    regions::{Region, TextRegion},
-};
+use super::{Region, TextRegion};
+use crate::Exception;
 use seaside_type_aliases::Address;
 
 pub struct InstructionMemory {

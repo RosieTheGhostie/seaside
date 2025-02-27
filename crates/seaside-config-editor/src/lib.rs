@@ -1,6 +1,8 @@
 mod editable_config;
 mod menus;
-mod versions;
+mod seaside_version;
+
+pub(crate) use seaside_version::SeasideVersion;
 
 use cursive::{event::Key, menu::Tree, theme::Theme, Cursive, CursiveRunnable};
 use editable_config::EditableConfig;

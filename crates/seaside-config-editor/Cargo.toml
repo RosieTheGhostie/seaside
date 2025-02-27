@@ -7,7 +7,7 @@ edition = "2021"
 cursive = "0.21"
 num-traits = "0.2"
 num-derive = "0.4"
-seaside-int-utils = { version = "*", default-features = false, features = [
+seaside-int-utils = { version = "*", features = [
 	"endian",
 ], path = "../seaside-int-utils" }
 semver = "1.0"
