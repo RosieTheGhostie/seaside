@@ -16,7 +16,6 @@ incremental = true
 anyhow = "1.0"
 directories = "5.0"
 seaside-assembler = { version = "*", path = "crates/seaside-assembler" }
-seaside-bitflags-addons = { version = "*", path = "crates/seaside-bitflags-addons" }
 seaside-config = { version = "*", path = "crates/seaside-config" }
 seaside-config-editor = { version = "*", path = "crates/seaside-config-editor" }
 seaside-constants = { version = "*", path = "crates/seaside-constants" }
