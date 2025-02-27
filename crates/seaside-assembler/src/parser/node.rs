@@ -1,4 +1,4 @@
-use super::super::{directives::SegmentDirective, BasicOperator, Operand};
+use crate::{directives::SegmentDirective, BasicOperator, Operand};
 
 #[derive(Debug, PartialEq)]
 pub enum Node {

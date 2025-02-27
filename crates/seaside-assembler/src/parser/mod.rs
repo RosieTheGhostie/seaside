@@ -5,7 +5,7 @@ pub mod node;
 pub use error::ParseError;
 pub use node::Node;
 
-use super::{
+use crate::{
     directives::{DataTypeDirective, SegmentDirective},
     operation::macros::{coprocessor_0, coprocessor_1, register_immediate, special, special_2},
     BasicOperator, Operand, Token,

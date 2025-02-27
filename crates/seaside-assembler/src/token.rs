@@ -1,10 +1,8 @@
-use super::{
+use crate::{
     directives::{DataTypeDirective, SegmentDirective},
-    operation::{
-        macros::{coprocessor_0, coprocessor_1, register_immediate, special, special_2},
-        BasicOperator::{self, *},
-    },
+    operation::macros::{coprocessor_0, coprocessor_1, register_immediate, special, special_2},
     string_literal::StringLiteralParser,
+    BasicOperator::{self, *},
 };
 use logos::Logos;
 

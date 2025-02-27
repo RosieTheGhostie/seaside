@@ -1,10 +1,7 @@
-use super::{
+use crate::{
     macros::assemble_field,
-    operation::{
-        macros::{coprocessor_0, coprocessor_1, special, special_2},
-        BasicOperator, Operand,
-    },
-    AssembleError,
+    operation::macros::{coprocessor_0, coprocessor_1, special, special_2},
+    AssembleError, BasicOperator, Operand,
 };
 use anyhow::{Error, Result};
 use seaside_constants::{number_fmt::NumberFormat, opcodes::Opcode};

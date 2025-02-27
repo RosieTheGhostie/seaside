@@ -1,4 +1,4 @@
-use super::ParseError;
+use crate::ParseError;
 use std::io::Error as IoError;
 use thiserror::Error;
 

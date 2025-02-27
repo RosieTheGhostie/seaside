@@ -5,7 +5,7 @@ pub mod operand;
 pub use basic_operator::BasicOperator;
 pub use operand::Operand;
 
-use super::AssembleError;
+use crate::AssembleError;
 use anyhow::{Error, Result};
 use macros::register_immediate;
 

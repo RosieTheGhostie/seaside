@@ -1,9 +1,8 @@
+use crate::AssembleError;
 use anyhow::{Error, Result};
 use seaside_int_utils::Endian;
 use seaside_type_aliases::Address;
 use std::{fs::write, path::PathBuf};
-
-use crate::error::AssembleError;
 
 pub struct SegmentBuildInfo {
     pub base: Address,
