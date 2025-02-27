@@ -32,16 +32,15 @@ pub fn new_editor() -> CursiveRunnable {
             "Features",
             Tree::new()
                 .leaf("General", menus::features::general)
-                .leaf("Assembler", menus::features::assembler)
                 .leaf("Syscalls", menus::features::syscalls),
         )
         .add_leaf("Memory Map", menus::memory_map)
         .add_subtree(
             "Register Defaults",
             Tree::new()
-                .leaf("CPU", menus::register_defaults::cpu)
-                .leaf("FPU", menus::register_defaults::fpu)
-                .leaf("Cop. 0", menus::register_defaults::coprocessor_0),
+                .leaf("General Purpose", menus::register_defaults::general_purpose)
+                .leaf("Cop. 0", menus::register_defaults::coprocessor_0)
+                .leaf("Cop. 1", menus::register_defaults::coprocessor_1),
         );
     siv.set_autohide_menu(false);
 
