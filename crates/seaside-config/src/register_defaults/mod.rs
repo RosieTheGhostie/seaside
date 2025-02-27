@@ -10,8 +10,7 @@ pub use general_purpose::GeneralPurposeRegister;
 pub use register_set::RegisterSet;
 pub use registers::Registers;
 
-use super::binary::EditFromBinary;
-use crate::ToBinary;
+use crate::{EditFromBinary, ToBinary};
 use anyhow::{anyhow, Result};
 use num_traits::ToPrimitive;
 use std::{

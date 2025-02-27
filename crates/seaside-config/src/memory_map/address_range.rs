@@ -1,4 +1,4 @@
-use super::{Contains, Overlapping};
+use super::traits::{Contains, Overlapping};
 use seaside_int_utils::AllZeroes;
 use seaside_type_aliases::Address;
 

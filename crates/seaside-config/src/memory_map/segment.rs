@@ -1,4 +1,7 @@
-use super::{AddressRange, Contains, Overlapping};
+use super::{
+    traits::{Contains, Overlapping},
+    AddressRange,
+};
 use seaside_int_utils::AllZeroes;
 
 /// Specifies the memory addresses associated with a given segment.

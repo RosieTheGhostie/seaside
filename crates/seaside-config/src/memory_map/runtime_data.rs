@@ -1,4 +1,7 @@
-use super::{AddressRange, Contains, Overlapping, Segment};
+use super::{
+    traits::{Contains, Overlapping},
+    AddressRange, Segment,
+};
 use seaside_int_utils::AllZeroes;
 
 /// Specifies the memory addresses associated with the heap and stack.
