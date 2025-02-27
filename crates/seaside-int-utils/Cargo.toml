@@ -15,10 +15,10 @@ features = ["derive"]
 optional = true
 
 [features]
-default = ["all_zeroes", "byte_stream", "endian", "sign_extend"]
+default = []
 full = ["all_zeroes", "byte_stream", "endian", "sign_extend"]
 
 all_zeroes = []
 byte_stream = ["endian"]
-endian = ["serde"]
+endian = []
 sign_extend = []

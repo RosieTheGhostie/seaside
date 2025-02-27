@@ -1,5 +1,5 @@
 use super::{super::super::Exception, Region};
-use seaside_int_utils::{byte_stream::ByteStream, Endian};
+use seaside_int_utils::{ByteStream, Endian};
 use seaside_type_aliases::{is_aligned, Address};
 use std::{iter::zip, ops::Range};
 

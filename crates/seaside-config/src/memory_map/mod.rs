@@ -7,12 +7,7 @@ pub use address_range::AddressRange;
 pub use runtime_data::RuntimeData;
 pub use segment::Segment;
 
-use crate::ToBinary;
-
-use super::{
-    binary::traits::{EditFromBinary, FromBinary},
-    validate::Validate,
-};
+use crate::{EditFromBinary, FromBinary, ToBinary, Validate};
 use anyhow::{anyhow, Error, Result};
 use seaside_error::EngineError;
 use seaside_int_utils::AllZeroes;

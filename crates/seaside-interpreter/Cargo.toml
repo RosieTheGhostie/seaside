@@ -20,7 +20,10 @@ seaside-disassembler = { version = "*", default-features = false, features = [
 	"fields",
 ], path = "../seaside-disassembler" }
 seaside-error = { version = "*", path = "../seaside-error" }
-seaside-int-utils = { version = "*", path = "../seaside-int-utils" }
+seaside-int-utils = { version = "*", features = [
+	"byte_stream",
+	"endian",
+], path = "../seaside-int-utils" }
 seaside-type-aliases = { version = "*", path = "../seaside-type-aliases" }
 thiserror = "2.0"
 

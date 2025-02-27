@@ -1,12 +1,9 @@
 use super::{AddressRange, Contains, Overlapping};
 use seaside_int_utils::AllZeroes;
-use serde::{Deserialize, Serialize};
 
 /// Specifies the memory addresses associated with a given segment.
-#[derive(Serialize, Deserialize)]
 pub struct Segment {
     /// The inclusive range of addresses within this segment.
-    #[serde(flatten)]
     pub address_range: AddressRange,
     /// The maximum number of bytes to allocate for this segment.
     pub allocate: u32,

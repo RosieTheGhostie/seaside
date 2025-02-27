@@ -1,11 +1,19 @@
-pub mod traits;
-
-pub use traits::{EditFromBinary, FromBinary, ToBinary};
-
 use anyhow::{anyhow, Result};
 use seaside_int_utils::Endian;
 use semver::Version;
 use std::io::{Read, Write};
+
+pub trait FromBinary: Sized {
+    fn from_binary<R: Read>(stream: &mut R) -> Result<Self>;
+}
+
+pub trait EditFromBinary<const VERSION: u32>: Sized {
+    fn edit_from_binary<R: Read>(&mut self, ids: [u8; 4], stream: &mut R) -> Result<()>;
+}
+
+pub trait ToBinary<const VERSION: u32> {
+    fn to_binary<W: Write>(&self, stream: &mut W) -> Result<()>;
+}
 
 impl FromBinary for bool {
     fn from_binary<R: Read>(stream: &mut R) -> Result<Self> {

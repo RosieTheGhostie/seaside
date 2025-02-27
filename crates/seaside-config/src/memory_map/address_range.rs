@@ -1,10 +1,8 @@
 use super::{Contains, Overlapping};
 use seaside_int_utils::AllZeroes;
 use seaside_type_aliases::Address;
-use serde::{Deserialize, Serialize};
 
 /// An inclusive range of [`Address`]es.
-#[derive(Deserialize, Serialize)]
 pub struct AddressRange {
     pub base: Address,
     pub limit: Address,

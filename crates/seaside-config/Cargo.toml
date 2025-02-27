@@ -14,10 +14,9 @@ anyhow = "1.0"
 clap = "4.5"
 num-traits = "0.2"
 seaside-error = { version = "*", path = "../seaside-error" }
-seaside-int-utils = { version = "*", path = "../seaside-int-utils" }
+seaside-int-utils = { version = "*", features = [
+	"all_zeroes",
+	"endian",
+], path = "../seaside-int-utils" }
 seaside-type-aliases = { version = "*", path = "../seaside-type-aliases" }
 semver = "1.0"
-
-[dependencies.serde]
-version = "1.0"
-features = ["derive"]

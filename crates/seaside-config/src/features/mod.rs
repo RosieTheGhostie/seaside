@@ -1,11 +1,10 @@
 pub mod syscalls;
 
-use crate::ToBinary;
-
 use super::{
-    binary::traits::{EditFromBinary, FromBinary},
+    binary::{EditFromBinary, FromBinary},
     validate::Validate,
 };
+use crate::ToBinary;
 use anyhow::{anyhow, Result};
 use seaside_int_utils::AllZeroes;
 use std::io::{Read, Write};

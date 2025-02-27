@@ -1,5 +1,4 @@
-use super::super::{binary::traits::EditFromBinary, Validate};
-use crate::{syscall_id, ToBinary};
+use crate::{syscall_id, EditFromBinary, ToBinary, Validate};
 use anyhow::{anyhow, Error, Result};
 use seaside_error::EngineError;
 use seaside_int_utils::AllZeroes;
