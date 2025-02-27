@@ -1,4 +1,5 @@
-use super::super::{Exception, Interpreter};
+use super::super::{Exception, InterpreterState};
+use crate::Interpreter;
 use seaside_constants::{opcodes::Opcode, register};
 use seaside_disassembler::fields;
 use seaside_int_utils::SignExtend;
@@ -11,14 +12,16 @@ impl Interpreter {
         instruction: Instruction,
     ) -> Result<(), Exception> {
         let jump_index = fields::jump_index(instruction);
-        let address = (self.pc & 0xf0000000) | (jump_index << 2);
+        let address = (self.state.pc & 0xf0000000) | (jump_index << 2);
         if opcode == Opcode::JumpAndLink {
-            self.link()?;
+            self.state.link()?;
         }
-        self.pc = address;
+        self.state.pc = address;
         Ok(())
     }
+}
 
+impl InterpreterState {
     pub fn branch(&mut self, offset: u16) {
         let offset = <u16 as SignExtend<i32>>::sign_extend(&offset) << 2;
         self.pc = u32::wrapping_add_signed(self.pc, offset);

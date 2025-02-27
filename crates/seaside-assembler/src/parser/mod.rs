@@ -12,14 +12,12 @@ use super::{
 };
 use anyhow::{Context, Error, Result};
 use logos::Lexer;
-use macros::{assert_token, assert_token_or_none, get_operand, if_enabled, parse_ops};
-use seaside_config::features::assembler::SpecialDirectives;
+use macros::{assert_token, assert_token_or_none, get_operand, parse_ops};
 use std::collections::VecDeque;
 
 pub struct Parser<'source> {
     lexer: Lexer<'source, Token>,
     peeked: VecDeque<Token>,
-    special_directives: SpecialDirectives,
 }
 
 impl Iterator for Parser<'_> {
@@ -37,9 +35,7 @@ impl Iterator for Parser<'_> {
             Token::SegmentDirective(directive) => self.parse_segment_header(directive),
             Token::DataTypeDirective(DataTypeDirective::Align) => self.parse_align_command(),
             Token::DataTypeDirective(DataTypeDirective::Ascii) => self.parse_string(false),
-            Token::DataTypeDirective(DataTypeDirective::Asciiz) => {
-                if_enabled!(self, Asciiz (".asciiz") => self.parse_string(true))
-            }
+            Token::DataTypeDirective(DataTypeDirective::Asciiz) => self.parse_string(true),
             Token::DataTypeDirective(DataTypeDirective::Byte) => self.parse_byte_array(),
             Token::DataTypeDirective(DataTypeDirective::Double) => self.parse_double_array(),
             Token::DataTypeDirective(DataTypeDirective::Float) => self.parse_float_array(),
@@ -54,11 +50,10 @@ impl Iterator for Parser<'_> {
 }
 
 impl<'source> Parser<'source> {
-    pub fn new(lexer: Lexer<'source, Token>, special_directives: SpecialDirectives) -> Self {
+    pub fn new(lexer: Lexer<'source, Token>) -> Self {
         Self {
             lexer,
             peeked: VecDeque::new(),
-            special_directives,
         }
     }
 }
@@ -454,7 +449,7 @@ mod tests {
 
         const SOURCE: &str = r#".text"#;
         let expected: Node = Node::SegmentHeader(SegmentDirective::Text, None);
-        let mut parser = Parser::new(Token::lexer(SOURCE), SpecialDirectives::all());
+        let mut parser = Parser::new(Token::lexer(SOURCE));
         match parser.next() {
             Some(Ok(got)) => assert_eq!(expected, got),
             Some(Err(_)) => panic!("parsing failed (expected: {expected:?})"),
@@ -469,7 +464,7 @@ mod tests {
 
         const SOURCE: &str = r#".text 0x00400000"#;
         let expected: Node = Node::SegmentHeader(SegmentDirective::Text, Some(0x00400000));
-        let mut parser = Parser::new(Token::lexer(SOURCE), SpecialDirectives::all());
+        let mut parser = Parser::new(Token::lexer(SOURCE));
         match parser.next() {
             Some(Ok(got)) => assert_eq!(expected, got),
             Some(Err(_)) => panic!("parsing failed (expected: {expected:?})"),
@@ -513,7 +508,7 @@ Square:
                 [Some(Operand::Register(register::RA)), None, None],
             ),
         ];
-        let parser = Parser::new(Token::lexer(SOURCE), SpecialDirectives::all());
+        let parser = Parser::new(Token::lexer(SOURCE));
         for (expected, got) in std::iter::zip(expected_nodes, parser) {
             assert_eq!(
                 expected,

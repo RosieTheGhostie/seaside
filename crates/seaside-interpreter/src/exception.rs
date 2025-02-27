@@ -57,10 +57,8 @@ impl Exception {
         }
     }
 
-    pub const fn service_code(&self) -> Option<u8> {
-        if let Self::SyscallFailure(SyscallFailureKind::UnknownServiceCode(code))
-        | Self::SyscallFailure(SyscallFailureKind::ServiceDisabled(code)) = *self
-        {
+    pub const fn service_code(&self) -> Option<u32> {
+        if let Self::SyscallFailure(SyscallFailureKind::UnknownServiceCode(code)) = *self {
             Some(code)
         } else {
             None

@@ -1,9 +1,10 @@
 use super::{
-    super::{memory::regions::Region, syscalls::Syscalls, SyscallFailureKind},
-    Exception, Interpreter,
+    super::{memory::regions::Region, SyscallFailureKind},
+    Exception, InterpreterState,
 };
+use crate::Interpreter;
 use console::Term;
-use seaside_constants::{register, service_codes};
+use seaside_constants::register;
 use seaside_type_aliases::Address;
 use std::{
     ffi::CStr,
@@ -15,91 +16,37 @@ use std::{
 
 impl Interpreter {
     pub fn syscall(&mut self) -> Result<(), Exception> {
-        use service_codes::*;
-        let service_code = self.registers.read_u32_from_cpu(register::V0)? as u8;
-        let syscall_flag = Syscalls::from_bits_truncate(1 << service_code);
-        if !Syscalls::all().intersects(syscall_flag) {
-            return Err(Exception::SyscallFailure(
-                SyscallFailureKind::UnknownServiceCode(service_code),
-            ));
-        }
-        if !self.syscalls.intersects(syscall_flag) {
-            return Err(Exception::SyscallFailure(
-                SyscallFailureKind::ServiceDisabled(service_code),
-            ));
-        }
-        match service_code {
-            PRINT_INT => self.print_int(),
-            PRINT_FLOAT => self.print_float(),
-            PRINT_DOUBLE => self.print_double(),
-            PRINT_STRING => self.print_string(),
-            READ_INT => self.read_int(),
-            READ_FLOAT => self.read_float(),
-            READ_DOUBLE => self.read_double(),
-            READ_STRING => self.read_string(),
-            SBRK => self.sbrk(),
-            EXIT => self.exit(),
-            PRINT_CHAR => self.print_char(),
-            READ_CHAR => self.read_char(),
-            OPEN_FILE => self.open_file(),
-            READ_FILE => self.read_file(),
-            WRITE_FILE => self.write_file(),
-            CLOSE_FILE => self.close_file(),
-            EXIT_2 => self.exit_2(),
-            TIME => self.time(),
-            SLEEP => self.sleep(),
-            PRINT_HEX => self.print_hex(),
-            PRINT_BIN => self.print_bin(),
-            PRINT_UINT => self.print_uint(),
-            SET_SEED => self.set_seed(),
-            RAND_INT => self.rand_int(),
-            RAND_INT_RANGE => self.rand_int_range(),
-            RAND_FLOAT => self.rand_float(),
-            RAND_DOUBLE => self.rand_double(),
-            MIDI_OUT
-            | MIDI_OUT_SYNC
-            | CONFIRM_DIALOG
-            | INPUT_DIALOG_INT
-            | INPUT_DIALOG_FLOAT
-            | INPUT_DIALOG_DOUBLE
-            | INPUT_DIALOG_STRING
-            | MESSAGE_DIALOG
-            | MESSAGE_DIALOG_INT
-            | MESSAGE_DIALOG_FLOAT
-            | MESSAGE_DIALOG_DOUBLE
-            | MESSAGE_DIALOG_STRING => Err(Exception::SyscallFailure(
-                SyscallFailureKind::ServiceUnimplemented(service_code),
-            )),
-            _ => Err(Exception::SyscallFailure(
-                SyscallFailureKind::UnknownServiceCode(service_code),
-            )),
-        }
+        let service_code = self.state.registers.read_u32_from_cpu(register::V0)?;
+        let service = self.services.get(&service_code).ok_or_else(|| {
+            Exception::SyscallFailure(SyscallFailureKind::UnknownServiceCode(service_code))
+        })?;
+        service(&mut self.state)
     }
 }
 
-impl Interpreter {
-    fn print_int(&mut self) -> Result<(), Exception> {
+impl InterpreterState {
+    pub fn print_int(&mut self) -> Result<(), Exception> {
         let x: i32 = self.registers.read_i32_from_cpu(register::A0)?;
         print!("{x}");
         self.stdout_pending_flush = true;
         Ok(())
     }
 
-    fn print_float(&mut self) -> Result<(), Exception> {
+    pub fn print_float(&mut self) -> Result<(), Exception> {
         let x: f32 = self.registers.read_f32_from_fpu(12)?;
         print!("{x}");
         self.stdout_pending_flush = true;
         Ok(())
     }
 
-    fn print_double(&mut self) -> Result<(), Exception> {
+    pub fn print_double(&mut self) -> Result<(), Exception> {
         let x: f64 = self.registers.read_f64_from_fpu(12)?;
         print!("{x}");
         self.stdout_pending_flush = true;
         Ok(())
     }
 
-    fn print_string(&mut self) -> Result<(), Exception> {
+    pub fn print_string(&mut self) -> Result<(), Exception> {
         let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let string = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
             .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
@@ -110,7 +57,7 @@ impl Interpreter {
         Ok(())
     }
 
-    fn read_int(&mut self) -> Result<(), Exception> {
+    pub fn read_int(&mut self) -> Result<(), Exception> {
         let mut buffer = String::new();
         self.flush_stdout_if_necessary()
             .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::StdoutFlushFailed))?;
@@ -124,7 +71,7 @@ impl Interpreter {
         self.registers.write_i32_to_cpu(register::V0, parsed)
     }
 
-    fn read_float(&mut self) -> Result<(), Exception> {
+    pub fn read_float(&mut self) -> Result<(), Exception> {
         let mut buffer = String::new();
         self.flush_stdout_if_necessary()
             .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::StdoutFlushFailed))?;
@@ -138,7 +85,7 @@ impl Interpreter {
         self.registers.write_f32_to_fpu(0, parsed)
     }
 
-    fn read_double(&mut self) -> Result<(), Exception> {
+    pub fn read_double(&mut self) -> Result<(), Exception> {
         let mut buffer = String::new();
         self.flush_stdout_if_necessary()
             .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::StdoutFlushFailed))?;
@@ -152,7 +99,7 @@ impl Interpreter {
         self.registers.write_f64_to_fpu(0, parsed)
     }
 
-    fn read_string(&mut self) -> Result<(), Exception> {
+    pub fn read_string(&mut self) -> Result<(), Exception> {
         // To appease the borrow checker, we must flush up here instead of directly before the read
         // from stdin like the other read services.
         self.flush_stdout_if_necessary()
@@ -192,7 +139,7 @@ impl Interpreter {
             .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::WriteFailed))
     }
 
-    fn sbrk(&mut self) -> Result<(), Exception> {
+    pub fn sbrk(&mut self, freeable_heap_allocations: bool) -> Result<(), Exception> {
         let n_bytes: i32 = self.registers.read_i32_from_cpu(register::A0)?;
         // Adjust value of `n_bytes` to be a multiple of four.
         let should_allocate: bool = n_bytes > 0;
@@ -212,7 +159,7 @@ impl Interpreter {
             } else {
                 0
             }
-        } else if self.freeable_heap_allocations {
+        } else if freeable_heap_allocations {
             n_bytes = n_bytes.min(self.memory.used_heap_space());
             *self.memory.free_heap_space_mut() += n_bytes;
             *self.memory.next_heap_address_mut() -= n_bytes;
@@ -226,12 +173,12 @@ impl Interpreter {
         self.registers.write_u32_to_cpu(register::V0, address)
     }
 
-    fn exit(&mut self) -> Result<(), Exception> {
+    pub fn exit(&mut self) -> Result<(), Exception> {
         self.exit_code = Some(0);
         Ok(())
     }
 
-    fn print_char(&mut self) -> Result<(), Exception> {
+    pub fn print_char(&mut self) -> Result<(), Exception> {
         let c = match char::from_u32(self.registers.read_u32_from_cpu(register::A0)?) {
             Some(c) => c,
             None => return Err(Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8)),
@@ -241,7 +188,7 @@ impl Interpreter {
         Ok(())
     }
 
-    fn read_char(&mut self) -> Result<(), Exception> {
+    pub fn read_char(&mut self) -> Result<(), Exception> {
         self.flush_stdout_if_necessary()
             .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::StdoutFlushFailed))?;
         // No idea why we're supposedly reading from stdout, but this works.
@@ -254,7 +201,7 @@ impl Interpreter {
         self.registers.write_u32_to_cpu(register::V0, input as u32)
     }
 
-    fn open_file(&mut self) -> Result<(), Exception> {
+    pub fn open_file(&mut self) -> Result<(), Exception> {
         let file_name_address = self.registers.read_u32_from_cpu(register::A0)?;
         let file_name = CStr::from_bytes_until_nul(self.memory.get_slice(file_name_address)?)
             .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
@@ -280,7 +227,7 @@ impl Interpreter {
         self.registers.write_u32_to_cpu(register::V0, fd)
     }
 
-    fn read_file(&mut self) -> Result<(), Exception> {
+    pub fn read_file(&mut self) -> Result<(), Exception> {
         let fd = self.registers.read_u32_from_cpu(register::A0)?;
         let buffer_address = self.registers.read_u32_from_cpu(register::A1)?;
         let buffer = self.memory.get_slice_mut(buffer_address)?;
@@ -299,7 +246,7 @@ impl Interpreter {
         self.registers.write_u32_to_cpu(register::V0, bytes_read)
     }
 
-    fn write_file(&mut self) -> Result<(), Exception> {
+    pub fn write_file(&mut self) -> Result<(), Exception> {
         let fd = self.registers.read_u32_from_cpu(register::A0)?;
         let buffer_address = self.registers.read_u32_from_cpu(register::A1)?;
         let buffer = self.memory.get_slice(buffer_address)?;
@@ -315,7 +262,7 @@ impl Interpreter {
         self.registers.write_u32_to_cpu(register::V0, bytes_written)
     }
 
-    fn close_file(&mut self) -> Result<(), Exception> {
+    pub fn close_file(&mut self) -> Result<(), Exception> {
         let fd = self.registers.read_u32_from_cpu(register::A0)?;
         // For whatever reason, MARS doesn't complain if you try to close any of the special files
         // (stdin, stdout, and stderr). I disagree with that, but to maintain compatibility with it,
@@ -324,13 +271,13 @@ impl Interpreter {
         Ok(())
     }
 
-    fn exit_2(&mut self) -> Result<(), Exception> {
+    pub fn exit_2(&mut self) -> Result<(), Exception> {
         let exit_code = self.registers.read_u32_from_cpu(register::A0)?;
         self.exit_code = Some((exit_code & 0xff) as u8);
         Ok(())
     }
 
-    fn time(&mut self) -> Result<(), Exception> {
+    pub fn time(&mut self) -> Result<(), Exception> {
         let system_time: u64 = match SystemTime::UNIX_EPOCH.elapsed() {
             Ok(duration) => duration.as_millis() as u64,
             Err(_) => {
@@ -346,7 +293,7 @@ impl Interpreter {
     }
 
     #[allow(dead_code, reason = "not yet implemented")]
-    fn midi_out(&self) -> Result<(), Exception> {
+    pub fn midi_out(&mut self) -> Result<(), Exception> {
         let _pitch = self.registers.read_u32_from_cpu(register::A0)?;
         let _millis = self.registers.read_u32_from_cpu(register::A1)?;
         let _instrument = self.registers.read_u32_from_cpu(register::A2)?;
@@ -354,14 +301,14 @@ impl Interpreter {
         todo!("generate a sound");
     }
 
-    fn sleep(&self) -> Result<(), Exception> {
+    pub fn sleep(&mut self) -> Result<(), Exception> {
         let millis: u32 = self.registers.read_u32_from_cpu(register::A0)?;
         sleep(Duration::from_millis(millis as u64));
         Ok(())
     }
 
     #[allow(dead_code, reason = "not yet implemented")]
-    fn midi_out_sync(&self) -> Result<(), Exception> {
+    pub fn midi_out_sync(&mut self) -> Result<(), Exception> {
         let _pitch = self.registers.read_u32_from_cpu(register::A0)?;
         let _millis = self.registers.read_u32_from_cpu(register::A1)?;
         let _instrument = self.registers.read_u32_from_cpu(register::A2)?;
@@ -369,35 +316,35 @@ impl Interpreter {
         todo!("generate a sound");
     }
 
-    fn print_hex(&mut self) -> Result<(), Exception> {
+    pub fn print_hex(&mut self) -> Result<(), Exception> {
         let x: u32 = self.registers.read_u32_from_cpu(register::A0)?;
         print!("0x{x:08x}");
         self.stdout_pending_flush = true;
         Ok(())
     }
 
-    fn print_bin(&mut self) -> Result<(), Exception> {
+    pub fn print_bin(&mut self) -> Result<(), Exception> {
         let x: u32 = self.registers.read_u32_from_cpu(register::A0)?;
         print!("0b{x:032b}");
         self.stdout_pending_flush = true;
         Ok(())
     }
 
-    fn print_uint(&mut self) -> Result<(), Exception> {
+    pub fn print_uint(&mut self) -> Result<(), Exception> {
         let x: u32 = self.registers.read_u32_from_cpu(register::A0)?;
         print!("{x}");
         self.stdout_pending_flush = true;
         Ok(())
     }
 
-    fn set_seed(&mut self) -> Result<(), Exception> {
+    pub fn set_seed(&mut self) -> Result<(), Exception> {
         let id: u32 = self.registers.read_u32_from_cpu(register::A0)?;
         let seed: u64 = self.registers.read_u32_from_cpu(register::A1)? as u64;
         self.set_rng_seed(id, seed);
         Ok(())
     }
 
-    fn rand_int(&mut self) -> Result<(), Exception> {
+    pub fn rand_int(&mut self) -> Result<(), Exception> {
         let id: u32 = self.registers.read_u32_from_cpu(register::A0)?;
         let rng = match self.rngs.get_mut(&id) {
             Some(rng) => rng,
@@ -407,7 +354,7 @@ impl Interpreter {
         self.registers.write_u32_to_cpu(register::A0, x)
     }
 
-    fn rand_int_range(&mut self) -> Result<(), Exception> {
+    pub fn rand_int_range(&mut self) -> Result<(), Exception> {
         let id: u32 = self.registers.read_u32_from_cpu(register::A0)?;
         let upper_bound: u64 = self.registers.read_u32_from_cpu(register::A1)? as u64;
         let rng = match self.rngs.get_mut(&id) {
@@ -422,7 +369,7 @@ impl Interpreter {
         }
     }
 
-    fn rand_float(&mut self) -> Result<(), Exception> {
+    pub fn rand_float(&mut self) -> Result<(), Exception> {
         let id: u32 = self.registers.read_u32_from_cpu(register::A0)?;
         let rng = match self.rngs.get_mut(&id) {
             Some(rng) => rng,
@@ -432,7 +379,7 @@ impl Interpreter {
         self.registers.write_f32_to_fpu(0, x)
     }
 
-    fn rand_double(&mut self) -> Result<(), Exception> {
+    pub fn rand_double(&mut self) -> Result<(), Exception> {
         let id: u32 = self.registers.read_u32_from_cpu(register::A0)?;
         let rng = match self.rngs.get_mut(&id) {
             Some(rng) => rng,
@@ -443,7 +390,7 @@ impl Interpreter {
     }
 
     #[allow(dead_code, reason = "not yet implemented")]
-    fn confirm_dialog(&mut self) -> Result<(), Exception> {
+    pub fn confirm_dialog(&mut self) -> Result<(), Exception> {
         let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
             .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
@@ -453,7 +400,7 @@ impl Interpreter {
     }
 
     #[allow(dead_code, reason = "not yet implemented")]
-    fn input_dialog_int(&mut self) -> Result<(), Exception> {
+    pub fn input_dialog_int(&mut self) -> Result<(), Exception> {
         let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
             .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
@@ -463,7 +410,7 @@ impl Interpreter {
     }
 
     #[allow(dead_code, reason = "not yet implemented")]
-    fn input_dialog_float(&mut self) -> Result<(), Exception> {
+    pub fn input_dialog_float(&mut self) -> Result<(), Exception> {
         let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
             .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
@@ -473,7 +420,7 @@ impl Interpreter {
     }
 
     #[allow(dead_code, reason = "not yet implemented")]
-    fn input_dialog_double(&mut self) -> Result<(), Exception> {
+    pub fn input_dialog_double(&mut self) -> Result<(), Exception> {
         let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
             .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
@@ -483,7 +430,7 @@ impl Interpreter {
     }
 
     #[allow(dead_code, reason = "not yet implemented")]
-    fn input_dialog_string(&mut self) -> Result<(), Exception> {
+    pub fn input_dialog_string(&mut self) -> Result<(), Exception> {
         let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
             .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
@@ -493,7 +440,7 @@ impl Interpreter {
     }
 
     #[allow(dead_code, reason = "not yet implemented")]
-    fn message_dialog(&mut self) -> Result<(), Exception> {
+    pub fn message_dialog(&mut self) -> Result<(), Exception> {
         let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
             .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
@@ -504,7 +451,7 @@ impl Interpreter {
     }
 
     #[allow(dead_code, reason = "not yet implemented")]
-    fn message_dialog_int(&mut self) -> Result<(), Exception> {
+    pub fn message_dialog_int(&mut self) -> Result<(), Exception> {
         let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
             .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
@@ -515,7 +462,7 @@ impl Interpreter {
     }
 
     #[allow(dead_code, reason = "not yet implemented")]
-    fn message_dialog_float(&mut self) -> Result<(), Exception> {
+    pub fn message_dialog_float(&mut self) -> Result<(), Exception> {
         let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
             .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
@@ -526,7 +473,7 @@ impl Interpreter {
     }
 
     #[allow(dead_code, reason = "not yet implemented")]
-    fn message_dialog_double(&mut self) -> Result<(), Exception> {
+    pub fn message_dialog_double(&mut self) -> Result<(), Exception> {
         let buffer_address: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
             .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
@@ -537,7 +484,7 @@ impl Interpreter {
     }
 
     #[allow(dead_code, reason = "not yet implemented")]
-    fn message_dialog_string(&mut self) -> Result<(), Exception> {
+    pub fn message_dialog_string(&mut self) -> Result<(), Exception> {
         let buffer_address_0: Address = self.registers.read_u32_from_cpu(register::A0)?;
         let _message_0 = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address_0)?)
             .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?

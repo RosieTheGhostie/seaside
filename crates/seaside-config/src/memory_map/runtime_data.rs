@@ -1,8 +1,8 @@
 use super::{AddressRange, Contains, Overlapping, Segment};
+use seaside_int_utils::AllZeroes;
 use serde::{Deserialize, Serialize};
 
-/// Specifies the memory [`Address`][crate::type_aliases::Address]es associated with the heap and
-/// stack.
+/// Specifies the memory addresses associated with the heap and stack.
 #[derive(Deserialize, Serialize)]
 pub struct RuntimeData {
     /// The inclusive range of addresses within this segment.
@@ -35,5 +35,15 @@ impl Overlapping<RuntimeData> for AddressRange {
 impl Overlapping<RuntimeData> for Segment {
     fn overlapping(&self, value: &RuntimeData) -> bool {
         self.address_range.overlapping(&value.address_range)
+    }
+}
+
+impl AllZeroes for RuntimeData {
+    fn all_zeroes() -> Self {
+        Self {
+            address_range: AddressRange::all_zeroes(),
+            heap_size: 0,
+            stack_size: 0,
+        }
     }
 }

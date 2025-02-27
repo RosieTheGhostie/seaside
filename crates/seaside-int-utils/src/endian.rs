@@ -3,6 +3,8 @@
 //! Provides the enum [`Endian`], which indicates the intended byte order/endianness. This
 //! information can be seamlessly processed via [`serde`].
 
+#[cfg(feature = "all_zeroes")]
+use crate::AllZeroes;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
@@ -32,6 +34,13 @@ impl Display for Endian {
 impl From<Endian> for String {
     fn from(value: Endian) -> Self {
         value.to_string()
+    }
+}
+
+#[cfg(feature = "all_zeroes")]
+impl AllZeroes for Endian {
+    fn all_zeroes() -> Self {
+        Self::Little
     }
 }
 

@@ -5,10 +5,7 @@ use thiserror::Error;
 pub enum SyscallFailureKind {
     /// A syscall was made with an unknown service code.
     #[error("requested unknown service (code: {0})")]
-    UnknownServiceCode(u8),
-    /// The requested service exists, but is currently disabled in the provided config.
-    #[error("requested disabled service (code: {0})")]
-    ServiceDisabled(u8),
+    UnknownServiceCode(u32),
     /// The requested service exists and is enabled, but no implementation for it exists yet.
     #[error("requested unimplemented service (code: {0})")]
     ServiceUnimplemented(u8),

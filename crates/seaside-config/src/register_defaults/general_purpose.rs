@@ -1,4 +1,4 @@
-use super::{register_set::make_registers_format, RegisterSet};
+use super::RegisterSet;
 use num_traits::{FromPrimitive, ToPrimitive};
 use std::{
     io::{Error, ErrorKind},
@@ -127,5 +127,3 @@ impl RegisterSet for GeneralPurposeRegister {
         "fp", "ra",
     ];
 }
-
-make_registers_format!(GeneralPurposeRegister);

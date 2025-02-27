@@ -1,4 +1,5 @@
-use super::super::{Exception, Interpreter};
+use super::super::{Exception, InterpreterState};
+use crate::Interpreter;
 use num_traits::FromPrimitive;
 use seaside_constants::{fn_codes::Coprocessor0Fn, register};
 use seaside_disassembler::fields;
@@ -20,12 +21,14 @@ impl Interpreter {
         let rt = fields::rt(instruction);
         let rd = fields::rd(instruction);
         match r#fn {
-            MoveFromCoprocessor0 => self.mfc0(rt, rd),
-            MoveToCoprocessor0 => self.mtc0(rd, rt),
-            ErrorReturn => self.eret(instruction),
+            MoveFromCoprocessor0 => self.state.mfc0(rt, rd),
+            MoveToCoprocessor0 => self.state.mtc0(rd, rt),
+            ErrorReturn => self.state.eret(instruction),
         }
     }
+}
 
+impl InterpreterState {
     /// Stores the value of coprocessor 0 register `rd` in CPU register `rt`.
     fn mfc0(&mut self, rt: u8, rd: u8) -> Result<(), Exception> {
         let rd_value = match rd {

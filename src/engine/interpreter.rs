@@ -46,13 +46,13 @@ pub fn init_interpreter(
 /// Upon success, this returns the exit code. If the interpreter raises an [`Exception`], this wraps
 /// it in an [`Error`] and, if enabled in the config, prints the crash handler.
 ///
-/// [`Exception`]: crate::interpreter::Exception
+/// [`Exception`]: seaside_interpreter::Exception
 pub fn run(interpreter: &mut Interpreter) -> Result<Option<u8>> {
     match interpreter.run() {
-        Ok(()) => Ok(interpreter.exit_code),
+        Ok(()) => Ok(interpreter.state.exit_code),
         Err(exception) => {
             if interpreter.show_crash_handler {
-                interpreter.print_crash_handler();
+                interpreter.state.print_crash_handler();
             }
             Err(exception.into())
         }

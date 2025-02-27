@@ -1,4 +1,5 @@
-use super::super::{Exception, Interpreter};
+use super::super::{Exception, InterpreterState};
+use crate::Interpreter;
 use num_traits::FromPrimitive;
 use seaside_constants::fn_codes::Special2Fn;
 use seaside_disassembler::fields;
@@ -17,23 +18,25 @@ impl Interpreter {
         let rs = fields::rs(instruction);
         let rt = fields::rt(instruction);
         let rd = fields::rd(instruction);
-        let rs_value = self.registers.read_u32_from_cpu(rs)?;
-        let rt_value = self.registers.read_u32_from_cpu(rt)?;
+        let rs_value = self.state.registers.read_u32_from_cpu(rs)?;
+        let rt_value = self.state.registers.read_u32_from_cpu(rt)?;
         let r#fn = match Special2Fn::from_u8(fields::r#fn(instruction)) {
             Some(fn_code) => fn_code,
             None => return Err(Exception::ReservedInstruction),
         };
         match r#fn {
-            MultiplyAdd => self.madd(rt_value, rs_value),
-            MultiplyAddUnsigned => self.maddu(rt_value, rs_value),
-            Multiply => self.mul(rd, rs_value, rt_value),
-            MultiplySubtract => self.msub(rt_value, rs_value),
-            MultiplySubtractUnsigned => self.msubu(rt_value, rs_value),
-            CountLeadingZeroes => self.clz(rd, rs_value),
-            CountLeadingOnes => self.clo(rd, rs_value),
+            MultiplyAdd => self.state.madd(rt_value, rs_value),
+            MultiplyAddUnsigned => self.state.maddu(rt_value, rs_value),
+            Multiply => self.state.mul(rd, rs_value, rt_value),
+            MultiplySubtract => self.state.msub(rt_value, rs_value),
+            MultiplySubtractUnsigned => self.state.msubu(rt_value, rs_value),
+            CountLeadingZeroes => self.state.clz(rd, rs_value),
+            CountLeadingOnes => self.state.clo(rd, rs_value),
         }
     }
+}
 
+impl InterpreterState {
     /// Multiplies `rs_value` and `rt_value` as signed integers, adding the most significant word
     /// of the product to register `hi` and the least significant word to register `lo`.
     fn madd(&mut self, rt_value: u32, rs_value: u32) -> Result<(), Exception> {

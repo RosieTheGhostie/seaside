@@ -27,7 +27,6 @@ seaside-error = { version = "*", path = "crates/seaside-error" }
 seaside-int-utils = { version = "*", path = "crates/seaside-int-utils" }
 seaside-interpreter = { version = "*", path = "crates/seaside-interpreter" }
 seaside-type-aliases = { version = "*", path = "crates/seaside-type-aliases" }
-toml = "0.8"
 
 [dependencies.clap]
 version = "4.5"

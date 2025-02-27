@@ -1,4 +1,4 @@
-use super::{register_set::make_registers_format, RegisterSet};
+use super::RegisterSet;
 use num_traits::{FromPrimitive, ToPrimitive};
 use std::{
     io::{Error, ErrorKind},
@@ -71,5 +71,3 @@ impl RegisterSet for FloatingPointRegister {
         "f27", "f28", "f29", "f30", "f31",
     ];
 }
-
-make_registers_format!(FloatingPointRegister);

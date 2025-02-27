@@ -71,61 +71,53 @@ PROPERTIES: dict[int, bytes] = {
     0x01000002: b"\x00",  # delay_slot: bool
     0x01000003: b"\x01",  # freeable_heap_allocations: bool
     0x01000004: b"\x01",  # show_crash_handler: bool
-    # --- /features/assembler/ ---
-    0x01010000: b"\x00",  # pseudo_instructions: bool
-    # --- /features/assembler/directives/ ---
-    0x01010100: b"\x01",  # asciiz: bool
-    0x01010101: b"\x00",  # eqv: bool
-    0x01010102: b"\x01",  # global: bool
-    0x01010103: b"\x01",  # include: bool
-    0x01010104: b"\x00",  # macros: bool
-    0x01010105: b"\x00",  # set: bool
+    0x01000005: b"\x00",  # pseudo_instructions: bool
     # --- /features/syscalls/mars_print/ ---
-    0x01020100: u32(1),   # int: u32
-    0x01020101: u32(36),  # uint: u32
-    0x01020102: u32(35),  # bin: u32
-    0x01020103: u32(34),  # hex: u32
-    0x01020104: u32(2),   # float: u32
-    0x01020105: u32(3),   # double: u32
-    0x01020106: u32(11),  # char: u32
-    0x01020107: u32(4),   # string: u32
+    0x01010100: u32(1),   # int: u32
+    0x01010101: u32(36),  # uint: u32
+    0x01010102: u32(35),  # bin: u32
+    0x01010103: u32(34),  # hex: u32
+    0x01010104: u32(2),   # float: u32
+    0x01010105: u32(3),   # double: u32
+    0x01010106: u32(11),  # char: u32
+    0x01010107: u32(4),   # string: u32
     # --- /features/syscalls/mars_read/ ---
-    0x01020200: u32(5),   # int: u32
-    0x01020201: u32(6),   # float: u32
-    0x01020202: u32(7),   # double: u32
-    0x01020203: u32(12),  # char: u32
-    0x01020204: u32(8),   # string: u32
+    0x01010200: u32(5),   # int: u32
+    0x01010201: u32(6),   # float: u32
+    0x01010202: u32(7),   # double: u32
+    0x01010203: u32(12),  # char: u32
+    0x01010204: u32(8),   # string: u32
     # --- /features/syscalls/mars_file/ ---
-    0x01020300: u32(13),  # open: u32
-    0x01020301: u32(14),  # read: u32
-    0x01020302: u32(15),  # write: u32
-    0x01020303: u32(16),  # close: u32
+    0x01010300: u32(13),  # open: u32
+    0x01010301: u32(14),  # read: u32
+    0x01010302: u32(15),  # write: u32
+    0x01010303: u32(16),  # close: u32
     # --- /features/syscalls/mars_input_dialog/ ---
-    0x01020400: u32(50),  # confirm: u32
-    0x01020401: u32(51),  # int: u32
-    0x01020402: u32(52),  # float: u32
-    0x01020403: u32(53),  # double: u32
-    0x01020404: u32(54),  # string: u32
+    0x01010400: u32(50),  # confirm: u32
+    0x01010401: u32(51),  # int: u32
+    0x01010402: u32(52),  # float: u32
+    0x01010403: u32(53),  # double: u32
+    0x01010404: u32(54),  # string: u32
     # --- /features/syscalls/mars_message_dialog/ ---
-    0x01020500: u32(55),  # general: u32
-    0x01020501: u32(56),  # int: u32
-    0x01020502: u32(57),  # float: u32
-    0x01020503: u32(58),  # double: u32
-    0x01020504: u32(59),  # string: u32
+    0x01010500: u32(55),  # general: u32
+    0x01010501: u32(56),  # int: u32
+    0x01010502: u32(57),  # float: u32
+    0x01010503: u32(58),  # double: u32
+    0x01010504: u32(59),  # string: u32
     # --- /features/syscalls/mars_system/ ---
-    0x01020600: u32(9),   # sbrk: u32
-    0x01020601: u32(10),  # exit: u32
-    0x01020602: u32(17),  # exit_2: u32
-    0x01020603: u32(30),  # time: u32
-    0x01020604: u32(32),  # sleep: u32
-    0x01020605: u32(31),  # midi_out: u32
-    0x01020606: u32(33),  # midi_out_sync: u32
+    0x01010600: u32(9),   # sbrk: u32
+    0x01010601: u32(10),  # exit: u32
+    0x01010602: u32(17),  # exit_2: u32
+    0x01010603: u32(30),  # time: u32
+    0x01010604: u32(32),  # sleep: u32
+    0x01010605: u32(31),  # midi_out: u32
+    0x01010606: u32(33),  # midi_out_sync: u32
     # --- /features/syscalls/mars_random/ ---
-    0x01020700: u32(40),  # set_seed: u32
-    0x01020701: u32(41),  # rand_int: u32
-    0x01020702: u32(42),  # rand_int_range: u32
-    0x01020703: u32(43),  # rand_float: u32
-    0x01020704: u32(44),  # rand_double: u32
+    0x01010700: u32(40),  # set_seed: u32
+    0x01010701: u32(41),  # rand_int: u32
+    0x01010702: u32(42),  # rand_int_range: u32
+    0x01010703: u32(43),  # rand_float: u32
+    0x01010704: u32(44),  # rand_double: u32
     # --- /memory_map/ ---
     0x02000000: u32(0x80000180),  # exception_handler: Address
     # --- /memory_map/user_space/ ---

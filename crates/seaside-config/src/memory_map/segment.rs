@@ -1,8 +1,8 @@
 use super::{AddressRange, Contains, Overlapping};
+use seaside_int_utils::AllZeroes;
 use serde::{Deserialize, Serialize};
 
-/// Specifies the memory [`Address`][crate::type_aliases::Address]es associated with a given
-/// segment.
+/// Specifies the memory addresses associated with a given segment.
 #[derive(Serialize, Deserialize)]
 pub struct Segment {
     /// The inclusive range of addresses within this segment.
@@ -21,5 +21,14 @@ impl Contains<Segment> for AddressRange {
 impl Overlapping<Segment> for Segment {
     fn overlapping(&self, other: &Self) -> bool {
         self.address_range.overlapping(&other.address_range)
+    }
+}
+
+impl AllZeroes for Segment {
+    fn all_zeroes() -> Self {
+        Self {
+            address_range: AddressRange::all_zeroes(),
+            allocate: 0,
+        }
     }
 }

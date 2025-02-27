@@ -1,4 +1,5 @@
-use super::super::{memory::regions::Region, Exception, Interpreter};
+use super::super::{memory::regions::Region, Exception, InterpreterState};
+use crate::Interpreter;
 use num_traits::FromPrimitive;
 use seaside_constants::opcodes::Opcode;
 use seaside_disassembler::fields;
@@ -21,44 +22,72 @@ impl Interpreter {
         let rs = fields::rs(instruction);
         let rt = fields::rt(instruction);
         let imm = fields::imm(instruction);
-        let rs_value = self.registers.read_u32_from_cpu(rs)?;
-        let rt_value = self.registers.read_u32_from_cpu(rt)?;
+        let rs_value = self.state.registers.read_u32_from_cpu(rs)?;
+        let rt_value = self.state.registers.read_u32_from_cpu(rt)?;
         match opcode {
             RegisterImmediate => self.execute_regimm(rt, rs_value, imm),
-            BranchEqual => self.beq(rs_value, rt_value, imm),
-            BranchNotEqual => self.bne(rs_value, rt_value, imm),
-            BranchLessEqualZero => self.blez(rs_value, imm),
-            BranchGreaterThanZero => self.bgtz(rs_value, imm),
-            AddImmediate => self.addi(rt, rs_value, imm),
-            AddImmediateUnsigned => self.addiu(rt, rs_value, imm),
-            SetLessThanImmediate => self.slti(rt, rs_value, imm),
-            SetLessThanImmediateUnsigned => self.sltiu(rt, rs_value, imm),
-            AndImmediate => self.andi(rt, rs_value, imm),
-            OrImmediate => self.ori(rt, rs_value, imm),
-            XorImmediate => self.xori(rt, rs_value, imm),
-            LoadUpperImmediate => self.lui(rt, imm),
-            LoadByte => self.lb(rt, rs_value, imm),
-            LoadHalf => self.lh(rt, rs_value, imm),
-            LoadWordLeft => self.lwl(rt, rs_value, rt_value, imm),
-            LoadWord => self.lw(rt, rs_value, imm),
-            LoadByteUnsigned => self.lbu(rt, rs_value, imm),
-            LoadHalfUnsigned => self.lhu(rt, rs_value, imm),
-            LoadWordRight => self.lwr(rt, rs_value, rt_value, imm),
-            StoreByte => self.sb(rs_value, rt_value, imm),
-            StoreHalf => self.sh(rs_value, rt_value, imm),
-            StoreWordLeft => self.swl(rs_value, rt_value, imm),
-            StoreWord => self.sw(rs_value, rt_value, imm),
-            StoreConditional => self.sc(rt, rs_value, rt_value, imm),
-            StoreWordRight => self.swr(rs_value, rt_value, imm),
-            LoadLinked => self.ll(rt, rs_value, imm),
-            LoadWordCoprocessor1 => self.lwc1(rt, rs_value, imm),
-            LoadDoubleCoprocessor1 => self.ldc1(rt, rs_value, imm),
-            StoreWordCoprocessor1 => self.swc1(rt, rs_value, imm),
-            StoreDoubleCoprocessor1 => self.sdc1(rt, rs_value, imm),
+            BranchEqual => self.state.beq(rs_value, rt_value, imm),
+            BranchNotEqual => self.state.bne(rs_value, rt_value, imm),
+            BranchLessEqualZero => self.state.blez(rs_value, imm),
+            BranchGreaterThanZero => self.state.bgtz(rs_value, imm),
+            AddImmediate => self.state.addi(rt, rs_value, imm),
+            AddImmediateUnsigned => self.state.addiu(rt, rs_value, imm),
+            SetLessThanImmediate => self.state.slti(rt, rs_value, imm),
+            SetLessThanImmediateUnsigned => self.state.sltiu(rt, rs_value, imm),
+            AndImmediate => self.state.andi(rt, rs_value, imm),
+            OrImmediate => self.state.ori(rt, rs_value, imm),
+            XorImmediate => self.state.xori(rt, rs_value, imm),
+            LoadUpperImmediate => self.state.lui(rt, imm),
+            LoadByte => self.state.lb(rt, rs_value, imm),
+            LoadHalf => self.state.lh(rt, rs_value, imm),
+            LoadWordLeft => self.state.lwl(rt, rs_value, rt_value, imm),
+            LoadWord => self.state.lw(rt, rs_value, imm),
+            LoadByteUnsigned => self.state.lbu(rt, rs_value, imm),
+            LoadHalfUnsigned => self.state.lhu(rt, rs_value, imm),
+            LoadWordRight => self.state.lwr(rt, rs_value, rt_value, imm),
+            StoreByte => self.state.sb(rs_value, rt_value, imm),
+            StoreHalf => self.state.sh(rs_value, rt_value, imm),
+            StoreWordLeft => self.state.swl(rs_value, rt_value, imm),
+            StoreWord => self.state.sw(rs_value, rt_value, imm),
+            StoreConditional => self.state.sc(rt, rs_value, rt_value, imm),
+            StoreWordRight => self.state.swr(rs_value, rt_value, imm),
+            LoadLinked => self.state.ll(rt, rs_value, imm),
+            LoadWordCoprocessor1 => self.state.lwc1(rt, rs_value, imm),
+            LoadDoubleCoprocessor1 => self.state.ldc1(rt, rs_value, imm),
+            StoreWordCoprocessor1 => self.state.swc1(rt, rs_value, imm),
+            StoreDoubleCoprocessor1 => self.state.sdc1(rt, rs_value, imm),
             _ => Err(Exception::InterpreterFailure),
         }
     }
 
+    /// Executes an instruction following the "register immediate" instruction format:
+    ///
+    /// ```text
+    /// 000001 xxxxx xxxxx xxxxxxxxxxxxxxxx
+    /// opcode  $rs   fn         imm
+    /// ```
+    pub fn execute_regimm(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
+        use seaside_constants::fn_codes::RegisterImmediateFn::{self, *};
+        let r#fn = match RegisterImmediateFn::from_u8(rt) {
+            Some(r#fn) => r#fn,
+            None => return Err(Exception::ReservedInstruction),
+        };
+        match r#fn {
+            BranchLessThanZero => self.state.bltz(rs_value, imm, false),
+            BranchGreaterEqualZero => self.state.bgez(rs_value, imm, false),
+            TrapGreaterEqualImmediate => self.state.tgei(rs_value, imm),
+            TrapGreaterEqualImmediateUnsigned => self.state.tgeiu(rs_value, imm),
+            TrapLessThanImmediate => self.state.tlti(rs_value, imm),
+            TrapLessThanImmediateUnsigned => self.state.tltiu(rs_value, imm),
+            TrapEqualImmediate => self.state.teqi(rs_value, imm),
+            TrapNotEqualImmediate => self.state.tnei(rs_value, imm),
+            BranchLessThanZeroAndLink => self.state.bltz(rs_value, imm, true),
+            BranchGreaterEqualZeroAndLink => self.state.bgez(rs_value, imm, true),
+        }
+    }
+}
+
+impl InterpreterState {
     /// If `rs_value` is equal to `rt_value`, branches `offset` instructions ahead.
     fn beq(&mut self, rs_value: u32, rt_value: u32, offset: u16) -> Result<(), Exception> {
         if rs_value == rt_value {
@@ -413,32 +442,6 @@ impl Interpreter {
         let address = u32::wrapping_add_signed(rs_value, offset);
         let ft_value = self.registers.read_u64_from_fpu(ft)?;
         self.memory.write_u64(address, ft_value, true)
-    }
-
-    /// Executes an instruction following the "register immediate" instruction format:
-    ///
-    /// ```text
-    /// 000001 xxxxx xxxxx xxxxxxxxxxxxxxxx
-    /// opcode  $rs   fn         imm
-    /// ```
-    pub fn execute_regimm(&mut self, rt: u8, rs_value: u32, imm: u16) -> Result<(), Exception> {
-        use seaside_constants::fn_codes::RegisterImmediateFn::{self, *};
-        let r#fn = match RegisterImmediateFn::from_u8(rt) {
-            Some(r#fn) => r#fn,
-            None => return Err(Exception::ReservedInstruction),
-        };
-        match r#fn {
-            BranchLessThanZero => self.bltz(rs_value, imm, false),
-            BranchGreaterEqualZero => self.bgez(rs_value, imm, false),
-            TrapGreaterEqualImmediate => self.tgei(rs_value, imm),
-            TrapGreaterEqualImmediateUnsigned => self.tgeiu(rs_value, imm),
-            TrapLessThanImmediate => self.tlti(rs_value, imm),
-            TrapLessThanImmediateUnsigned => self.tltiu(rs_value, imm),
-            TrapEqualImmediate => self.teqi(rs_value, imm),
-            TrapNotEqualImmediate => self.tnei(rs_value, imm),
-            BranchLessThanZeroAndLink => self.bltz(rs_value, imm, true),
-            BranchGreaterEqualZeroAndLink => self.bgez(rs_value, imm, true),
-        }
     }
 
     /// If `rs_value` is negative, branches `offset` instructions ahead. Also performs a link if

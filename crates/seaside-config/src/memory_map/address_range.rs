@@ -1,4 +1,5 @@
 use super::{Contains, Overlapping};
+use seaside_int_utils::AllZeroes;
 use seaside_type_aliases::Address;
 use serde::{Deserialize, Serialize};
 
@@ -24,5 +25,14 @@ impl Contains<Address> for AddressRange {
 impl Contains<AddressRange> for AddressRange {
     fn contains(&self, other: &AddressRange) -> bool {
         self.base <= other.base && other.limit <= self.limit
+    }
+}
+
+impl AllZeroes for AddressRange {
+    fn all_zeroes() -> Self {
+        Self {
+            base: 0x00000000,
+            limit: 0x00000000,
+        }
     }
 }

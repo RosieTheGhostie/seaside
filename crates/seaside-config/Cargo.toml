@@ -11,11 +11,8 @@ path = "src/lib.rs"
 
 [dependencies]
 anyhow = "1.0"
-bitflags = "2.8"
 clap = "4.5"
-convert_case = "0.7"
 num-traits = "0.2"
-seaside-bitflags-addons = { version = "*", path = "../seaside-bitflags-addons" }
 seaside-error = { version = "*", path = "../seaside-error" }
 seaside-int-utils = { version = "*", path = "../seaside-int-utils" }
 seaside-type-aliases = { version = "*", path = "../seaside-type-aliases" }

@@ -1,4 +1,4 @@
-use super::{register_set::make_registers_format, RegisterSet};
+use super::RegisterSet;
 use num_traits::{FromPrimitive, ToPrimitive};
 use std::{
     io::{Error, ErrorKind},
@@ -194,5 +194,3 @@ impl RegisterSet for Coprocessor0Register {
     const NUM_REGISTERS: usize = 4;
     const REGISTER_NAMES: &'static [&'static str] = &["vaddr", "status", "cause", "epc"];
 }
-
-make_registers_format!(Coprocessor0Register);

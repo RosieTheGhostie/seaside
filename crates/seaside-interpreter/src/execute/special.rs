@@ -1,4 +1,5 @@
-use super::super::{Exception, Interpreter};
+use super::super::{Exception, InterpreterState};
+use crate::Interpreter;
 use num_traits::FromPrimitive;
 use seaside_constants::fn_codes::SpecialFn;
 use seaside_disassembler::fields;
@@ -17,54 +18,56 @@ impl Interpreter {
         let rs = fields::rs(instruction);
         let rt = fields::rt(instruction);
         let rd = fields::rd(instruction);
-        let rs_value = self.registers.read_u32_from_cpu(rs)?;
-        let rt_value = self.registers.read_u32_from_cpu(rt)?;
+        let rs_value = self.state.registers.read_u32_from_cpu(rs)?;
+        let rt_value = self.state.registers.read_u32_from_cpu(rt)?;
         let shamt = fields::shamt(instruction);
         let r#fn = match SpecialFn::from_u8(fields::r#fn(instruction)) {
             Some(fn_code) => fn_code,
             None => return Err(Exception::ReservedInstruction),
         };
         match r#fn {
-            ShiftLeftLogical => self.sll(rd, rt_value, shamt),
-            MoveConditional => self.movc(rt, rd, rs_value),
-            ShiftRightLogical => self.srl(rd, rt_value, shamt),
-            ShiftRightArithmetic => self.sra(rd, rt_value, shamt),
-            ShiftLeftLogicalVariable => self.sllv(rd, rs_value, rt_value),
-            ShiftRightLogicalVariable => self.srlv(rd, rs_value, rt_value),
-            ShiftRightArithmeticVariable => self.srav(rd, rs_value, rt_value),
-            JumpRegister => self.jr(rs_value),
-            JumpAndLinkRegister => self.jalr(rd, rs_value),
-            MoveZero => self.movz(rd, rs_value, rt_value),
-            MoveNotZero => self.movn(rd, rs_value, rt_value),
+            ShiftLeftLogical => self.state.sll(rd, rt_value, shamt),
+            MoveConditional => self.state.movc(rt, rd, rs_value),
+            ShiftRightLogical => self.state.srl(rd, rt_value, shamt),
+            ShiftRightArithmetic => self.state.sra(rd, rt_value, shamt),
+            ShiftLeftLogicalVariable => self.state.sllv(rd, rs_value, rt_value),
+            ShiftRightLogicalVariable => self.state.srlv(rd, rs_value, rt_value),
+            ShiftRightArithmeticVariable => self.state.srav(rd, rs_value, rt_value),
+            JumpRegister => self.state.jr(rs_value),
+            JumpAndLinkRegister => self.state.jalr(rd, rs_value),
+            MoveZero => self.state.movz(rd, rs_value, rt_value),
+            MoveNotZero => self.state.movn(rd, rs_value, rt_value),
             SystemCall => self.syscall(),
-            Break => self.r#break(),
-            MoveFromHigh => self.mfhi(rd),
-            MoveToHigh => self.mthi(rs_value),
-            MoveFromLow => self.mflo(rd),
-            MoveToLow => self.mtlo(rs_value),
-            Multiply => self.mult(rs_value, rt_value),
-            MultiplyUnsigned => self.multu(rs_value, rt_value),
-            Divide => self.div(rs_value, rt_value),
-            DivideUnsigned => self.divu(rs_value, rt_value),
-            Add => self.add(rd, rs_value, rt_value),
-            AddUnsigned => self.addu(rd, rs_value, rt_value),
-            Subtract => self.sub(rd, rs_value, rt_value),
-            SubtractUnsigned => self.subu(rd, rs_value, rt_value),
-            And => self.and(rd, rs_value, rt_value),
-            Or => self.or(rd, rs_value, rt_value),
-            Xor => self.xor(rd, rs_value, rt_value),
-            Nor => self.nor(rd, rs_value, rt_value),
-            SetLessThan => self.slt(rd, rs_value, rt_value),
-            SetLessThanUnsigned => self.sltu(rd, rs_value, rt_value),
-            TrapGreaterEqual => self.tge(rs_value, rt_value),
-            TrapGreaterEqualUnsigned => self.tgeu(rs_value, rt_value),
-            TrapLessThan => self.tlt(rs_value, rt_value),
-            TrapLessThanUnsigned => self.tltu(rs_value, rt_value),
-            TrapEqual => self.teq(rs_value, rt_value),
-            TrapNotEqual => self.tne(rs_value, rt_value),
+            Break => self.state.r#break(),
+            MoveFromHigh => self.state.mfhi(rd),
+            MoveToHigh => self.state.mthi(rs_value),
+            MoveFromLow => self.state.mflo(rd),
+            MoveToLow => self.state.mtlo(rs_value),
+            Multiply => self.state.mult(rs_value, rt_value),
+            MultiplyUnsigned => self.state.multu(rs_value, rt_value),
+            Divide => self.state.div(rs_value, rt_value),
+            DivideUnsigned => self.state.divu(rs_value, rt_value),
+            Add => self.state.add(rd, rs_value, rt_value),
+            AddUnsigned => self.state.addu(rd, rs_value, rt_value),
+            Subtract => self.state.sub(rd, rs_value, rt_value),
+            SubtractUnsigned => self.state.subu(rd, rs_value, rt_value),
+            And => self.state.and(rd, rs_value, rt_value),
+            Or => self.state.or(rd, rs_value, rt_value),
+            Xor => self.state.xor(rd, rs_value, rt_value),
+            Nor => self.state.nor(rd, rs_value, rt_value),
+            SetLessThan => self.state.slt(rd, rs_value, rt_value),
+            SetLessThanUnsigned => self.state.sltu(rd, rs_value, rt_value),
+            TrapGreaterEqual => self.state.tge(rs_value, rt_value),
+            TrapGreaterEqualUnsigned => self.state.tgeu(rs_value, rt_value),
+            TrapLessThan => self.state.tlt(rs_value, rt_value),
+            TrapLessThanUnsigned => self.state.tltu(rs_value, rt_value),
+            TrapEqual => self.state.teq(rs_value, rt_value),
+            TrapNotEqual => self.state.tne(rs_value, rt_value),
         }
     }
+}
 
+impl InterpreterState {
     /// Shifts `rt_value` left by `shamt` bits and stores the result in CPU register `rd`.
     fn sll(&mut self, rd: u8, rt_value: u32, shamt: u8) -> Result<(), Exception> {
         self.registers.write_u32_to_cpu(rd, rt_value << shamt)

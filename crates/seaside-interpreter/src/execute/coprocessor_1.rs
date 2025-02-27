@@ -1,4 +1,5 @@
-use super::super::{Exception, Interpreter};
+use super::super::{Exception, InterpreterState};
+use crate::Interpreter;
 use num_traits::{FromPrimitive, Zero};
 use seaside_constants::{fn_codes::Coprocessor1Fn, number_fmt::NumberFormat};
 use seaside_disassembler::fields;
@@ -34,7 +35,7 @@ impl Interpreter {
         let fd = fields::fd(instruction);
         let fmt = fields::fmt(instruction);
         if fmt == 8 {
-            return self.bc1c(ft, instruction);
+            return self.state.bc1c(ft, instruction);
         }
         let r#fn = match Coprocessor1Fn::from_u8(fields::r#fn(instruction)) {
             Some(r#fn) => r#fn,
@@ -44,12 +45,12 @@ impl Interpreter {
             Some(Single) => self.execute_coprocessor_1_single(ft, fs, fd, r#fn),
             Some(Double) => self.execute_coprocessor_1_double(ft, fs, fd, r#fn),
             Some(Word) => self.execute_coprocessor_1_word(fs, fd, r#fn),
-            Some(SingleNoPrefix) if r#fn == Coprocessor1Fn::Add => {
-                self.mfc1(ft, self.registers.read_f32_from_fpu(fd)?)
-            }
-            Some(WordNoPrefix) if r#fn == Coprocessor1Fn::Add => {
-                self.mtc1(fd, self.registers.read_u32_from_cpu(ft)?)
-            }
+            Some(SingleNoPrefix) if r#fn == Coprocessor1Fn::Add => self
+                .state
+                .mfc1(ft, self.state.registers.read_f32_from_fpu(fd)?),
+            Some(WordNoPrefix) if r#fn == Coprocessor1Fn::Add => self
+                .state
+                .mtc1(fd, self.state.registers.read_u32_from_cpu(ft)?),
             _ => Err(Exception::ReservedInstruction),
         }
     }
@@ -64,30 +65,30 @@ impl Interpreter {
         r#fn: Coprocessor1Fn,
     ) -> Result<(), Exception> {
         use Coprocessor1Fn::*;
-        let ft_value = self.registers.read_f32_from_fpu(ft)?;
-        let fs_value = self.registers.read_f32_from_fpu(fs)?;
+        let ft_value = self.state.registers.read_f32_from_fpu(ft)?;
+        let fs_value = self.state.registers.read_f32_from_fpu(fs)?;
         match r#fn {
-            Add => self.add_s(fd, fs_value, ft_value),
-            Subtract => self.sub_s(fd, fs_value, ft_value),
-            Multiply => self.mul_s(fd, fs_value, ft_value),
-            Divide => self.div_s(fd, fs_value, ft_value),
-            SquareRoot => self.sqrt_s(fd, fs_value),
-            AbsoluteValue => self.abs_s(fd, fs_value),
-            Move => self.mov_s(fd, fs_value),
-            Negate => self.neg_s(fd, fs_value),
-            RoundWord => self.round_w_s(fd, fs_value),
-            TruncateWord => self.trunc_w_s(fd, fs_value),
-            CeilingWord => self.ceil_w_s(fd, fs_value),
-            FloorWord => self.floor_w_s(fd, fs_value),
-            MoveConditional => self.movc_s(fd, ft, fs_value),
-            MoveZero => self.movz_s(fd, ft, fs_value),
-            MoveNotZero => self.movn_s(fd, ft, fs_value),
+            Add => self.state.add_s(fd, fs_value, ft_value),
+            Subtract => self.state.sub_s(fd, fs_value, ft_value),
+            Multiply => self.state.mul_s(fd, fs_value, ft_value),
+            Divide => self.state.div_s(fd, fs_value, ft_value),
+            SquareRoot => self.state.sqrt_s(fd, fs_value),
+            AbsoluteValue => self.state.abs_s(fd, fs_value),
+            Move => self.state.mov_s(fd, fs_value),
+            Negate => self.state.neg_s(fd, fs_value),
+            RoundWord => self.state.round_w_s(fd, fs_value),
+            TruncateWord => self.state.trunc_w_s(fd, fs_value),
+            CeilingWord => self.state.ceil_w_s(fd, fs_value),
+            FloorWord => self.state.floor_w_s(fd, fs_value),
+            MoveConditional => self.state.movc_s(fd, ft, fs_value),
+            MoveZero => self.state.movz_s(fd, ft, fs_value),
+            MoveNotZero => self.state.movn_s(fd, ft, fs_value),
             ConvertToSingle => Err(Exception::ReservedInstruction),
-            ConvertToDouble => self.cvt_d_s(fd, fs_value),
-            ConvertToWord => self.cvt_w_s(fd, fs_value),
-            CompareEqual => self.c_eq_s(fd, fs_value, ft_value),
-            CompareLessThan => self.c_lt_s(fd, fs_value, ft_value),
-            CompareLessEqual => self.c_le_s(fd, fs_value, ft_value),
+            ConvertToDouble => self.state.cvt_d_s(fd, fs_value),
+            ConvertToWord => self.state.cvt_w_s(fd, fs_value),
+            CompareEqual => self.state.c_eq_s(fd, fs_value, ft_value),
+            CompareLessThan => self.state.c_lt_s(fd, fs_value, ft_value),
+            CompareLessEqual => self.state.c_le_s(fd, fs_value, ft_value),
         }
     }
 
@@ -101,30 +102,30 @@ impl Interpreter {
         r#fn: Coprocessor1Fn,
     ) -> Result<(), Exception> {
         use Coprocessor1Fn::*;
-        let ft_value = self.registers.read_f64_from_fpu(ft)?;
-        let fs_value = self.registers.read_f64_from_fpu(fs)?;
+        let ft_value = self.state.registers.read_f64_from_fpu(ft)?;
+        let fs_value = self.state.registers.read_f64_from_fpu(fs)?;
         match r#fn {
-            Add => self.add_d(fd, fs_value, ft_value),
-            Subtract => self.sub_d(fd, fs_value, ft_value),
-            Multiply => self.mul_d(fd, fs_value, ft_value),
-            Divide => self.div_d(fd, fs_value, ft_value),
-            SquareRoot => self.sqrt_d(fd, fs_value),
-            AbsoluteValue => self.abs_d(fd, fs_value),
-            Move => self.mov_d(fd, fs_value),
-            Negate => self.neg_d(fd, fs_value),
-            RoundWord => self.round_w_d(fd, fs_value),
-            TruncateWord => self.trunc_w_d(fd, fs_value),
-            CeilingWord => self.ceil_w_d(fd, fs_value),
-            FloorWord => self.floor_w_d(fd, fs_value),
-            MoveConditional => self.movc_d(fd, ft, fs_value),
-            MoveZero => self.movz_d(fd, ft, fs_value),
-            MoveNotZero => self.movn_d(fd, ft, fs_value),
-            ConvertToSingle => self.cvt_s_d(fd, fs_value),
+            Add => self.state.add_d(fd, fs_value, ft_value),
+            Subtract => self.state.sub_d(fd, fs_value, ft_value),
+            Multiply => self.state.mul_d(fd, fs_value, ft_value),
+            Divide => self.state.div_d(fd, fs_value, ft_value),
+            SquareRoot => self.state.sqrt_d(fd, fs_value),
+            AbsoluteValue => self.state.abs_d(fd, fs_value),
+            Move => self.state.mov_d(fd, fs_value),
+            Negate => self.state.neg_d(fd, fs_value),
+            RoundWord => self.state.round_w_d(fd, fs_value),
+            TruncateWord => self.state.trunc_w_d(fd, fs_value),
+            CeilingWord => self.state.ceil_w_d(fd, fs_value),
+            FloorWord => self.state.floor_w_d(fd, fs_value),
+            MoveConditional => self.state.movc_d(fd, ft, fs_value),
+            MoveZero => self.state.movz_d(fd, ft, fs_value),
+            MoveNotZero => self.state.movn_d(fd, ft, fs_value),
+            ConvertToSingle => self.state.cvt_s_d(fd, fs_value),
             ConvertToDouble => Err(Exception::ReservedInstruction),
-            ConvertToWord => self.cvt_w_d(fd, fs_value),
-            CompareEqual => self.c_eq_d(fd, fs_value, ft_value),
-            CompareLessThan => self.c_lt_d(fd, fs_value, ft_value),
-            CompareLessEqual => self.c_le_d(fd, fs_value, ft_value),
+            ConvertToWord => self.state.cvt_w_d(fd, fs_value),
+            CompareEqual => self.state.c_eq_d(fd, fs_value, ft_value),
+            CompareLessThan => self.state.c_lt_d(fd, fs_value, ft_value),
+            CompareLessEqual => self.state.c_le_d(fd, fs_value, ft_value),
         }
     }
 
@@ -137,14 +138,16 @@ impl Interpreter {
         r#fn: Coprocessor1Fn,
     ) -> Result<(), Exception> {
         use Coprocessor1Fn::*;
-        let fs_value = self.registers.read_i32_from_fpu(fs)?;
+        let fs_value = self.state.registers.read_i32_from_fpu(fs)?;
         match r#fn {
-            ConvertToSingle => self.cvt_s_w(fd, fs_value),
-            ConvertToDouble => self.cvt_d_w(fd, fs_value),
+            ConvertToSingle => self.state.cvt_s_w(fd, fs_value),
+            ConvertToDouble => self.state.cvt_d_w(fd, fs_value),
             _ => Err(Exception::ReservedInstruction),
         }
     }
+}
 
+impl InterpreterState {
     /// Adds `fs_value` and `ft_value`, storing the sum in FPU register `fd`.
     fn add_s(&mut self, fd: u8, fs_value: f32, ft_value: f32) -> Result<(), Exception> {
         self.registers.write_f32_to_fpu(fd, fs_value + ft_value)

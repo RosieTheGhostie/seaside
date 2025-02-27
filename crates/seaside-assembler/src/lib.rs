@@ -42,10 +42,9 @@ pub struct Assembler<'source> {
 impl<'source> Assembler<'source> {
     pub fn init(config: &Config, source: &'source str) -> Self {
         let endian = config.endian;
-        let directives = config.features.assembler.directives;
         let segments = &config.memory_map.segments;
         Self {
-            parser: Parser::new(Token::lexer(source), directives),
+            parser: Parser::new(Token::lexer(source)),
             segments: [
                 SegmentBuildInfo::new(segments.data.address_range.base),
                 SegmentBuildInfo::new(segments.r#extern.address_range.base),

@@ -1,20 +1,3 @@
-macro_rules! if_enabled {
-    ($self:ident, $directive:ident ($directive_repr:literal) => $callback:expr) => {
-        if $self
-            .special_directives
-            .intersects(seaside_config::features::assembler::SpecialDirectives::$directive)
-        {
-            $callback
-        } else {
-            Err(anyhow::Error::new(
-                $crate::parser::ParseError::DirectiveDisabled,
-            ))
-            .with_context(|| format!("{} is disabled in the config", $directive_repr))
-        }
-    };
-}
-pub(crate) use if_enabled;
-
 macro_rules! assert_token {
     ($self:ident, $variant:ident) => {
         match $self.next_token() {
