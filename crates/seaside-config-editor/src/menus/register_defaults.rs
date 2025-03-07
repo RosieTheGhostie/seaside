@@ -1,7 +1,15 @@
+use crate::Editable;
 use cursive::Cursive;
+use seaside_config::register_defaults::Registers;
 
-pub fn general_purpose(_siv: &mut Cursive) {}
+impl Editable<'g'> for Registers<32> {
+    fn menu(siv: &mut Cursive) {}
+}
 
-pub fn coprocessor_0(_siv: &mut Cursive) {}
+impl Editable<'0'> for Registers<4> {
+    fn menu(siv: &mut Cursive) {}
+}
 
-pub fn coprocessor_1(_siv: &mut Cursive) {}
+impl Editable<'1'> for Registers<32> {
+    fn menu(siv: &mut Cursive) {}
+}

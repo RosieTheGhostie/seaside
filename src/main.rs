@@ -67,6 +67,6 @@ fn print_exe_path() -> Result<(), Error> {
 #[cfg(debug_assertions)]
 fn experimental_code() -> Result<()> {
     // minimal_logging::macros::warnln!("no experimental code to run");
-    seaside_config_editor::new_editor().run();
+    seaside_config_editor::new_editor(None)?.run();
     Ok(())
 }

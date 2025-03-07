@@ -1,16 +1,26 @@
-mod editable_config;
+mod editable;
+mod macros;
 mod menus;
 mod seaside_version;
 
+pub(crate) use editable::{Config, Editable};
 pub(crate) use seaside_version::SeasideVersion;
 
+use anyhow::Result;
 use cursive::{event::Key, menu::Tree, theme::Theme, Cursive, CursiveRunnable};
-use editable_config::EditableConfig;
+use menus::{home, save, save_as};
+use seaside_config::{
+    features::Syscalls, register_defaults::Registers, Config as SeasideConfig, Features, MemoryMap,
+};
 
-pub fn new_editor() -> CursiveRunnable {
+pub fn new_editor(config: Option<SeasideConfig>) -> Result<CursiveRunnable> {
     let mut siv = cursive::default();
     siv.set_theme(Theme::terminal_default());
-    siv.set_user_data(EditableConfig::default());
+    let editable_config: Config = match config {
+        Some(config) => config.try_into()?,
+        None => Config::default(),
+    };
+    siv.set_user_data(editable_config);
 
     // --- Callbacks ---
     siv.add_global_callback(Key::Esc, Cursive::select_menubar);
@@ -22,30 +32,30 @@ pub fn new_editor() -> CursiveRunnable {
         .add_subtree(
             "File",
             Tree::new()
-                .leaf("Save", move |_| {})
-                .leaf("Save as", move |_| {})
+                .leaf("Save", save)
+                .leaf("Save as", save_as)
                 .delimiter()
                 .leaf("Quit", Cursive::quit),
         )
-        .add_leaf("General", menus::general)
+        .add_leaf("General", Config::menu)
         .add_subtree(
             "Features",
             Tree::new()
-                .leaf("General", menus::features::general)
-                .leaf("Syscalls", menus::features::syscalls),
+                .leaf("General", Features::menu)
+                .leaf("Syscalls", Syscalls::menu),
         )
-        .add_leaf("Memory Map", menus::memory_map)
+        .add_leaf("Memory Map", MemoryMap::menu)
         .add_subtree(
             "Register Defaults",
             Tree::new()
-                .leaf("General Purpose", menus::register_defaults::general_purpose)
-                .leaf("Cop. 0", menus::register_defaults::coprocessor_0)
-                .leaf("Cop. 1", menus::register_defaults::coprocessor_1),
+                .leaf("General Purpose", <Registers<32> as Editable<'g'>>::menu)
+                .leaf("Cop. 0", <Registers<4> as Editable<'0'>>::menu)
+                .leaf("Cop. 1", <Registers<32> as Editable<'1'>>::menu),
         );
     siv.set_autohide_menu(false);
 
     // --- Layers ---
-    menus::home(&mut siv);
+    home(&mut siv);
 
-    siv
+    Ok(siv)
 }

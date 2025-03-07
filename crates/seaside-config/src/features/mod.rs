@@ -1,12 +1,14 @@
 pub mod syscalls;
 
-use crate::{EditFromBinary, FromBinary, ToBinary, Validate};
+pub use syscalls::Syscalls;
+
+use crate::{prefixed, EditFromBinary, FromBinary, ToBinary, Validate};
 use anyhow::{anyhow, Result};
 use seaside_int_utils::AllZeroes;
 use std::io::{Read, Write};
-use syscalls::Syscalls;
 
 /// Customizes the features available to the seaside engine.
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct Features {
     /// Allow users to provide code and/or data relating to kernel space.
     pub kernel_space_accessible: bool,
@@ -70,19 +72,17 @@ impl EditFromBinary<1> for Features {
 
 impl ToBinary<1> for Features {
     fn to_binary<W: Write>(&self, stream: &mut W) -> Result<()> {
-        use crate::properties::prefixed::features::*;
-
-        KERNEL_SPACE_ACCESSIBLE.to_binary(stream)?;
+        prefixed!(features[KERNEL_SPACE_ACCESSIBLE]).to_binary(stream)?;
         self.kernel_space_accessible.to_binary(stream)?;
-        SELF_MODIFYING_CODE.to_binary(stream)?;
+        prefixed!(features[SELF_MODIFYING_CODE]).to_binary(stream)?;
         self.self_modifying_code.to_binary(stream)?;
-        DELAY_SLOT.to_binary(stream)?;
+        prefixed!(features[DELAY_SLOT]).to_binary(stream)?;
         self.delay_slot.to_binary(stream)?;
-        FREEABLE_HEAP_ALLOCATIONS.to_binary(stream)?;
+        prefixed!(features[FREEABLE_HEAP_ALLOCATIONS]).to_binary(stream)?;
         self.freeable_heap_allocations.to_binary(stream)?;
-        SHOW_CRASH_HANDLER.to_binary(stream)?;
+        prefixed!(features[SHOW_CRASH_HANDLER]).to_binary(stream)?;
         self.show_crash_handler.to_binary(stream)?;
-        PSEUDO_INSTRUCTIONS.to_binary(stream)?;
+        prefixed!(features[PSEUDO_INSTRUCTIONS]).to_binary(stream)?;
         self.pseudo_instructions.to_binary(stream)?;
         self.syscalls.to_binary(stream)
     }

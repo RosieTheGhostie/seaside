@@ -1,3 +1,4 @@
+use anyhow::{anyhow, Error};
 use num_derive::{FromPrimitive as FromPrimitiveMacro, ToPrimitive as ToPrimitiveMacro};
 use num_traits::FromPrimitive;
 use semver::Version;
@@ -78,5 +79,23 @@ impl Sub<isize> for SeasideVersion {
 impl SubAssign<isize> for SeasideVersion {
     fn sub_assign(&mut self, rhs: isize) {
         *self = *self - rhs;
+    }
+}
+
+impl TryFrom<Version> for SeasideVersion {
+    type Error = Error;
+
+    fn try_from(value: Version) -> Result<Self, Self::Error> {
+        use SeasideVersion::*;
+
+        Ok(match (value.major, value.minor, value.patch) {
+            (1, 2, 0) => V1_2_0,
+            (1, 1, 0) => V1_1_0,
+            (1, 0, 3) => V1_0_3,
+            (1, 0, 2) => V1_0_2,
+            (1, 0, 1) => V1_0_1,
+            (1, 0, 0) => V1_0_0,
+            _ => return Err(anyhow!("{value} is not a known version of seaside")),
+        })
     }
 }

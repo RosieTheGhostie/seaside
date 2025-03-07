@@ -89,7 +89,9 @@ impl FromBinary for Config {
 
 impl EditFromBinary<1> for Config {
     fn edit_from_binary<R: Read>(&mut self, ids: [u8; 4], stream: &mut R) -> Result<()> {
-        use crate::properties::*;
+        use crate::properties::{
+            features, memory_map, register_defaults, ENDIAN, PROJECT_DIRECTORY_IS_CWD, VERSION,
+        };
 
         match (ids[0], ids[3]) {
             (0x00, VERSION) => self.version = Version::from_binary(stream)?,
@@ -120,17 +122,15 @@ impl EditFromBinary<1> for Config {
 
 impl ToBinary<1> for Config {
     fn to_binary<W: Write>(&self, stream: &mut W) -> Result<()> {
-        use properties::prefixed::*;
-
         stream.write(&[
             b's', b'e', b'a', b's', b'i', b'd', b'e', 0, // magic
             1, 0, 0, 0, // version
         ])?;
-        stream.write(&VERSION.to_le_bytes())?;
+        stream.write(&prefixed!(_[VERSION]).to_le_bytes())?;
         self.version.to_binary(stream)?;
-        stream.write(&ENDIAN.to_le_bytes())?;
+        stream.write(&prefixed!(_[ENDIAN]).to_le_bytes())?;
         self.endian.to_binary(stream)?;
-        stream.write(&PROJECT_DIRECTORY_IS_CWD.to_le_bytes())?;
+        stream.write(&prefixed!(_[PROJECT_DIRECTORY_IS_CWD]).to_le_bytes())?;
         self.project_directory_is_cwd.to_binary(stream)?;
         self.features.to_binary(stream)?;
         self.memory_map.to_binary(stream)?;

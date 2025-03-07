@@ -3,6 +3,7 @@ use seaside_int_utils::AllZeroes;
 use seaside_type_aliases::Address;
 
 /// An inclusive range of [`Address`]es.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct AddressRange {
     pub base: Address,
     pub limit: Address,
@@ -34,3 +35,13 @@ impl AllZeroes for AddressRange {
         }
     }
 }
+
+macro_rules! address_range {
+    [$base:literal..$limit:literal] => {
+        $crate::memory_map::AddressRange { base: $base, limit: $limit + 1 }
+    };
+    [$base:literal..=$limit:literal] => {
+        $crate::memory_map::AddressRange { base: $base, limit: $limit }
+    };
+}
+pub(crate) use address_range;

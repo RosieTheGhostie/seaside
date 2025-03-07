@@ -882,6 +882,7 @@ dependencies = [
  "anyhow",
  "clap",
  "num-traits",
+ "seaside-constants",
  "seaside-error",
  "seaside-int-utils",
  "seaside-type-aliases",
@@ -892,9 +893,11 @@ dependencies = [
 name = "seaside-config-editor"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "cursive",
  "num-derive",
  "num-traits",
+ "seaside-config",
  "seaside-int-utils",
  "semver",
  "strum",

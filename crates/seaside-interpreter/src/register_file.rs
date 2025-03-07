@@ -152,7 +152,7 @@ impl RegisterFile {
         register_file.hi = register_defaults.hi;
         register_file.lo = register_defaults.lo;
         for i in 0..32 {
-            let x = f32::from_bits(register_defaults.floating_point[i]);
+            let x = f32::from_bits(register_defaults.coprocessor_1[i]);
             let _ = register_file.write_f32_to_fpu(i as u8, x);
         }
         register_file.vaddr = register_defaults.coprocessor_0[0];

@@ -4,9 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0"
 cursive = "0.21"
 num-traits = "0.2"
 num-derive = "0.4"
+seaside-config = { version = "*", path = "../seaside-config" }
 seaside-int-utils = { version = "*", features = [
 	"endian",
 ], path = "../seaside-int-utils" }

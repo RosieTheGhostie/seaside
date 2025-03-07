@@ -13,6 +13,7 @@ path = "src/lib.rs"
 anyhow = "1.0"
 clap = "4.5"
 num-traits = "0.2"
+seaside-constants = { version = "*", path = "../seaside-constants" }
 seaside-error = { version = "*", path = "../seaside-error" }
 seaside-int-utils = { version = "*", features = [
 	"all_zeroes",

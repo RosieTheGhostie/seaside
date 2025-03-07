@@ -1,4 +1,4 @@
-use crate::{syscall_id, EditFromBinary, ToBinary, Validate};
+use crate::{prefix, service_id, EditFromBinary, ToBinary, Validate};
 use anyhow::{anyhow, Error, Result};
 use seaside_error::EngineError;
 use seaside_int_utils::AllZeroes;
@@ -7,15 +7,16 @@ use std::{
     io::{Read, Write},
 };
 
-/// Controls which syscalls are available to the seaside engine.
+/// Controls which system services are available to the seaside engine.
 ///
 /// If a program requests a disabled service, a `SyscallFailure` exception will be raised.
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct Syscalls(HashMap<u16, u32>);
 
 impl Validate for Syscalls {
     fn validate(&self) -> Result<()> {
-        if self.0.contains_key(&syscall_id!(mars_system[EXIT]))
-            || self.0.contains_key(&syscall_id!(mars_system[EXIT_2]))
+        if self.0.contains_key(&service_id!(mars_system[EXIT]))
+            || self.0.contains_key(&service_id!(mars_system[EXIT_2]))
         {
             Ok(())
         } else {
@@ -49,7 +50,7 @@ impl EditFromBinary<1> for Syscalls {
 
 impl ToBinary<1> for Syscalls {
     fn to_binary<W: Write>(&self, stream: &mut W) -> Result<()> {
-        let mut id_buffer = crate::properties::features::syscalls::PREFIX.to_le_bytes();
+        let mut id_buffer = prefix!(features::syscalls).to_le_bytes();
         for (&id, &service_code) in self.iter() {
             [id_buffer[0], id_buffer[1]] = id.to_le_bytes();
             stream.write(&id_buffer)?;

@@ -5,6 +5,7 @@ use super::{
 use seaside_int_utils::AllZeroes;
 
 /// Specifies the memory addresses associated with the heap and stack.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct RuntimeData {
     /// The inclusive range of addresses within this segment.
     pub address_range: AddressRange,
