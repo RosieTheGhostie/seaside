@@ -1,6 +1,6 @@
 use std::{
     fs::File,
-    io::{stderr, stdin, stdout, Error, ErrorKind, Read, Result, Stderr, Stdin, Stdout, Write},
+    io::{Error, ErrorKind, Read, Result, Stderr, Stdin, Stdout, Write, stderr, stdin, stdout},
 };
 
 pub enum FileHandle {
@@ -13,8 +13,8 @@ pub enum FileHandle {
 impl Read for FileHandle {
     fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
         match self {
-            Self::Stdin(ref mut stdin) => stdin.read(buf),
-            Self::File(ref mut file) => file.read(buf),
+            Self::Stdin(stdin) => stdin.read(buf),
+            Self::File(file) => file.read(buf),
             _ => Err(Error::from(ErrorKind::PermissionDenied)),
         }
     }
@@ -23,18 +23,18 @@ impl Read for FileHandle {
 impl Write for FileHandle {
     fn write(&mut self, buf: &[u8]) -> Result<usize> {
         match self {
-            Self::Stdout(ref mut stdout) => stdout.write(buf),
-            Self::Stderr(ref mut stderr) => stderr.write(buf),
-            Self::File(ref mut file) => file.write(buf),
+            Self::Stdout(stdout) => stdout.write(buf),
+            Self::Stderr(stderr) => stderr.write(buf),
+            Self::File(file) => file.write(buf),
             _ => Err(Error::from(ErrorKind::PermissionDenied)),
         }
     }
 
     fn flush(&mut self) -> Result<()> {
         match self {
-            Self::Stdout(ref mut stdout) => stdout.flush(),
-            Self::Stderr(ref mut stderr) => stderr.flush(),
-            Self::File(ref mut file) => file.flush(),
+            Self::Stdout(stdout) => stdout.flush(),
+            Self::Stderr(stderr) => stderr.flush(),
+            Self::File(file) => file.flush(),
             _ => Err(Error::from(ErrorKind::PermissionDenied)),
         }
     }

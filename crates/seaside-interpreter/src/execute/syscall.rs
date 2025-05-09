@@ -1,11 +1,11 @@
-use crate::{memory::Region, Exception, Interpreter, InterpreterState, SyscallFailureKind};
+use crate::{Exception, Interpreter, InterpreterState, SyscallFailureKind, memory::Region};
 use console::Term;
 use seaside_constants::register;
 use seaside_type_aliases::Address;
 use std::{
     ffi::CStr,
     fs::OpenOptions,
-    io::{stdin, Read, Write},
+    io::{Read, Write, stdin},
     thread::sleep,
     time::{Duration, SystemTime},
 };

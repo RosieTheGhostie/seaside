@@ -1,9 +1,22 @@
-use std::ops::{Index, IndexMut};
+use std::ops::{Deref, Index, IndexMut};
 
 /// The values of `N` 32-bit registers stored contiguously in memory.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Registers<const N: usize> {
     registers: [u32; N],
+}
+
+pub struct RegisterIter<'a, const N: usize> {
+    registers: &'a Registers<N>,
+    i: usize,
+}
+
+impl<const N: usize> Deref for Registers<N> {
+    type Target = [u32];
+
+    fn deref(&self) -> &Self::Target {
+        &self.registers
+    }
 }
 
 impl<const N: usize> Default for Registers<N> {
@@ -56,5 +69,15 @@ impl<const N: usize> Registers<N> {
     /// Returns true if this object is in the default state.
     pub fn is_default(&self) -> bool {
         *self == Self::default()
+    }
+}
+
+impl<'a, const N: usize> Iterator for RegisterIter<'a, N> {
+    type Item = &'a u32;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let register = self.registers.get(self.i)?;
+        self.i += 1;
+        Some(register)
     }
 }

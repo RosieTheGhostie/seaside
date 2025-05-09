@@ -1,19 +1,18 @@
 use super::{
+    Overlapping, RuntimeData, Segment,
     address_range::address_range,
     segment::{allocate, segment},
-    Overlapping, RuntimeData, Segment,
 };
-use crate::{EditFromBinary, FromBinary, Validate};
-use anyhow::{anyhow, Error, Result};
+use crate::Validate;
+use anyhow::{Error, Result};
 use seaside_error::EngineError;
 use seaside_int_utils::AllZeroes;
-use seaside_type_aliases::Address;
-use std::io::Read;
+use serde::{Deserialize, Serialize};
 
 /// Collection of segments in the [`MemoryMap`].
 ///
 /// [`MemoryMap`]: super::MemoryMap
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Segments {
     pub text: Segment,
     pub r#extern: Segment,
@@ -45,7 +44,7 @@ impl Default for Segments {
             r#extern: segment!(0x10000000..0x10010000, 64 KiB),
             data: segment!(0x10010000..0x10040000, 192 KiB),
             runtime_data: RuntimeData {
-                address_range: address_range![0x10040000..0x80000000],
+                range: address_range![0x10040000..0x80000000],
                 heap_size: allocate!(128 KiB),
                 stack_size: allocate!(4 MiB),
             },
@@ -53,67 +52,6 @@ impl Default for Segments {
             kdata: segment!(0x90000000..0xffff0000, 1 MiB),
             mmio: segment!(0xffff0000..=0xffffffff, 4 KiB),
         }
-    }
-}
-
-impl EditFromBinary<1> for Segments {
-    fn edit_from_binary<R: Read>(&mut self, ids: [u8; 4], stream: &mut R) -> Result<()> {
-        use crate::properties::memory_map::segments::*;
-
-        match (ids[2], ids[3]) {
-            (text::ID, text::BASE) => self.text.address_range.base = Address::from_binary(stream)?,
-            (text::ID, text::LIMIT) => {
-                self.text.address_range.limit = Address::from_binary(stream)?
-            }
-            (text::ID, text::ALLOCATE) => self.text.allocate = u32::from_binary(stream)?,
-            (r#extern::ID, r#extern::BASE) => {
-                self.r#extern.address_range.base = Address::from_binary(stream)?
-            }
-            (r#extern::ID, r#extern::LIMIT) => {
-                self.r#extern.address_range.limit = Address::from_binary(stream)?
-            }
-            (r#extern::ID, r#extern::ALLOCATE) => {
-                self.r#extern.allocate = u32::from_binary(stream)?
-            }
-            (data::ID, data::BASE) => self.data.address_range.base = Address::from_binary(stream)?,
-            (data::ID, data::LIMIT) => {
-                self.data.address_range.limit = Address::from_binary(stream)?
-            }
-            (data::ID, data::ALLOCATE) => self.data.allocate = u32::from_binary(stream)?,
-            (runtime_data::ID, runtime_data::BASE) => {
-                self.runtime_data.address_range.base = Address::from_binary(stream)?
-            }
-            (runtime_data::ID, runtime_data::LIMIT) => {
-                self.runtime_data.address_range.limit = Address::from_binary(stream)?
-            }
-            (runtime_data::ID, runtime_data::HEAP_SIZE) => {
-                self.runtime_data.heap_size = u32::from_binary(stream)?
-            }
-            (runtime_data::ID, runtime_data::STACK_SIZE) => {
-                self.runtime_data.stack_size = u32::from_binary(stream)?
-            }
-            (ktext::ID, ktext::BASE) => {
-                self.ktext.address_range.base = Address::from_binary(stream)?
-            }
-            (ktext::ID, ktext::LIMIT) => {
-                self.ktext.address_range.limit = Address::from_binary(stream)?
-            }
-            (ktext::ID, ktext::ALLOCATE) => self.ktext.allocate = u32::from_binary(stream)?,
-            (kdata::ID, kdata::BASE) => {
-                self.kdata.address_range.base = Address::from_binary(stream)?
-            }
-            (kdata::ID, kdata::LIMIT) => {
-                self.kdata.address_range.limit = Address::from_binary(stream)?
-            }
-            (kdata::ID, kdata::ALLOCATE) => self.kdata.allocate = u32::from_binary(stream)?,
-            (mmio::ID, mmio::BASE) => self.mmio.address_range.base = Address::from_binary(stream)?,
-            (mmio::ID, mmio::LIMIT) => {
-                self.mmio.address_range.limit = Address::from_binary(stream)?
-            }
-            (mmio::ID, mmio::ALLOCATE) => self.mmio.allocate = u32::from_binary(stream)?,
-            _ => return Err(anyhow!("unknown property id: {}", u32::from_be_bytes(ids))),
-        }
-        Ok(())
     }
 }
 

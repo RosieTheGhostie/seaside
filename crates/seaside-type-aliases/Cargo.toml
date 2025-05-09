@@ -3,7 +3,7 @@ name = "seaside-type-aliases"
 description = "A handful of type aliases for seaside"
 version = "0.1.0"
 authors = ["RosieTheGhostie"]
-edition = "2021"
+edition = "2024"
 
 [lib]
 crate-type = ["lib"]

@@ -6,9 +6,9 @@ use super::resolve_if_exists;
 use crate::CmdArgs;
 use anyhow::{Error, Result};
 use directories::ProjectDirs;
-use seaside_config::{Config, FromBinary, Validate};
+use seaside_config::{Config, Validate};
 use seaside_error::EngineError;
-use std::{fs::File, path::PathBuf};
+use std::{fs::read_to_string, path::PathBuf};
 
 /// Finds and parses a seaside configuration file.
 ///
@@ -17,26 +17,25 @@ use std::{fs::File, path::PathBuf};
 /// depends on the operating system.
 pub fn get_config(args: &CmdArgs) -> Result<Config> {
     // The borrow checker requires an explicit binding to the temporary produced by
-    // `find_seaside_bin` to make a reference to it.
+    // `find_seaside_toml` to make a reference to it.
     let stupid_binding: PathBuf;
     let config_path: &PathBuf = if let Some(path) = &args.config {
         path
     } else {
-        stupid_binding = find_seaside_bin()?;
+        stupid_binding = find_seaside_toml()?;
         &stupid_binding
     };
 
-    let mut file = File::open(config_path)?;
-    let config: Config = Config::from_binary(&mut file)?;
+    let config: Config = toml::from_str(&read_to_string(config_path)?)?;
     config.validate().map(|_| config)
 }
 
-/// Tries to find 'Seaside.bin'.
+/// Tries to find 'Seaside.toml'.
 ///
 /// This first searches the current working directory, but if it cannot find it there, it will move
 /// on to the directory designated by the operating system for seaside's configuration files.
-fn find_seaside_bin() -> Result<PathBuf, Error> {
-    let path = PathBuf::from("Seaside.bin");
+fn find_seaside_toml() -> Result<PathBuf, Error> {
+    let path = PathBuf::from("Seaside.toml");
     if path.exists() {
         return Ok(path);
     }
@@ -44,5 +43,5 @@ fn find_seaside_bin() -> Result<PathBuf, Error> {
         Error::new(EngineError::NotFound).context("couldn't find seaside's project directories")
     })?;
     resolve_if_exists(project_directories.config_dir(), path)
-        .ok_or_else(|| Error::new(EngineError::NotFound).context("couldn't find 'Seaside.bin'"))
+        .ok_or_else(|| Error::new(EngineError::NotFound).context("couldn't find 'Seaside.toml'"))
 }

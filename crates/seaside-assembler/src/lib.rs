@@ -46,11 +46,11 @@ impl<'source> Assembler<'source> {
         Self {
             parser: Parser::new(Token::lexer(source)),
             segments: [
-                SegmentBuildInfo::new(segments.data.address_range.base),
-                SegmentBuildInfo::new(segments.r#extern.address_range.base),
-                SegmentBuildInfo::new(segments.kdata.address_range.base),
-                SegmentBuildInfo::new(segments.ktext.address_range.base),
-                SegmentBuildInfo::new(segments.text.address_range.base),
+                SegmentBuildInfo::new(segments.data.range.base),
+                SegmentBuildInfo::new(segments.r#extern.range.base),
+                SegmentBuildInfo::new(segments.kdata.range.base),
+                SegmentBuildInfo::new(segments.ktext.range.base),
+                SegmentBuildInfo::new(segments.text.range.base),
             ],
             current_segment: SegmentDirective::Text,
             unresolved: VecDeque::new(),

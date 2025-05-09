@@ -22,23 +22,21 @@ pub struct RegisterFile {
 
 impl RegisterFile {
     pub fn read_u32_from_cpu(&self, index: u8) -> Result<u32, Exception> {
-        if index < 32 {
-            Ok(self.cpu[index as usize])
-        } else {
-            Err(Exception::InterpreterFailure)
-        }
+        self.cpu
+            .get(index as usize)
+            .copied()
+            .ok_or(Exception::InterpreterFailure)
     }
 
     pub fn read_i32_from_cpu(&self, index: u8) -> Result<i32, Exception> {
-        Ok(self.read_u32_from_cpu(index)? as i32)
+        self.read_u32_from_cpu(index).map(|x| x as i32)
     }
 
     pub fn read_f32_from_fpu(&self, index: u8) -> Result<f32, Exception> {
-        if index < 32 {
-            Ok(self.fpu[index as usize])
-        } else {
-            Err(Exception::InterpreterFailure)
-        }
+        self.fpu
+            .get(index as usize)
+            .copied()
+            .ok_or(Exception::InterpreterFailure)
     }
 
     pub fn read_f64_from_fpu(&self, index: u8) -> Result<f64, Exception> {
@@ -53,19 +51,19 @@ impl RegisterFile {
     }
 
     pub fn read_u32_from_fpu(&self, index: u8) -> Result<u32, Exception> {
-        Ok(self.read_f32_from_fpu(index)?.to_bits())
+        self.read_f32_from_fpu(index).map(f32::to_bits)
     }
 
     pub fn read_i32_from_fpu(&self, index: u8) -> Result<i32, Exception> {
-        Ok(self.read_u32_from_fpu(index)? as i32)
+        self.read_u32_from_fpu(index).map(|x| x as i32)
     }
 
     pub fn read_u64_from_fpu(&self, index: u8) -> Result<u64, Exception> {
-        Ok(self.read_f64_from_fpu(index)?.to_bits())
+        self.read_f64_from_fpu(index).map(f64::to_bits)
     }
 
     pub fn read_i64_from_fpu(&self, index: u8) -> Result<i64, Exception> {
-        Ok(self.read_u64_from_fpu(index)? as i64)
+        self.read_u32_from_fpu(index).map(|x| x as i64)
     }
 
     pub fn read_flag_from_fpu(&self, index: u8) -> Result<bool, Exception> {
@@ -77,14 +75,13 @@ impl RegisterFile {
     }
 
     pub fn write_u32_to_cpu(&mut self, index: u8, value: u32) -> Result<(), Exception> {
-        if index < 32 {
-            if index != 0 {
-                self.cpu[index as usize] = value;
-            }
-            Ok(())
-        } else {
-            Err(Exception::InterpreterFailure)
+        if index != 0 {
+            *self
+                .cpu
+                .get_mut(index as usize)
+                .ok_or(Exception::InterpreterFailure)? = value;
         }
+        Ok(())
     }
 
     pub fn write_i32_to_cpu(&mut self, index: u8, value: i32) -> Result<(), Exception> {
@@ -92,12 +89,11 @@ impl RegisterFile {
     }
 
     pub fn write_f32_to_fpu(&mut self, index: u8, value: f32) -> Result<(), Exception> {
-        if index < 32 {
-            self.fpu[index as usize] = value;
-            Ok(())
-        } else {
-            Err(Exception::InterpreterFailure)
-        }
+        *self
+            .fpu
+            .get_mut(index as usize)
+            .ok_or(Exception::InterpreterFailure)? = value;
+        Ok(())
     }
 
     pub fn write_f64_to_fpu(&mut self, index: u8, value: f64) -> Result<(), Exception> {
@@ -144,16 +140,13 @@ impl RegisterFile {
 
     pub fn init(register_defaults: &RegisterDefaults) -> Self {
         let mut register_file = Self::default();
-        // can't iterate directly due to borrow checker stuff
-        for i in 0..32 {
-            let default_value = register_defaults.general_purpose[i];
+        for (i, &default_value) in register_defaults.general_purpose.iter().enumerate() {
             let _ = register_file.write_u32_to_cpu(i as u8, default_value);
         }
         register_file.hi = register_defaults.hi;
         register_file.lo = register_defaults.lo;
-        for i in 0..32 {
-            let x = f32::from_bits(register_defaults.coprocessor_1[i]);
-            let _ = register_file.write_f32_to_fpu(i as u8, x);
+        for (i, &default_value) in register_defaults.coprocessor_1.iter().enumerate() {
+            let _ = register_file.write_f32_to_fpu(i as u8, f32::from_bits(default_value));
         }
         register_file.vaddr = register_defaults.coprocessor_0[0];
         register_file.status = register_defaults.coprocessor_0[1];

@@ -1,3 +1,5 @@
+"$schema" = "file:///C:/Users/mdcar/github/seaside/res/schema.json"
+
 version = "1.2.0"
 endian = "little"
 project_directory_is_cwd = true
@@ -14,61 +16,81 @@ pseudo_instructions = false
 directives = "recommended"
 
 [features.syscalls]
-print = "all"
-read = "all"
-file = "all"
-system = "all"
-random = "all"
-dialog = "all"
+1 = "spim.print.int"
+2 = "spim.print.float"
+3 = "spim.print.double"
+4 = "spim.print.string"
+5 = "spim.read.int"
+6 = "spim.read.float"
+7 = "spim.read.double"
+8 = "spim.read.string"
+9 = "spim.system.sbrk"
+10 = "spim.system.exit"
+11 = "spim.print.char"
+12 = "spim.read.char"
+13 = "spim.file.open"
+14 = "spim.file.read"
+15 = "spim.file.write"
+16 = "spim.file.close"
+17 = "spim.system.exit2"
+30 = "mars.system.time"
+31 = "mars.system.midi_out"
+32 = "mars.system.sleep"
+33 = "mars.system.midi_out_sync"
+34 = "mars.print.hex"
+35 = "mars.print.bin"
+36 = "mars.print.uint"
+40 = "mars.random.set_seed"
+41 = "mars.random.rand_int"
+42 = "mars.random.rand_int_range"
+43 = "mars.random.rand_float"
+44 = "mars.random.rand_double"
+50 = "mars.dialog.input.confirm"
+51 = "mars.dialog.input.int"
+52 = "mars.dialog.input.float"
+53 = "mars.dialog.input.double"
+54 = "mars.dialog.input.string"
+55 = "mars.dialog.message.general"
+56 = "mars.dialog.message.int"
+57 = "mars.dialog.message.float"
+58 = "mars.dialog.message.double"
+59 = "mars.dialog.message.string"
 
 [memory_map]
 exception_handler = 0x80000180
-
-[memory_map.user_space]
-base = 0x00000000
-limit = 0x7fffffff
-
-[memory_map.kernel_space]
-base = 0x80000000
-limit = 0xffffffff
+user_space = [0x00000000, 0x7fffffff]
+kernel_space = [0x80000000, 0xffffffff]
 
 [memory_map.segments]
 
 [memory_map.segments.text]
-base = 0x00400000
-limit = 0x0ffffffc
-allocate = 0x800000 # 8 MiB
+range = [0x00400000, 0x0ffffffc]
+allocate = 0x800000              # 8 MiB
 
 [memory_map.segments.extern]
-base = 0x10000000
-limit = 0x1000ffff
-allocate = 0x10000 # 64 KiB
+range = [0x10000000, 0x1000ffff]
+allocate = 0x10000               # 64 KiB
 
 [memory_map.segments.data]
-base = 0x10010000
-limit = 0x1003ffff
-allocate = 0x30000 # 192 KiB
+range = [0x10010000, 0x1003ffff]
+allocate = 0x30000               # 192 KiB
 
 [memory_map.segments.runtime_data]
-base = 0x10040000
-limit = 0x7fffffff
-heap_size = 0x20000   # 128 KiB
-stack_size = 0x400000 # 4 MiB
+range = [0x10040000, 0x7fffffff]
+heap_size = 0x20000              # 128 KiB
+stack_size = 0x400000            # 4 MiB
 
 [memory_map.segments.ktext]
-base = 0x80000000
-limit = 0x8fffffff
-allocate = 0x100000 # 1 MiB
+range = [0x80000000, 0x8fffffff]
+allocate = 0x100000              # 1 MiB
 
 [memory_map.segments.kdata]
-base = 0x90000000
-limit = 0xfffeffff
-allocate = 0x100000 # 1 MiB
+range = [0x90000000, 0xfffeffff]
+allocate = 0x100000              # 1 MiB
 
 [memory_map.segments.mmio]
-base = 0xffff0000
-limit = 0xffffffff
-allocate = 0x1000  # 4 KiB
+range = [0xffff0000, 0xffffffff]
+allocate = 0x1000                # 4 KiB
 
 [register_defaults]
 

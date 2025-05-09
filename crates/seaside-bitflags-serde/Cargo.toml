@@ -1,0 +1,15 @@
+[package]
+name = "seaside-bitflags-serde"
+description = "Custom serde support for bitflags in seaside"
+version = "0.1.0"
+authors = ["RosieTheGhostie"]
+edition = "2024"
+
+[lib]
+crate-type = ["lib"]
+path = "src/lib.rs"
+
+[dependencies]
+bitflags = "2.9.0"
+heck = "0.5.0"
+serde = "1.0.219"

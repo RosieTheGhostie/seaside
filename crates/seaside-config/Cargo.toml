@@ -3,21 +3,28 @@ name = "seaside-config"
 description = "Configuration support for seaside"
 version = "1.2.0"                                 # must match the version of seaside
 authors = ["RosieTheGhostie"]
-edition = "2021"
+edition = "2024"
 
 [lib]
 crate-type = ["lib"]
 path = "src/lib.rs"
 
 [dependencies]
-anyhow = "1.0"
-clap = "4.5"
-num-traits = "0.2"
+anyhow = "1.0.98"
+bitflags = "2.9.0"
+heck = "0.5.0"
+num-traits = "0.2.19"
+seaside-bitflags-serde = { version = "0.1.0", path = "../seaside-bitflags-serde" }
 seaside-constants = { version = "*", path = "../seaside-constants" }
 seaside-error = { version = "*", path = "../seaside-error" }
 seaside-int-utils = { version = "*", features = [
 	"all_zeroes",
 	"endian",
+	"serde",
 ], path = "../seaside-int-utils" }
+seaside-service-group = { version = "0.1.0", path = "../seaside-service-group" }
 seaside-type-aliases = { version = "*", path = "../seaside-type-aliases" }
-semver = "1.0"
+semver = "1.0.26"
+serde = { version = "1.0.219", features = ["derive"] }
+strum = { version = "0.27.1", features = ["derive"] }
+toml = "0.8.22"

@@ -2,22 +2,13 @@
 name = "seaside"
 version = "1.2.0"
 authors = ["RosieTheGhostie"]
-edition = "2021"
-
-[profile.release]
-opt-level = 3
-debug = false
-strip = true
-debug-assertions = false
-overflow-checks = true
-incremental = true
+edition = "2024"
 
 [dependencies]
 anyhow = "1.0"
-directories = "5.0"
+directories = "6.0"
 seaside-assembler = { version = "*", path = "crates/seaside-assembler" }
 seaside-config = { version = "*", path = "crates/seaside-config" }
-seaside-config-editor = { version = "*", path = "crates/seaside-config-editor" }
 seaside-constants = { version = "*", path = "crates/seaside-constants" }
 seaside-disassembler = { version = "*", features = [
 	"full",
@@ -26,6 +17,8 @@ seaside-error = { version = "*", path = "crates/seaside-error" }
 seaside-int-utils = { version = "*", path = "crates/seaside-int-utils" }
 seaside-interpreter = { version = "*", path = "crates/seaside-interpreter" }
 seaside-type-aliases = { version = "*", path = "crates/seaside-type-aliases" }
+serde = "1.0.219"
+toml = "0.8.22"
 
 [dependencies.clap]
 version = "4.5"

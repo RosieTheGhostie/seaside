@@ -36,9 +36,9 @@ pub fn disassemble_segment(
     let mut address = if let Some(address) = start_address {
         address
     } else if segment.ends_with("text") {
-        config.memory_map.segments.text.address_range.base
+        config.memory_map.segments.text.range.base
     } else if segment.ends_with("ktext") {
-        config.memory_map.segments.ktext.address_range.base
+        config.memory_map.segments.ktext.range.base
     } else {
         0
     };

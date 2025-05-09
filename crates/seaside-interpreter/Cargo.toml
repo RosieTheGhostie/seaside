@@ -3,17 +3,17 @@ name = "seaside-interpreter"
 description = "The MIPS32 interpreter for seaside"
 version = "0.1.0"
 authors = ["RosieTheGhostie"]
-edition = "2021"
+edition = "2024"
 
 [lib]
 crate-type = ["lib"]
 path = "src/lib.rs"
 
 [dependencies]
-anyhow = "1.0"
-console = "0.15"
+anyhow = "1.0.98"
+console = "0.15.11"
 num-traits = "0.2"
-rand = "0.9"
+rand = "0.9.1"
 seaside-config = { version = "*", path = "../seaside-config" }
 seaside-constants = { version = "*", path = "../seaside-constants" }
 seaside-disassembler = { version = "*", default-features = false, features = [
@@ -25,7 +25,7 @@ seaside-int-utils = { version = "*", features = [
 	"endian",
 ], path = "../seaside-int-utils" }
 seaside-type-aliases = { version = "*", path = "../seaside-type-aliases" }
-thiserror = "2.0"
+thiserror = "2.0.12"
 
 [dependencies.minimal-logging]
 version = "0.5"

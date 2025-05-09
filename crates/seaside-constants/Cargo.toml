@@ -3,7 +3,7 @@ name = "seaside-constants"
 description = "Various constant and enum definitions for use in seaside"
 version = "0.1.0"
 authors = ["RosieTheGhostie"]
-edition = "2021"
+edition = "2024"
 
 [lib]
 crate-type = ["lib"]

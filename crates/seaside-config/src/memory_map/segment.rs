@@ -1,34 +1,35 @@
 use super::{
-    traits::{Contains, Overlapping},
     AddressRange,
+    traits::{Contains, Overlapping},
 };
 use seaside_int_utils::AllZeroes;
+use serde::{Deserialize, Serialize};
 
 /// Specifies the memory addresses associated with a given segment.
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Segment {
     /// The inclusive range of addresses within this segment.
-    pub address_range: AddressRange,
+    pub range: AddressRange,
     /// The maximum number of bytes to allocate for this segment.
     pub allocate: u32,
 }
 
 impl Contains<Segment> for AddressRange {
     fn contains(&self, value: &Segment) -> bool {
-        self.contains(&value.address_range)
+        self.contains(&value.range)
     }
 }
 
 impl Overlapping<Segment> for Segment {
     fn overlapping(&self, other: &Self) -> bool {
-        self.address_range.overlapping(&other.address_range)
+        self.range.overlapping(&other.range)
     }
 }
 
 impl AllZeroes for Segment {
     fn all_zeroes() -> Self {
         Self {
-            address_range: AddressRange::all_zeroes(),
+            range: AddressRange::all_zeroes(),
             allocate: 0,
         }
     }
@@ -56,13 +57,13 @@ pub(crate) use allocate;
 macro_rules! segment {
     ($base:literal..$limit:literal, $allocate:literal $($units:ident)?) => {
         $crate::memory_map::Segment {
-            address_range: $crate::memory_map::address_range::address_range![$base..$limit],
+            range: $crate::memory_map::address_range::address_range![$base..$limit],
             allocate: $crate::memory_map::segment::allocate!($allocate $($units)?),
         }
     };
     ($base:literal..=$limit:literal, $allocate:literal $($units:ident)?) => {
         $crate::memory_map::Segment {
-            address_range: $crate::memory_map::address_range::address_range![$base..=$limit],
+            range: $crate::memory_map::address_range::address_range![$base..=$limit],
             allocate: $crate::memory_map::segment::allocate!($allocate $($units)?),
         }
     };

@@ -1,0 +1,17 @@
+[package]
+name = "seaside-service-group"
+description = "Macros for defining system service groups in seaside"
+version = "0.1.0"
+authors = ["RosieTheGhostie"]
+edition = "2024"
+
+[lib]
+proc-macro = true
+path = "src/lib.rs"
+
+[dependencies]
+heck = "0.5.0"
+proc-macro-error2 = { version = "2.0.1", features = ["syn-error"] }
+proc-macro2 = "1.0.94"
+quote = "1.0.40"
+syn = "2.0.100"
