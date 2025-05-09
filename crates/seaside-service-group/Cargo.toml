@@ -2,7 +2,7 @@
 name = "seaside-service-group"
 description = "Macros for defining system service groups in seaside"
 version = "0.1.0"
-authors = ["RosieTheGhostie"]
+authors = ["RosieTheGhostie <rosetheghost.dev@gmail.com>"]
 edition = "2024"
 
 [lib]

@@ -2,7 +2,7 @@
 name = "seaside-interpreter"
 description = "The MIPS32 interpreter for seaside"
 version = "0.1.0"
-authors = ["RosieTheGhostie"]
+authors = ["RosieTheGhostie <rosetheghost.dev@gmail.com>"]
 edition = "2024"
 
 [lib]

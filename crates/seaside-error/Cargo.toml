@@ -2,7 +2,7 @@
 name = "seaside-error"
 description = "Error type for seaside"
 version = "0.1.0"
-authors = ["RosieTheGhostie"]
+authors = ["RosieTheGhostie <rosetheghost.dev@gmail.com>"]
 edition = "2024"
 
 [lib]

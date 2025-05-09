@@ -1,7 +1,7 @@
 [package]
 name = "seaside"
 version = "1.2.0"
-authors = ["RosieTheGhostie"]
+authors = ["RosieTheGhostie <rosetheghost.dev@gmail.com>"]
 edition = "2024"
 
 [dependencies]

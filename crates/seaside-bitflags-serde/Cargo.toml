@@ -2,7 +2,7 @@
 name = "seaside-bitflags-serde"
 description = "Custom serde support for bitflags in seaside"
 version = "0.1.0"
-authors = ["RosieTheGhostie"]
+authors = ["RosieTheGhostie <rosetheghost.dev@gmail.com>"]
 edition = "2024"
 
 [lib]
