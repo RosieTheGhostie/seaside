@@ -1,34 +1,42 @@
-pub mod syscalls;
+pub mod assembler;
+pub mod services;
 
-pub use syscalls::Syscalls;
+pub use assembler::AssemblerOptions;
+pub use services::{Service, Services};
 
-use crate::{prefixed, EditFromBinary, FromBinary, ToBinary, Validate};
-use anyhow::{anyhow, Result};
+use crate::{Validate, primitive_defaults};
+use anyhow::Result;
 use seaside_int_utils::AllZeroes;
-use std::io::{Read, Write};
+use serde::{Deserialize, Serialize};
 
 /// Customizes the features available to the seaside engine.
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Features {
     /// Allow users to provide code and/or data relating to kernel space.
+    #[serde(default = "primitive_defaults::r#true")]
     pub kernel_space_accessible: bool,
     /// Enable run-time modification of text segments.
+    #[serde(default = "primitive_defaults::r#false")]
     pub self_modifying_code: bool,
     /// Simulate the delay slot.
+    #[serde(default = "primitive_defaults::r#false")]
     pub delay_slot: bool,
     /// Allow `sbrk` to free memory when given a negative argument.
+    #[serde(default = "primitive_defaults::r#false")]
     pub freeable_heap_allocations: bool,
     /// Enables displaying a crash handler when an unhandled exception is thrown.
+    #[serde(default = "primitive_defaults::r#true")]
     pub show_crash_handler: bool,
-    /// Allow use of pseudo-instructions and formats.
-    pub pseudo_instructions: bool,
-    /// Set syscalls available to interpreter.
-    pub syscalls: Syscalls,
+    /// Set features available to assembler.
+    pub assembler: AssemblerOptions,
+    /// Set system services available to interpreter.
+    #[serde(alias = "syscalls")]
+    pub services: Services,
 }
 
 impl Validate for Features {
     fn validate(&self) -> Result<()> {
-        self.syscalls.validate()
+        self.services.validate()
     }
 }
 
@@ -40,50 +48,8 @@ impl AllZeroes for Features {
             delay_slot: false,
             freeable_heap_allocations: false,
             show_crash_handler: false,
-            pseudo_instructions: false,
-            syscalls: Syscalls::all_zeroes(),
+            assembler: AssemblerOptions::all_zeroes(),
+            services: Services::all_zeroes(),
         }
-    }
-}
-
-impl EditFromBinary<1> for Features {
-    fn edit_from_binary<R: Read>(&mut self, ids: [u8; 4], stream: &mut R) -> Result<()> {
-        use crate::properties::features::*;
-
-        match (ids[1], ids[3]) {
-            (0x00, KERNEL_SPACE_ACCESSIBLE) => {
-                self.kernel_space_accessible = bool::from_binary(stream)?
-            }
-            (0x00, SELF_MODIFYING_CODE) => self.self_modifying_code = bool::from_binary(stream)?,
-            (0x00, DELAY_SLOT) => self.delay_slot = bool::from_binary(stream)?,
-            (0x00, FREEABLE_HEAP_ALLOCATIONS) => {
-                self.freeable_heap_allocations = bool::from_binary(stream)?
-            }
-            (0x00, SHOW_CRASH_HANDLER) => self.show_crash_handler = bool::from_binary(stream)?,
-            (0x00, PSEUDO_INSTRUCTIONS) => self.pseudo_instructions = bool::from_binary(stream)?,
-            (syscalls::ID, _) => {
-                <Syscalls as EditFromBinary<1>>::edit_from_binary(&mut self.syscalls, ids, stream)?
-            }
-            _ => return Err(anyhow!("unknown property id: {}", u32::from_be_bytes(ids))),
-        }
-        Ok(())
-    }
-}
-
-impl ToBinary<1> for Features {
-    fn to_binary<W: Write>(&self, stream: &mut W) -> Result<()> {
-        prefixed!(features[KERNEL_SPACE_ACCESSIBLE]).to_binary(stream)?;
-        self.kernel_space_accessible.to_binary(stream)?;
-        prefixed!(features[SELF_MODIFYING_CODE]).to_binary(stream)?;
-        self.self_modifying_code.to_binary(stream)?;
-        prefixed!(features[DELAY_SLOT]).to_binary(stream)?;
-        self.delay_slot.to_binary(stream)?;
-        prefixed!(features[FREEABLE_HEAP_ALLOCATIONS]).to_binary(stream)?;
-        self.freeable_heap_allocations.to_binary(stream)?;
-        prefixed!(features[SHOW_CRASH_HANDLER]).to_binary(stream)?;
-        self.show_crash_handler.to_binary(stream)?;
-        prefixed!(features[PSEUDO_INSTRUCTIONS]).to_binary(stream)?;
-        self.pseudo_instructions.to_binary(stream)?;
-        self.syscalls.to_binary(stream)
     }
 }

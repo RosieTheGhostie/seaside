@@ -1,8 +1,8 @@
 use super::{DataMemory, DataRegion, InstructionMemory, Memory, TextRegion};
 use anyhow::Result;
 use seaside_config::{
-    memory_map::{RuntimeData, Segment},
     Config,
+    memory_map::{RuntimeData, Segment},
 };
 use seaside_int_utils::Endian;
 use std::path::PathBuf;
@@ -45,7 +45,7 @@ fn init_text_region(
     path: Option<PathBuf>,
     endian: Endian,
 ) -> Result<TextRegion> {
-    let mut region = TextRegion::new(segment.address_range.base, segment.allocate as usize);
+    let mut region = TextRegion::new(segment.range.base, segment.allocate as usize);
     if let Some(path) = path {
         region.populate(std::fs::read(path)?, endian);
     }
@@ -53,7 +53,7 @@ fn init_text_region(
 }
 
 fn init_data_region(segment: &Segment, path: Option<PathBuf>) -> Result<DataRegion> {
-    let mut region = DataRegion::new(segment.address_range.base, segment.allocate as usize);
+    let mut region = DataRegion::new(segment.range.base, segment.allocate as usize);
     if let Some(path) = path {
         region.populate(std::fs::read(path)?);
     }
@@ -61,8 +61,8 @@ fn init_data_region(segment: &Segment, path: Option<PathBuf>) -> Result<DataRegi
 }
 
 fn init_heap_and_stack(runtime_data: &RuntimeData) -> [DataRegion; 2] {
-    let heap_low_address = runtime_data.address_range.base;
-    let stack_low_address = runtime_data.address_range.limit - runtime_data.stack_size + 1;
+    let heap_low_address = runtime_data.range.base;
+    let stack_low_address = runtime_data.range.limit - runtime_data.stack_size + 1;
     [
         DataRegion::new(heap_low_address, runtime_data.heap_size as usize),
         DataRegion::new(stack_low_address, runtime_data.stack_size as usize),

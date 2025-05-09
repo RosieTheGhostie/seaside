@@ -3,11 +3,11 @@ name = "seaside-error"
 description = "Error type for seaside"
 version = "0.1.0"
 authors = ["RosieTheGhostie"]
-edition = "2021"
+edition = "2024"
 
 [lib]
 crate-type = ["lib"]
 path = "src/lib.rs"
 
 [dependencies]
-thiserror = "2.0"
+thiserror = "2.0.12"

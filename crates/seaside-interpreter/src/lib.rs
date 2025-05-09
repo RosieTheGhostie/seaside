@@ -12,18 +12,27 @@ pub use memory::Memory;
 pub use register_file::RegisterFile;
 pub use syscall_failure::SyscallFailureKind;
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use file_handle::FileHandle;
 use memory::regions::Region;
 use minimal_logging::macros::debugln;
 use rng::Rng;
-use seaside_config::{features::syscalls::Syscalls, Config};
+use seaside_config::{
+    Config,
+    features::{
+        Service, Services,
+        services::{
+            mars::{self, Mars},
+            spim::{self, Spim},
+        },
+    },
+};
 use seaside_constants::register;
 use seaside_type_aliases::Address;
 use std::{
     collections::HashMap,
     fs::File,
-    io::{stdout, Write},
+    io::{Write, stdout},
     path::PathBuf,
 };
 
@@ -58,7 +67,7 @@ impl Interpreter {
         let memory = Memory::init(config, text, r#extern, data, ktext, kdata)?;
         let pc = memory.initial_pc();
         let services = Self::init_services(
-            &config.features.syscalls,
+            &config.features.services,
             config.features.freeable_heap_allocations,
         )?;
         let registers = RegisterFile::init(&config.register_defaults);
@@ -83,10 +92,7 @@ impl Interpreter {
         };
         interpreter
             .state
-            .init_argv(
-                argv,
-                config.memory_map.segments.runtime_data.address_range.limit,
-            )
+            .init_argv(argv, config.memory_map.segments.runtime_data.range.limit)
             .map(|_| interpreter)
     }
 
@@ -113,83 +119,88 @@ impl Interpreter {
     }
 
     fn init_services(
-        syscalls: &Syscalls,
+        services: &Services,
         freeable_heap_allocations: bool,
     ) -> Result<HashMap<u32, for<'a> fn(&'a mut InterpreterState) -> Result<(), Exception>>> {
-        use seaside_config::properties::features::syscalls::*;
-
-        let mut services = HashMap::new();
-        for (&id, &service_code) in syscalls.iter() {
-            let service = match id.to_be_bytes() {
-                [mars_print::ID, mars_print::INT] => InterpreterState::print_int,
-                [mars_print::ID, mars_print::UINT] => InterpreterState::print_uint,
-                [mars_print::ID, mars_print::BIN] => InterpreterState::print_bin,
-                [mars_print::ID, mars_print::HEX] => InterpreterState::print_hex,
-                [mars_print::ID, mars_print::FLOAT] => InterpreterState::print_float,
-                [mars_print::ID, mars_print::DOUBLE] => InterpreterState::print_double,
-                [mars_print::ID, mars_print::CHAR] => InterpreterState::print_char,
-                [mars_print::ID, mars_print::STRING] => InterpreterState::print_string,
-                [mars_read::ID, mars_read::INT] => InterpreterState::read_int,
-                [mars_read::ID, mars_read::FLOAT] => InterpreterState::read_float,
-                [mars_read::ID, mars_read::DOUBLE] => InterpreterState::read_double,
-                [mars_read::ID, mars_read::CHAR] => InterpreterState::read_char,
-                [mars_read::ID, mars_read::STRING] => InterpreterState::read_string,
-                [mars_file::ID, mars_file::OPEN] => InterpreterState::open_file,
-                [mars_file::ID, mars_file::READ] => InterpreterState::read_file,
-                [mars_file::ID, mars_file::WRITE] => InterpreterState::write_file,
-                [mars_file::ID, mars_file::CLOSE] => InterpreterState::close_file,
-                [mars_input_dialog::ID, mars_input_dialog::CONFIRM] => {
+        let mut service_fns = HashMap::new();
+        for (&code, &service) in services.iter() {
+            let r#fn = match service {
+                Service::Spim(Spim::Print(spim::Print::Int)) => InterpreterState::print_int,
+                Service::Mars(Mars::Print(mars::Print::Uint)) => InterpreterState::print_uint,
+                Service::Mars(Mars::Print(mars::Print::Bin)) => InterpreterState::print_bin,
+                Service::Mars(Mars::Print(mars::Print::Hex)) => InterpreterState::print_hex,
+                Service::Spim(Spim::Print(spim::Print::Float)) => InterpreterState::print_float,
+                Service::Spim(Spim::Print(spim::Print::Double)) => InterpreterState::print_double,
+                Service::Spim(Spim::Print(spim::Print::Char)) => InterpreterState::print_char,
+                Service::Spim(Spim::Print(spim::Print::String)) => InterpreterState::print_string,
+                Service::Spim(Spim::Read(spim::Read::Int)) => InterpreterState::read_int,
+                Service::Spim(Spim::Read(spim::Read::Float)) => InterpreterState::read_float,
+                Service::Spim(Spim::Read(spim::Read::Double)) => InterpreterState::read_double,
+                Service::Spim(Spim::Read(spim::Read::Char)) => InterpreterState::read_char,
+                Service::Spim(Spim::Read(spim::Read::String)) => InterpreterState::read_string,
+                Service::Spim(Spim::File(spim::File::Open)) => InterpreterState::open_file,
+                Service::Spim(Spim::File(spim::File::Read)) => InterpreterState::read_file,
+                Service::Spim(Spim::File(spim::File::Write)) => InterpreterState::write_file,
+                Service::Spim(Spim::File(spim::File::Close)) => InterpreterState::close_file,
+                Service::Mars(Mars::Dialog(mars::Dialog::Input(mars::InputDialog::Confirm))) => {
                     InterpreterState::confirm_dialog
                 }
-                [mars_input_dialog::ID, mars_input_dialog::INT] => {
+                Service::Mars(Mars::Dialog(mars::Dialog::Input(mars::InputDialog::Int))) => {
                     InterpreterState::input_dialog_int
                 }
-                [mars_input_dialog::ID, mars_input_dialog::FLOAT] => {
+                Service::Mars(Mars::Dialog(mars::Dialog::Input(mars::InputDialog::Float))) => {
                     InterpreterState::input_dialog_float
                 }
-                [mars_input_dialog::ID, mars_input_dialog::DOUBLE] => {
+                Service::Mars(Mars::Dialog(mars::Dialog::Input(mars::InputDialog::Double))) => {
                     InterpreterState::input_dialog_double
                 }
-                [mars_input_dialog::ID, mars_input_dialog::STRING] => {
+                Service::Mars(Mars::Dialog(mars::Dialog::Input(mars::InputDialog::String))) => {
                     InterpreterState::input_dialog_string
                 }
-                [mars_message_dialog::ID, mars_message_dialog::GENERAL] => {
-                    InterpreterState::message_dialog
-                }
-                [mars_message_dialog::ID, mars_message_dialog::INT] => {
+                Service::Mars(Mars::Dialog(mars::Dialog::Message(
+                    mars::MessageDialog::General,
+                ))) => InterpreterState::message_dialog,
+                Service::Mars(Mars::Dialog(mars::Dialog::Message(mars::MessageDialog::Int))) => {
                     InterpreterState::message_dialog_int
                 }
-                [mars_message_dialog::ID, mars_message_dialog::FLOAT] => {
+                Service::Mars(Mars::Dialog(mars::Dialog::Message(mars::MessageDialog::Float))) => {
                     InterpreterState::message_dialog_float
                 }
-                [mars_message_dialog::ID, mars_message_dialog::DOUBLE] => {
+                Service::Mars(Mars::Dialog(mars::Dialog::Message(mars::MessageDialog::Double))) => {
                     InterpreterState::message_dialog_double
                 }
-                [mars_message_dialog::ID, mars_message_dialog::STRING] => {
+                Service::Mars(Mars::Dialog(mars::Dialog::Message(mars::MessageDialog::String))) => {
                     InterpreterState::message_dialog_string
                 }
-                [mars_system::ID, mars_system::SBRK] if freeable_heap_allocations => {
+                Service::Spim(Spim::System(spim::System::Sbrk)) if freeable_heap_allocations => {
                     |state: &mut InterpreterState| state.sbrk(true)
                 }
-                [mars_system::ID, mars_system::SBRK] => {
+                Service::Spim(Spim::System(spim::System::Sbrk)) => {
                     |state: &mut InterpreterState| state.sbrk(false)
                 }
-                [mars_system::ID, mars_system::EXIT] => InterpreterState::exit,
-                [mars_system::ID, mars_system::EXIT_2] => InterpreterState::exit_2,
-                [mars_system::ID, mars_system::TIME] => InterpreterState::time,
-                [mars_system::ID, mars_system::SLEEP] => InterpreterState::sleep,
-                [mars_system::ID, mars_system::MIDI_OUT] => InterpreterState::midi_out,
-                [mars_system::ID, mars_system::MIDI_OUT_SYNC] => InterpreterState::midi_out_sync,
-                [mars_random::ID, mars_random::SET_SEED] => InterpreterState::set_seed,
-                [mars_random::ID, mars_random::INT] => InterpreterState::rand_int,
-                [mars_random::ID, mars_random::INT_RANGE] => InterpreterState::rand_int_range,
-                [mars_random::ID, mars_random::FLOAT] => InterpreterState::rand_float,
-                [mars_random::ID, mars_random::DOUBLE] => InterpreterState::rand_double,
-                _ => return Err(anyhow!("0x{id:04x} is not a known system service ID")),
+                Service::Spim(Spim::System(spim::System::Exit)) => InterpreterState::exit,
+                Service::Spim(Spim::System(spim::System::Exit2)) => InterpreterState::exit_2,
+                Service::Mars(Mars::System(mars::System::Time)) => InterpreterState::time,
+                Service::Mars(Mars::System(mars::System::Sleep)) => InterpreterState::sleep,
+                Service::Mars(Mars::System(mars::System::MidiOut)) => InterpreterState::midi_out,
+                Service::Mars(Mars::System(mars::System::MidiOutSync)) => {
+                    InterpreterState::midi_out_sync
+                }
+                Service::Mars(Mars::Random(mars::Random::SetSeed)) => InterpreterState::set_seed,
+                Service::Mars(Mars::Random(mars::Random::RandInt)) => InterpreterState::rand_int,
+                Service::Mars(Mars::Random(mars::Random::RandIntRange)) => {
+                    InterpreterState::rand_int_range
+                }
+                Service::Mars(Mars::Random(mars::Random::RandFloat)) => {
+                    InterpreterState::rand_float
+                }
+                Service::Mars(Mars::Random(mars::Random::RandDouble)) => {
+                    InterpreterState::rand_double
+                }
             };
-            services.insert(service_code, service);
+            service_fns.insert(code, r#fn);
         }
-        Ok(services)
+        Ok(service_fns)
     }
 }
 
