@@ -16,6 +16,7 @@ use anyhow::Result;
 use file_handle::FileHandle;
 use memory::regions::Region;
 use minimal_logging::macros::debugln;
+use register_file::IndexByRegister;
 use rng::Rng;
 use seaside_config::{
     Config,
@@ -27,7 +28,7 @@ use seaside_config::{
         },
     },
 };
-use seaside_constants::register;
+use seaside_constants::register::CpuRegister;
 use seaside_type_aliases::Address;
 use std::{
     collections::HashMap,
@@ -238,7 +239,7 @@ impl InterpreterState {
             }
             arg_addresses.push(current + 1);
         }
-        let mut stack_frame_base: Address = self.registers.read_u32_from_cpu(register::SP)?;
+        let mut stack_frame_base: Address = self.registers.read(CpuRegister::StackPtr);
         if current < stack_frame_base {
             stack_frame_base = current - (current % 4) - 4;
         }
@@ -249,10 +250,10 @@ impl InterpreterState {
         }
         self.memory.write_u32(stack_frame_base, argc, true)?;
         self.registers
-            .write_u32_to_cpu(register::SP, stack_frame_base)?;
-        self.registers.write_u32_to_cpu(register::A0, argc)?;
+            .write(CpuRegister::StackPtr, stack_frame_base);
+        self.registers.write(CpuRegister::Arg0, argc);
         self.registers
-            .write_u32_to_cpu(register::A1, stack_frame_base + 4)?;
+            .write(CpuRegister::Arg1, stack_frame_base + 4);
         Ok(())
     }
 

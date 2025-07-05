@@ -557,6 +557,10 @@ version = "0.1.0"
 dependencies = [
  "num-derive",
  "num-traits",
+ "strum",
+ "strum_macros",
+ "take-exact",
+ "thiserror",
 ]
 
 [[package]]
@@ -599,6 +603,7 @@ dependencies = [
  "seaside-error",
  "seaside-int-utils",
  "seaside-type-aliases",
+ "strum",
  "thiserror",
 ]
 
@@ -690,6 +695,11 @@ dependencies = [
  "quote",
  "unicode-ident",
 ]
+
+[[package]]
+name = "take-exact"
+version = "0.1.0"
+source = "git+https://github.com/RosieTheGhostie/take-exact#1189afe4dd0b3c164345f65159fb81ff3e2dff8a"
 
 [[package]]
 name = "thiserror"

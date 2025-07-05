@@ -1,7 +1,7 @@
 use super::{Component, DestructuredInstruction, Operation};
 use crate::fields;
 use num_traits::FromPrimitive;
-use seaside_constants::{fn_codes::RegisterImmediateFn, Opcode};
+use seaside_constants::{Opcode, fn_codes::RegisterImmediateFn, register::CpuRegister};
 use seaside_type_aliases::Instruction;
 
 pub fn destructure(opcode: Opcode, instruction: Instruction) -> Option<DestructuredInstruction> {
@@ -68,7 +68,11 @@ pub fn destructure(opcode: Opcode, instruction: Instruction) -> Option<Destructu
     ))
 }
 
-fn destructure_regimm(rs: u8, rt: u8, imm: u16) -> Option<DestructuredInstruction> {
+fn destructure_regimm(
+    rs: CpuRegister,
+    rt: CpuRegister,
+    imm: u16,
+) -> Option<DestructuredInstruction> {
     use RegisterImmediateFn::*;
     let mut components = [
         Component::Gpr(rs),
@@ -77,7 +81,7 @@ fn destructure_regimm(rs: u8, rt: u8, imm: u16) -> Option<DestructuredInstructio
         Component::default(),
         Component::default(),
     ];
-    let r#fn = RegisterImmediateFn::from_u8(rt)?;
+    let r#fn = RegisterImmediateFn::from_u8(rt as u8)?;
     components[1] = match r#fn {
         BranchLessThanZero
         | BranchGreaterEqualZero

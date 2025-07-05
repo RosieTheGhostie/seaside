@@ -1,6 +1,6 @@
-use crate::{Exception, Interpreter, InterpreterState};
+use crate::{Exception, Interpreter, InterpreterState, register_file::IndexByRegister};
 use num_traits::FromPrimitive;
-use seaside_constants::fn_codes::Special2Fn;
+use seaside_constants::{fn_codes::Special2Fn, register::CpuRegister};
 use seaside_disassembler::fields;
 use seaside_int_utils::SignExtend;
 use seaside_type_aliases::Instruction;
@@ -17,8 +17,8 @@ impl Interpreter {
         let rs = fields::rs(instruction);
         let rt = fields::rt(instruction);
         let rd = fields::rd(instruction);
-        let rs_value = self.state.registers.read_u32_from_cpu(rs)?;
-        let rt_value = self.state.registers.read_u32_from_cpu(rt)?;
+        let rs_value: u32 = self.state.registers.read(rs);
+        let rt_value: u32 = self.state.registers.read(rt);
         let r#fn = match Special2Fn::from_u8(fields::r#fn(instruction)) {
             Some(fn_code) => fn_code,
             None => return Err(Exception::ReservedInstruction),
@@ -60,11 +60,12 @@ impl InterpreterState {
 
     /// Multiplies `rs_value` and `rt_value` as signed integers, storing the least significant word
     /// of the product in CPU register `rd` and discarding the most significant word.
-    fn mul(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
+    fn mul(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
         let rs_value = rs_value as i32;
         let rt_value = rt_value as i32;
         self.registers
-            .write_i32_to_cpu(rd, i32::wrapping_mul(rs_value, rt_value))
+            .write(rd, i32::wrapping_mul(rs_value, rt_value));
+        Ok(())
     }
 
     /// Multiplies `rs_value` and `rt_value` as signed integers, subtracting the most significant
@@ -91,13 +92,14 @@ impl InterpreterState {
 
     /// Counts the number of leading zeroes in `rs_value` and stores the result in CPU register
     /// `rd`.
-    fn clz(&mut self, rd: u8, rs_value: u32) -> Result<(), Exception> {
-        self.registers
-            .write_u32_to_cpu(rd, rs_value.leading_zeros())
+    fn clz(&mut self, rd: CpuRegister, rs_value: u32) -> Result<(), Exception> {
+        self.registers.write(rd, rs_value.leading_zeros());
+        Ok(())
     }
 
     /// Counts the number of leading ones in `rs_value` and stores the result in CPU register `rd`.
-    fn clo(&mut self, rd: u8, rs_value: u32) -> Result<(), Exception> {
-        self.registers.write_u32_to_cpu(rd, rs_value.leading_ones())
+    fn clo(&mut self, rd: CpuRegister, rs_value: u32) -> Result<(), Exception> {
+        self.registers.write(rd, rs_value.leading_ones());
+        Ok(())
     }
 }

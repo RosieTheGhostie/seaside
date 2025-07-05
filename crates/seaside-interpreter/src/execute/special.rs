@@ -1,6 +1,6 @@
-use crate::{Exception, Interpreter, InterpreterState};
+use crate::{Exception, Interpreter, InterpreterState, register_file::IndexByRegister};
 use num_traits::FromPrimitive;
-use seaside_constants::fn_codes::SpecialFn;
+use seaside_constants::{fn_codes::SpecialFn, register::CpuRegister};
 use seaside_disassembler::fields;
 use seaside_int_utils::SignExtend;
 use seaside_type_aliases::Instruction;
@@ -17,8 +17,8 @@ impl Interpreter {
         let rs = fields::rs(instruction);
         let rt = fields::rt(instruction);
         let rd = fields::rd(instruction);
-        let rs_value = self.state.registers.read_u32_from_cpu(rs)?;
-        let rt_value = self.state.registers.read_u32_from_cpu(rt)?;
+        let rs_value: u32 = self.state.registers.read(rs);
+        let rt_value: u32 = self.state.registers.read(rt);
         let shamt = fields::shamt(instruction);
         let r#fn = match SpecialFn::from_u8(fields::r#fn(instruction)) {
             Some(fn_code) => fn_code,
@@ -68,49 +68,54 @@ impl Interpreter {
 
 impl InterpreterState {
     /// Shifts `rt_value` left by `shamt` bits and stores the result in CPU register `rd`.
-    fn sll(&mut self, rd: u8, rt_value: u32, shamt: u8) -> Result<(), Exception> {
-        self.registers.write_u32_to_cpu(rd, rt_value << shamt)
+    fn sll(&mut self, rd: CpuRegister, rt_value: u32, shamt: u8) -> Result<(), Exception> {
+        self.registers.write(rd, rt_value << shamt);
+        Ok(())
     }
 
     /// If the condition flag specified in the field `rt` matches the condition, stores `rs_value`
     /// in CPU register `rd`.
-    fn movc(&mut self, rt: u8, rd: u8, rs_value: u32) -> Result<(), Exception> {
-        let cc = fields::cc_from_index(rt);
-        let condition = fields::condition_from_index(rt);
-        if self.registers.read_flag_from_fpu(cc)? == condition {
-            self.registers.write_u32_to_cpu(rd, rs_value)
-        } else {
-            Ok(())
+    fn movc(&mut self, rt: CpuRegister, rd: CpuRegister, rs_value: u32) -> Result<(), Exception> {
+        let cc = fields::cc_from_cpu_register(rt);
+        let condition = fields::condition_from_cpu_register(rt);
+        if self.registers.read_fpu_flag(cc) == condition {
+            self.registers.write(rd, rs_value);
         }
+        Ok(())
     }
 
     /// Shifts `rt_value` right by `shamt` bits and stores the result in CPU register `rd`.
-    fn srl(&mut self, rd: u8, rt_value: u32, shamt: u8) -> Result<(), Exception> {
-        self.registers.write_u32_to_cpu(rd, rt_value >> shamt)
+    fn srl(&mut self, rd: CpuRegister, rt_value: u32, shamt: u8) -> Result<(), Exception> {
+        self.registers.write(rd, rt_value >> shamt);
+        Ok(())
     }
 
     /// Shifts `rt_value` right by `shamt` bits (copying the most significant bit of `rt_value` to
     /// fill the space) and stores the result in CPU register `rd`.
-    fn sra(&mut self, rd: u8, rt_value: u32, shamt: u8) -> Result<(), Exception> {
+    fn sra(&mut self, rd: CpuRegister, rt_value: u32, shamt: u8) -> Result<(), Exception> {
         let rt_value = rt_value as i32;
-        self.registers.write_i32_to_cpu(rd, rt_value >> shamt)
+        self.registers.write(rd, rt_value >> shamt);
+        Ok(())
     }
 
     /// Shifts `rt_value` left by `rs_value` bits and stores the result in CPU register `rd`.
-    fn sllv(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        self.registers.write_u32_to_cpu(rd, rt_value << rs_value)
+    fn sllv(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
+        self.registers.write(rd, rt_value << rs_value);
+        Ok(())
     }
 
     /// Shifts `rt_value` right by `rs_value` bits and stores the result in CPU register `rd`.
-    fn srlv(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        self.registers.write_u32_to_cpu(rd, rt_value >> rs_value)
+    fn srlv(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
+        self.registers.write(rd, rt_value >> rs_value);
+        Ok(())
     }
 
     /// Shifts `rt_value` right by `rs_value` bits (copying the most significant bit of `rt_value`
     /// to fill the space) and stores the result in CPU register `rd`.
-    fn srav(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
+    fn srav(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
         let rt_value = rt_value as i32;
-        self.registers.write_i32_to_cpu(rd, rt_value >> rs_value)
+        self.registers.write(rd, rt_value >> rs_value);
+        Ok(())
     }
 
     /// Sets the program counter (PC) to `rs_value`.
@@ -120,28 +125,26 @@ impl InterpreterState {
     }
 
     /// Stores the current program counter (PC) in CPU register `rd`, then sets PC to `rs_value`.
-    fn jalr(&mut self, rd: u8, rs_value: u32) -> Result<(), Exception> {
-        self.registers.write_u32_to_cpu(rd, self.pc)?;
+    fn jalr(&mut self, rd: CpuRegister, rs_value: u32) -> Result<(), Exception> {
+        self.registers.write(rd, self.pc);
         self.pc = rs_value;
         Ok(())
     }
 
     /// If `rt_value` is zero, stores `rs_value` in CPU register `rd`.
-    fn movz(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
+    fn movz(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
         if rt_value == 0 {
-            self.registers.write_u32_to_cpu(rd, rs_value)
-        } else {
-            Ok(())
+            self.registers.write(rd, rs_value);
         }
+        Ok(())
     }
 
     /// If `rt_value` is nonzero, stores `rs_value` in CPU register `rd`.
-    fn movn(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
+    fn movn(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
         if rt_value != 0 {
-            self.registers.write_u32_to_cpu(rd, rs_value)
-        } else {
-            Ok(())
+            self.registers.write(rd, rs_value);
         }
+        Ok(())
     }
 
     /// Raises a [break][Exception::Break] exception.
@@ -150,8 +153,9 @@ impl InterpreterState {
     }
 
     /// Stores the value of register `hi` in CPU register `rd`.
-    fn mfhi(&mut self, rd: u8) -> Result<(), Exception> {
-        self.registers.write_u32_to_cpu(rd, self.registers.hi)
+    fn mfhi(&mut self, rd: CpuRegister) -> Result<(), Exception> {
+        self.registers.write(rd, self.registers.hi);
+        Ok(())
     }
 
     /// Stores `rs_value` in register `hi`.
@@ -161,8 +165,9 @@ impl InterpreterState {
     }
 
     /// Stores the value of register `lo` in CPU register `rd`.
-    fn mflo(&mut self, rd: u8) -> Result<(), Exception> {
-        self.registers.write_u32_to_cpu(rd, self.registers.lo)
+    fn mflo(&mut self, rd: CpuRegister) -> Result<(), Exception> {
+        self.registers.write(rd, self.registers.lo);
+        Ok(())
     }
 
     /// Stores `rs_value` in register `lo`.
@@ -223,19 +228,23 @@ impl InterpreterState {
     ///
     /// Raises an [integer overflow/underflow][Exception::IntegerOverflowOrUnderflow] exception if
     /// the sum cannot be represented as a signed 32-bit integer.
-    fn add(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
+    fn add(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
         let rs_value = rs_value as i32;
         let rt_value = rt_value as i32;
         match i32::checked_add(rs_value, rt_value) {
-            Some(sum) => self.registers.write_i32_to_cpu(rd, sum),
+            Some(sum) => {
+                self.registers.write(rd, sum);
+                Ok(())
+            }
             None => Err(Exception::IntegerOverflowOrUnderflow),
         }
     }
 
     /// Adds `rs_value` and `rt_value` together, storing the sum in CPU register `rd`.
-    fn addu(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
+    fn addu(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
         self.registers
-            .write_u32_to_cpu(rd, u32::wrapping_add(rs_value, rt_value))
+            .write(rd, u32::wrapping_add(rs_value, rt_value));
+        Ok(())
     }
 
     /// Subtracts `rt_value` from `rs_value`, storing the difference in CPU register `rd`.
@@ -244,59 +253,69 @@ impl InterpreterState {
     ///
     /// Raises an [integer overflow/underflow][Exception::IntegerOverflowOrUnderflow] exception if
     /// the sum cannot be represented as a signed 32-bit integer.
-    fn sub(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
+    fn sub(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
         let rs_value = rs_value as i32;
         let rt_value = rt_value as i32;
         match i32::checked_sub(rs_value, rt_value) {
-            Some(difference) => self.registers.write_i32_to_cpu(rd, difference),
+            Some(difference) => {
+                self.registers.write(rd, difference);
+                Ok(())
+            }
             None => Err(Exception::IntegerOverflowOrUnderflow),
         }
     }
 
     /// Subtracts `rt_value` from `rs_value`, storing the difference in CPU register `rd`.
-    fn subu(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
+    fn subu(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
         self.registers
-            .write_u32_to_cpu(rd, u32::wrapping_sub(rs_value, rt_value))
+            .write(rd, u32::wrapping_sub(rs_value, rt_value));
+        Ok(())
     }
 
     /// Computes the bitwise AND of `rs_value` and `rt_value`, storing the result in CPU register
     /// `rd`.
-    fn and(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        self.registers.write_u32_to_cpu(rd, rs_value & rt_value)
+    fn and(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
+        self.registers.write(rd, rs_value & rt_value);
+        Ok(())
     }
 
     /// Computes the bitwise OR of `rs_value` and `rt_value`, storing the result in CPU register
     /// `rd`.
-    fn or(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        self.registers.write_u32_to_cpu(rd, rs_value | rt_value)
+    fn or(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
+        self.registers.write(rd, rs_value | rt_value);
+        Ok(())
     }
 
     /// Computes the bitwise XOR of `rs_value` and `rt_value`, storing the result in CPU register
     /// `rd`.
-    fn xor(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        self.registers.write_u32_to_cpu(rd, rs_value ^ rt_value)
+    fn xor(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
+        self.registers.write(rd, rs_value ^ rt_value);
+        Ok(())
     }
 
     /// Computes the bitwise NOR of `rs_value` and `rt_value`, storing the result in CPU register
     /// `rd`.
-    fn nor(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        self.registers.write_u32_to_cpu(rd, !(rs_value | rt_value))
+    fn nor(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
+        self.registers.write(rd, !(rs_value | rt_value));
+        Ok(())
     }
 
     /// If `rs_value` is less than `rt_value` (both interpreted as signed integers), stores the
     /// value 1 in CPU register `rd`. Otherwise, stores the value 0 in `rd`.
-    fn slt(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
+    fn slt(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
         let rs_value = rs_value as i32;
         let rt_value = rt_value as i32;
         self.registers
-            .write_u32_to_cpu(rd, if rs_value < rt_value { 1 } else { 0 })
+            .write(rd, if rs_value < rt_value { 1 } else { 0 });
+        Ok(())
     }
 
     /// If `rs_value` is less than `rt_value` (both interpreted as unsigned integers), stores the
     /// value 1 in CPU register `rd`. Otherwise, stores the value 0 in `rd`.
-    fn sltu(&mut self, rd: u8, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
+    fn sltu(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
         self.registers
-            .write_u32_to_cpu(rd, if rs_value < rt_value { 1 } else { 0 })
+            .write(rd, if rs_value < rt_value { 1 } else { 0 });
+        Ok(())
     }
 
     /// If `rs_value` is greater than or equal to `rt_value` (both interpreted as signed integers),

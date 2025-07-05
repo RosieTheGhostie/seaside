@@ -1,11 +1,16 @@
 use crate::Exception;
-use seaside_config::RegisterDefaults;
-use seaside_constants::register;
-use seaside_type_aliases::Address;
-use std::{
+use core::{
     fmt::{Display, Formatter, Result as FmtResult},
+    iter::zip,
     mem::transmute,
 };
+use seaside_config::RegisterDefaults;
+use seaside_constants::{
+    ConditionCode,
+    register::{CpuRegister, FpuRegister},
+};
+use seaside_type_aliases::Address;
+use strum::IntoEnumIterator;
 
 #[derive(Default)]
 pub struct RegisterFile {
@@ -20,133 +25,139 @@ pub struct RegisterFile {
     pub epc: Address,
 }
 
-impl RegisterFile {
-    pub fn read_u32_from_cpu(&self, index: u8) -> Result<u32, Exception> {
-        self.cpu
-            .get(index as usize)
-            .copied()
-            .ok_or(Exception::InterpreterFailure)
+pub trait IndexByRegister<Register, T> {
+    fn read(&self, register: Register) -> T;
+    fn write(&mut self, register: Register, value: T);
+}
+
+pub trait TryIndexByRegister<Register, T> {
+    fn try_read(&self, register: Register) -> Result<T, Exception>;
+    fn try_write(&mut self, register: Register, value: T) -> Result<(), Exception>;
+}
+
+impl IndexByRegister<CpuRegister, u32> for RegisterFile {
+    fn read(&self, register: CpuRegister) -> u32 {
+        *self.cpu.get(register as usize).unwrap()
     }
 
-    pub fn read_i32_from_cpu(&self, index: u8) -> Result<i32, Exception> {
-        self.read_u32_from_cpu(index).map(|x| x as i32)
-    }
-
-    pub fn read_f32_from_fpu(&self, index: u8) -> Result<f32, Exception> {
-        self.fpu
-            .get(index as usize)
-            .copied()
-            .ok_or(Exception::InterpreterFailure)
-    }
-
-    pub fn read_f64_from_fpu(&self, index: u8) -> Result<f64, Exception> {
-        if index >= 32 {
-            Err(Exception::InterpreterFailure)
-        } else if index % 2 != 0 {
-            Err(Exception::MalformedInstruction)
-        } else {
-            let registers = [self.fpu[index as usize], self.fpu[index as usize + 1]];
-            Ok(unsafe { transmute::<[f32; 2], f64>(registers) })
-        }
-    }
-
-    pub fn read_u32_from_fpu(&self, index: u8) -> Result<u32, Exception> {
-        self.read_f32_from_fpu(index).map(f32::to_bits)
-    }
-
-    pub fn read_i32_from_fpu(&self, index: u8) -> Result<i32, Exception> {
-        self.read_u32_from_fpu(index).map(|x| x as i32)
-    }
-
-    pub fn read_u64_from_fpu(&self, index: u8) -> Result<u64, Exception> {
-        self.read_f64_from_fpu(index).map(f64::to_bits)
-    }
-
-    pub fn read_i64_from_fpu(&self, index: u8) -> Result<i64, Exception> {
-        self.read_u32_from_fpu(index).map(|x| x as i64)
-    }
-
-    pub fn read_flag_from_fpu(&self, index: u8) -> Result<bool, Exception> {
-        if index < 8 {
-            Ok((self.fpu_flags >> index) & 1 == 1)
-        } else {
-            Err(Exception::InterpreterFailure)
-        }
-    }
-
-    pub fn write_u32_to_cpu(&mut self, index: u8, value: u32) -> Result<(), Exception> {
+    fn write(&mut self, register: CpuRegister, value: u32) {
+        let index = register as usize;
         if index != 0 {
-            *self
-                .cpu
-                .get_mut(index as usize)
-                .ok_or(Exception::InterpreterFailure)? = value;
+            unsafe { *self.cpu.get_unchecked_mut(index) = value };
         }
-        Ok(())
+    }
+}
+
+impl IndexByRegister<CpuRegister, i32> for RegisterFile {
+    fn read(&self, register: CpuRegister) -> i32 {
+        <_ as IndexByRegister<_, u32>>::read(self, register) as i32
     }
 
-    pub fn write_i32_to_cpu(&mut self, index: u8, value: i32) -> Result<(), Exception> {
-        self.write_u32_to_cpu(index, value as u32)
+    fn write(&mut self, register: CpuRegister, value: i32) {
+        self.write(register, value as u32)
+    }
+}
+
+impl IndexByRegister<FpuRegister, f32> for RegisterFile {
+    fn read(&self, register: FpuRegister) -> f32 {
+        *self.fpu.get(register as usize).unwrap()
     }
 
-    pub fn write_f32_to_fpu(&mut self, index: u8, value: f32) -> Result<(), Exception> {
-        *self
-            .fpu
-            .get_mut(index as usize)
-            .ok_or(Exception::InterpreterFailure)? = value;
-        Ok(())
+    fn write(&mut self, register: FpuRegister, value: f32) {
+        unsafe { *self.fpu.get_unchecked_mut(register as usize) = value };
     }
+}
 
-    pub fn write_f64_to_fpu(&mut self, index: u8, value: f64) -> Result<(), Exception> {
-        if index >= 32 {
-            Err(Exception::InterpreterFailure)
-        } else if index % 2 != 0 {
+impl TryIndexByRegister<FpuRegister, f64> for RegisterFile {
+    fn try_read(&self, register: FpuRegister) -> Result<f64, Exception> {
+        if register.is_double_aligned() {
+            let i = register as usize;
+            Ok(unsafe { transmute::<_, f64>([self.fpu[i], self.fpu[i + 1]]) })
+        } else {
             Err(Exception::MalformedInstruction)
-        } else {
-            let index = index as usize;
-            let halves: [f32; 2] = unsafe { transmute::<f64, [f32; 2]>(value) };
-            self.fpu[index] = halves[0];
-            self.fpu[index + 1] = halves[1];
-            Ok(())
         }
     }
 
-    pub fn write_u32_to_fpu(&mut self, index: u8, value: u32) -> Result<(), Exception> {
-        self.write_f32_to_fpu(index, f32::from_bits(value))
-    }
-
-    pub fn write_i32_to_fpu(&mut self, index: u8, value: i32) -> Result<(), Exception> {
-        self.write_u32_to_cpu(index, value as u32)
-    }
-
-    pub fn write_u64_to_fpu(&mut self, index: u8, value: u64) -> Result<(), Exception> {
-        self.write_f64_to_fpu(index, f64::from_bits(value))
-    }
-
-    pub fn write_i64_to_fpu(&mut self, index: u8, value: i64) -> Result<(), Exception> {
-        self.write_u64_to_fpu(index, value as u64)
-    }
-
-    pub fn write_flag_to_fpu(&mut self, index: u8, value: bool) -> Result<(), Exception> {
-        if index < 8 {
-            let mask: u8 = 1u8 << index;
-            let value = if value { mask } else { 0 };
-            self.fpu_flags &= !(1u8 << index);
-            self.fpu_flags |= value;
+    fn try_write(&mut self, register: FpuRegister, value: f64) -> Result<(), Exception> {
+        if register.is_double_aligned() {
+            let i = register as usize;
+            let halves = unsafe { transmute::<f64, [f32; 2]>(value) };
+            self.fpu[i] = halves[0];
+            self.fpu[i + 1] = halves[1];
             Ok(())
         } else {
-            Err(Exception::InterpreterFailure)
+            Err(Exception::MalformedInstruction)
         }
+    }
+}
+
+impl IndexByRegister<FpuRegister, u32> for RegisterFile {
+    fn read(&self, register: FpuRegister) -> u32 {
+        <_ as IndexByRegister<_, f32>>::read(self, register).to_bits()
+    }
+
+    fn write(&mut self, register: FpuRegister, value: u32) {
+        self.write(register, f32::from_bits(value))
+    }
+}
+
+impl IndexByRegister<FpuRegister, i32> for RegisterFile {
+    fn read(&self, register: FpuRegister) -> i32 {
+        <_ as IndexByRegister<_, u32>>::read(self, register) as i32
+    }
+
+    fn write(&mut self, register: FpuRegister, value: i32) {
+        self.write(register, f32::from_bits(value as u32))
+    }
+}
+
+impl TryIndexByRegister<FpuRegister, u64> for RegisterFile {
+    fn try_read(&self, register: FpuRegister) -> Result<u64, Exception> {
+        <_ as TryIndexByRegister<_, f64>>::try_read(self, register).map(f64::to_bits)
+    }
+
+    fn try_write(&mut self, register: FpuRegister, value: u64) -> Result<(), Exception> {
+        self.try_write(register, f64::from_bits(value))
+    }
+}
+
+impl TryIndexByRegister<FpuRegister, i64> for RegisterFile {
+    fn try_read(&self, register: FpuRegister) -> Result<i64, Exception> {
+        <_ as TryIndexByRegister<_, u64>>::try_read(self, register).map(|value| value as i64)
+    }
+
+    fn try_write(&mut self, register: FpuRegister, value: i64) -> Result<(), Exception> {
+        self.try_write(register, value as u64)
+    }
+}
+
+impl RegisterFile {
+    pub fn read_fpu_flag(&self, cc: ConditionCode) -> bool {
+        (self.fpu_flags >> cc as u8) & 1 == 1
+    }
+
+    pub fn write_fpu_flag(&mut self, cc: ConditionCode, value: bool) {
+        let index = cc as u8;
+        let mask = 1 << index;
+        let value = if value { mask } else { 0 };
+        self.fpu_flags &= !mask;
+        self.fpu_flags |= value;
     }
 
     pub fn init(register_defaults: &RegisterDefaults) -> Self {
         let mut register_file = Self::default();
-        for (i, &default_value) in register_defaults.general_purpose.iter().enumerate() {
-            let _ = register_file.write_u32_to_cpu(i as u8, default_value);
+        for (register, &default_value) in zip(
+            CpuRegister::iter(),
+            register_defaults.general_purpose.iter(),
+        ) {
+            register_file.write(register, default_value);
         }
         register_file.hi = register_defaults.hi;
         register_file.lo = register_defaults.lo;
-        for (i, &default_value) in register_defaults.coprocessor_1.iter().enumerate() {
-            let _ = register_file.write_f32_to_fpu(i as u8, f32::from_bits(default_value));
+        for (register, &default_value) in
+            zip(FpuRegister::iter(), register_defaults.coprocessor_1.iter())
+        {
+            register_file.write(register, default_value);
         }
         register_file.vaddr = register_defaults.coprocessor_0[0];
         register_file.status = register_defaults.coprocessor_0[1];
@@ -175,7 +186,6 @@ impl Display for RegisterFile {
 }
 
 fn write_cpu_registers(register_file: &RegisterFile, f: &mut Formatter<'_>) -> FmtResult {
-    use register::*;
     writeln!(
         f,
         r"┃ $at: {:08x} ┊ $v0: {:08x} ┊ $v1: {:08x} ┃
@@ -189,37 +199,37 @@ fn write_cpu_registers(register_file: &RegisterFile, f: &mut Formatter<'_>) -> F
 ┃ $t9: {:08x} ┊ $k0: {:08x} ┊ $k1: {:08x} ┃
 ┃ $gp: {:08x} ┊ $sp: {:08x} ┊ $fp: {:08x} ┃
 ┃ $ra: {:08x} ┊  hi: {:08x} ┊  lo: {:08x} ┃",
-        register_file.cpu[AT as usize],
-        register_file.cpu[V0 as usize],
-        register_file.cpu[V1 as usize],
-        register_file.cpu[A0 as usize],
-        register_file.cpu[A1 as usize],
-        register_file.cpu[A2 as usize],
-        register_file.cpu[A3 as usize],
-        register_file.cpu[T0 as usize],
-        register_file.cpu[T1 as usize],
-        register_file.cpu[T2 as usize],
-        register_file.cpu[T3 as usize],
-        register_file.cpu[T4 as usize],
-        register_file.cpu[T5 as usize],
-        register_file.cpu[T6 as usize],
-        register_file.cpu[T7 as usize],
-        register_file.cpu[S0 as usize],
-        register_file.cpu[S1 as usize],
-        register_file.cpu[S2 as usize],
-        register_file.cpu[S3 as usize],
-        register_file.cpu[S4 as usize],
-        register_file.cpu[S5 as usize],
-        register_file.cpu[S6 as usize],
-        register_file.cpu[S7 as usize],
-        register_file.cpu[T8 as usize],
-        register_file.cpu[T9 as usize],
-        register_file.cpu[K0 as usize],
-        register_file.cpu[K1 as usize],
-        register_file.cpu[GP as usize],
-        register_file.cpu[SP as usize],
-        register_file.cpu[FP as usize],
-        register_file.cpu[RA as usize],
+        register_file.cpu[CpuRegister::AsmTemp as usize],
+        register_file.cpu[CpuRegister::Val0 as usize],
+        register_file.cpu[CpuRegister::Val1 as usize],
+        register_file.cpu[CpuRegister::Arg0 as usize],
+        register_file.cpu[CpuRegister::Arg1 as usize],
+        register_file.cpu[CpuRegister::Arg2 as usize],
+        register_file.cpu[CpuRegister::Arg3 as usize],
+        register_file.cpu[CpuRegister::Temp0 as usize],
+        register_file.cpu[CpuRegister::Temp1 as usize],
+        register_file.cpu[CpuRegister::Temp2 as usize],
+        register_file.cpu[CpuRegister::Temp3 as usize],
+        register_file.cpu[CpuRegister::Temp4 as usize],
+        register_file.cpu[CpuRegister::Temp5 as usize],
+        register_file.cpu[CpuRegister::Temp6 as usize],
+        register_file.cpu[CpuRegister::Temp7 as usize],
+        register_file.cpu[CpuRegister::Saved0 as usize],
+        register_file.cpu[CpuRegister::Saved1 as usize],
+        register_file.cpu[CpuRegister::Saved2 as usize],
+        register_file.cpu[CpuRegister::Saved3 as usize],
+        register_file.cpu[CpuRegister::Saved4 as usize],
+        register_file.cpu[CpuRegister::Saved5 as usize],
+        register_file.cpu[CpuRegister::Saved6 as usize],
+        register_file.cpu[CpuRegister::Saved7 as usize],
+        register_file.cpu[CpuRegister::Temp8 as usize],
+        register_file.cpu[CpuRegister::Temp9 as usize],
+        register_file.cpu[CpuRegister::Kernel0 as usize],
+        register_file.cpu[CpuRegister::Kernel1 as usize],
+        register_file.cpu[CpuRegister::GlobalPtr as usize],
+        register_file.cpu[CpuRegister::StackPtr as usize],
+        register_file.cpu[CpuRegister::FramePtr as usize],
+        register_file.cpu[CpuRegister::ReturnAddr as usize],
         register_file.hi,
         register_file.lo,
     )
@@ -229,13 +239,15 @@ fn write_fpu_registers(register_file: &RegisterFile, f: &mut Formatter<'_>) -> F
     for i in 0u8..7u8 {
         let i0 = i * 4;
         let i1 = i0 + 2;
+        let r0 = unsafe { transmute::<u8, FpuRegister>(i0) };
+        let r1 = unsafe { transmute::<u8, FpuRegister>(i1) };
         writeln!(
             f,
             "┃ {}{i0}: {:>+#15.7e} ┊ {}{i1}: {:>+#15.7e} ┃",
             if i0 >= 10 { "$f" } else { " $f" },
-            register_file.read_f64_from_fpu(i0).unwrap(),
+            <_ as TryIndexByRegister<_, f64>>::try_read(register_file, r0).unwrap(),
             if i1 >= 10 { "$f" } else { " $f" },
-            register_file.read_f64_from_fpu(i1).unwrap(),
+            <_ as TryIndexByRegister<_, f64>>::try_read(register_file, r1).unwrap(),
         )?;
     }
     Ok(())

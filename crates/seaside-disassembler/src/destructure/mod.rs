@@ -14,16 +14,12 @@ pub use destructured_instruction::DestructuredInstruction;
 pub use operation::Operation;
 
 use crate::fields;
-use num_traits::FromPrimitive;
-use seaside_constants::{InstructionFormat, Opcode};
+use seaside_constants::InstructionFormat;
 use seaside_type_aliases::{Address, Instruction};
 
 pub fn destructure(instruction: Instruction, address: Address) -> Option<DestructuredInstruction> {
     use InstructionFormat::*;
-    let opcode = match Opcode::from_u8(fields::opcode(instruction)) {
-        Some(opcode) => opcode,
-        None => return None,
-    };
+    let opcode = fields::opcode(instruction)?;
     Some(
         match InstructionFormat::from(opcode) {
             Special => special::destructure(instruction),

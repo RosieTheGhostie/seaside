@@ -1,6 +1,9 @@
-use crate::{Exception, Interpreter, InterpreterState};
+use crate::{Exception, Interpreter, InterpreterState, register_file::IndexByRegister};
 use num_traits::FromPrimitive;
-use seaside_constants::{fn_codes::Coprocessor0Fn, register};
+use seaside_constants::{
+    fn_codes::Coprocessor0Fn,
+    register::{Coprocessor0Register, CpuRegister},
+};
 use seaside_disassembler::fields;
 use seaside_type_aliases::Instruction;
 
@@ -13,12 +16,10 @@ impl Interpreter {
     /// ```
     pub fn execute_coprocessor_0(&mut self, instruction: Instruction) -> Result<(), Exception> {
         use Coprocessor0Fn::*;
-        let r#fn = match Coprocessor0Fn::from_u8(fields::rs(instruction)) {
-            Some(r#fn) => r#fn,
-            None => return Err(Exception::ReservedInstruction),
-        };
+        let r#fn = Coprocessor0Fn::from_u8(fields::rs_raw(instruction))
+            .ok_or(Exception::ReservedInstruction)?;
         let rt = fields::rt(instruction);
-        let rd = fields::rd(instruction);
+        let rd = fields::rd_raw(instruction);
         match r#fn {
             MoveFromCoprocessor0 => self.state.mfc0(rt, rd),
             MoveToCoprocessor0 => self.state.mtc0(rd, rt),
@@ -29,25 +30,26 @@ impl Interpreter {
 
 impl InterpreterState {
     /// Stores the value of coprocessor 0 register `rd` in CPU register `rt`.
-    fn mfc0(&mut self, rt: u8, rd: u8) -> Result<(), Exception> {
+    fn mfc0(&mut self, rt: CpuRegister, rd: u8) -> Result<(), Exception> {
         let rd_value = match rd {
-            register::VADDR => self.registers.vaddr,
-            register::STATUS => self.registers.status,
-            register::CAUSE => self.registers.cause,
-            register::EPC => self.registers.epc,
+            Coprocessor0Register::VADDR => self.registers.vaddr,
+            Coprocessor0Register::STATUS => self.registers.status,
+            Coprocessor0Register::CAUSE => self.registers.cause,
+            Coprocessor0Register::EPC => self.registers.epc,
             _ => return Err(Exception::MalformedInstruction),
         };
-        self.registers.write_u32_to_cpu(rt, rd_value)
+        self.registers.write(rt, rd_value);
+        Ok(())
     }
 
     /// Stores the value of CPU register `rt` in coprocessor 0 register `rd`.
-    fn mtc0(&mut self, rd: u8, rt: u8) -> Result<(), Exception> {
-        let rt_value = self.registers.read_u32_from_cpu(rt)?;
+    fn mtc0(&mut self, rd: u8, rt: CpuRegister) -> Result<(), Exception> {
+        let rt_value: u32 = self.registers.read(rt);
         let destination = match rd {
-            register::VADDR => &mut self.registers.vaddr,
-            register::STATUS => &mut self.registers.status,
-            register::CAUSE => &mut self.registers.cause,
-            register::EPC => &mut self.registers.epc,
+            Coprocessor0Register::VADDR => &mut self.registers.vaddr,
+            Coprocessor0Register::STATUS => &mut self.registers.status,
+            Coprocessor0Register::CAUSE => &mut self.registers.cause,
+            Coprocessor0Register::EPC => &mut self.registers.epc,
             _ => return Err(Exception::MalformedInstruction),
         };
         *destination = rt_value;

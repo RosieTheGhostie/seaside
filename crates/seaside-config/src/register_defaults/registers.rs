@@ -1,5 +1,7 @@
 use std::ops::{Deref, Index, IndexMut};
 
+use seaside_constants::register::{CpuRegister, FpuRegister};
+
 /// The values of `N` 32-bit registers stored contiguously in memory.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Registers<const N: usize> {
@@ -44,6 +46,34 @@ impl<const N: usize> Index<usize> for Registers<N> {
 impl<const N: usize> IndexMut<usize> for Registers<N> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.registers[index]
+    }
+}
+
+impl Index<CpuRegister> for Registers<32> {
+    type Output = u32;
+
+    fn index(&self, index: CpuRegister) -> &Self::Output {
+        &self.registers[index as usize]
+    }
+}
+
+impl IndexMut<CpuRegister> for Registers<32> {
+    fn index_mut(&mut self, index: CpuRegister) -> &mut Self::Output {
+        &mut self.registers[index as usize]
+    }
+}
+
+impl Index<FpuRegister> for Registers<32> {
+    type Output = u32;
+
+    fn index(&self, index: FpuRegister) -> &Self::Output {
+        &self.registers[index as usize]
+    }
+}
+
+impl IndexMut<FpuRegister> for Registers<32> {
+    fn index_mut(&mut self, index: FpuRegister) -> &mut Self::Output {
+        &mut self.registers[index as usize]
     }
 }
 
