@@ -5,10 +5,9 @@ pub use register_set::RegisterSet;
 pub use registers::Registers;
 
 use num_traits::Zero;
+use register_set::make_registers_format;
 use seaside_constants::register::{Coprocessor0Register, CpuRegister, FpuRegister};
 use serde::{Deserialize, Serialize};
-
-use crate::register_defaults::register_set::make_registers_format;
 
 #[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct RegisterDefaults {

@@ -1,6 +1,6 @@
+use core::cmp::Ordering;
 use semver::Version;
 use serde::{Deserialize, Deserializer, Serializer};
-use std::cmp::Ordering;
 
 pub fn serialize<S>(version: &Version, serializer: S) -> Result<S::Ok, S::Error>
 where

@@ -3,10 +3,11 @@
 //! Provides the wrapper function [`assemble`], which runs the assembler routine.
 
 use anyhow::Result;
+use core::str::FromStr;
 use minimal_logging::macros::grayln;
 use seaside_assembler::Assembler;
 use seaside_config::Config;
-use std::{fs::read_to_string, path::PathBuf, str::FromStr, time::Instant};
+use std::{fs::read_to_string, path::PathBuf, time::Instant};
 
 /// Assembles `source` into a format usable by the seaside interpreter.
 ///

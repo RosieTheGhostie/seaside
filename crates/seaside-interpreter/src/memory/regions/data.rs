@@ -1,6 +1,6 @@
-use crate::{memory::Region, Exception};
-use seaside_type_aliases::{is_aligned, Address};
-use std::{iter::zip, ops::Range};
+use crate::{Exception, memory::Region};
+use core::{iter::zip, ops::Range};
+use seaside_type_aliases::{Address, is_aligned};
 
 pub struct DataRegion {
     pub addresses: Range<Address>,

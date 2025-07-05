@@ -2,10 +2,6 @@ use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use syn::{Ident, Token, Variant, punctuated::Punctuated, spanned::Spanned};
 
-/**
- * Service::Spim(Spim::Print(Print::String)) => "spim.print.string"
- */
-
 pub fn generate_code(ident: Ident, variants: Punctuated<Variant, Token![,]>) -> TokenStream2 {
     let mut branches: Punctuated<TokenStream2, Token![else]> = Punctuated::new();
     let mut match_arms = Vec::new();

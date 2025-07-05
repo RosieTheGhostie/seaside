@@ -1,5 +1,5 @@
+use core::str::FromStr;
 use num_traits::{FromPrimitive, ToPrimitive};
-use std::str::FromStr;
 
 /// A set of related registers.
 pub trait RegisterSet: FromStr + FromPrimitive + ToPrimitive {

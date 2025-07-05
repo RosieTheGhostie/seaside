@@ -1,8 +1,8 @@
+use core::fmt::{Display, Formatter, Result as FmtResult};
 use seaside_constants::{
-    NumberFormat,
+    ConditionCode, NumberFormat,
     register::{CpuRegister, FpuRegister},
 };
-use std::fmt::{Display, Formatter, Result as FmtResult};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum Component {
@@ -12,7 +12,7 @@ pub enum Component {
     Gpr(CpuRegister),
     WrappedGpr(CpuRegister),
     Fpr(FpuRegister),
-    Cc(u8),
+    Cc(ConditionCode),
     Condition(bool),
     Shamt(u8),
     Immediate(u16),

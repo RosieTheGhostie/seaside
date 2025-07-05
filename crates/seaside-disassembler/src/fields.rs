@@ -62,14 +62,6 @@ pub const fn cc_from_fpu_register(register: FpuRegister) -> ConditionCode {
     unsafe { transmute((register as u8) >> 2) }
 }
 
-pub const fn cc_from_index(register_index: u8) -> u8 {
-    register_index >> 2
-}
-
-pub const fn condition_from_index(register_index: u8) -> bool {
-    (register_index & 1) == 1
-}
-
 pub const fn condition_from_cpu_register(register: CpuRegister) -> bool {
     register as u8 & 1 == 1
 }

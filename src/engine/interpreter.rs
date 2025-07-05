@@ -43,10 +43,9 @@ pub fn init_interpreter(
 
 /// Runs `interpreter`.
 ///
-/// Upon success, this returns the exit code. If the interpreter raises an [`Exception`], this wraps
-/// it in an [`Error`] and, if enabled in the config, prints the crash handler.
-///
-/// [`Exception`]: seaside_interpreter::Exception
+/// Upon success, this returns the exit code. If the interpreter raises an
+/// [`Exception`](seaside_interpreter::Exception), this wraps it in an [`Error`] and, if enabled in
+/// the config, prints the crash handler.
 pub fn run(interpreter: &mut Interpreter) -> Result<Option<u8>> {
     match interpreter.run() {
         Ok(()) => Ok(interpreter.state.exit_code),

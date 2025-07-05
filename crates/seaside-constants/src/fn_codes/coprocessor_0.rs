@@ -1,20 +1,12 @@
 use num_derive::FromPrimitive;
-use std::fmt::{Display, Formatter, Result as FmtResult};
+use thiserror::Error; // these aren't errors, but i want to convert them to strings, soooo
 
-#[derive(Clone, Copy, Debug, Eq, FromPrimitive, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Error, FromPrimitive, PartialEq)]
 pub enum Coprocessor0Fn {
-    MoveFromCoprocessor0 = 0x00, // mfc0
-    MoveToCoprocessor0 = 0x04,   // mtc0
-    ErrorReturn = 0x10,          // eret
-}
-
-impl Display for Coprocessor0Fn {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        use Coprocessor0Fn::*;
-        f.write_str(match *self {
-            MoveFromCoprocessor0 => "mfc0",
-            MoveToCoprocessor0 => "mtc0",
-            ErrorReturn => "eret",
-        })
-    }
+    #[error("mfc0")]
+    MoveFromCoprocessor0 = 0x00,
+    #[error("mtc0")]
+    MoveToCoprocessor0 = 0x04,
+    #[error("eret")]
+    ErrorReturn = 0x10,
 }

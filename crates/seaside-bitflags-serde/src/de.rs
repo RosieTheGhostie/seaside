@@ -1,6 +1,6 @@
+use core::marker::PhantomData;
 use heck::AsPascalCase;
 use serde::de::{self, Visitor};
-use std::marker::PhantomData;
 
 pub struct BitFlagVisitor<F: bitflags::Flags> {
     _marker: PhantomData<fn() -> F>,

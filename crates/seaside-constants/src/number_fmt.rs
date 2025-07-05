@@ -1,25 +1,20 @@
 use num_derive::FromPrimitive;
-use std::fmt::{Display, Formatter, Result as FmtResult};
+use thiserror::Error; // these aren't errors, but i want to convert them to strings, soooo
 
-#[derive(Clone, Copy, Debug, Eq, FromPrimitive, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Error, FromPrimitive, PartialEq)]
 pub enum NumberFormat {
+    #[error(".s")]
     SingleNoPrefix = 0,
+    #[error(".d")]
     DoubleNoPrefix = 1,
+    #[error(".w")]
     WordNoPrefix = 4,
     // LongNoPrefix = 5,
+    #[error(".s")]
     Single = 16,
+    #[error(".d")]
     Double = 17,
+    #[error(".w")]
     Word = 20,
     // Long = 21,
-}
-
-impl Display for NumberFormat {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        use NumberFormat::*;
-        f.write_str(match *self {
-            Single | SingleNoPrefix => ".s",
-            Double | DoubleNoPrefix => ".d",
-            Word | WordNoPrefix => ".w",
-        })
-    }
 }

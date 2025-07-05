@@ -47,10 +47,10 @@ pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> 
         MoveFromHigh | MoveFromLow => components[0] = Component::Gpr(rd),
         Break => components[0] = Component::Code(fields::code(instruction)),
         MoveConditional => {
-            components[0] = Component::Condition(fields::condition_from_index(rt as u8));
+            components[0] = Component::Condition(fields::condition_from_cpu_register(rt));
             components[1] = Component::Gpr(rd);
             components[2] = Component::Gpr(rs);
-            components[3] = Component::Cc(fields::cc_from_index(rt as u8));
+            components[3] = Component::Cc(fields::cc_from_cpu_register(rt));
         }
         SystemCall => {}
     };

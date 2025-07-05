@@ -17,6 +17,7 @@ pub use parser::{Node, ParseError, Parser};
 pub use token::Token;
 
 use anyhow::{Error, Result};
+use core::iter::zip;
 use directives::SegmentDirective;
 use logos::Logos;
 use operation::convert_address;
@@ -26,7 +27,6 @@ use seaside_type_aliases::Address;
 use segment::SegmentBuildInfo;
 use std::{
     collections::{HashMap, VecDeque},
-    iter::zip,
     path::Path,
 };
 

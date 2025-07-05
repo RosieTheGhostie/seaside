@@ -1,88 +1,80 @@
 use num_derive::FromPrimitive;
-use std::fmt::{Display, Formatter, Result as FmtResult};
+use thiserror::Error; // these aren't errors, but i want to convert them to strings, soooo
 
-#[derive(Clone, Copy, Debug, Eq, FromPrimitive, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Error, FromPrimitive, PartialEq)]
 pub enum SpecialFn {
-    ShiftLeftLogical = 0x00,             // sll
-    MoveConditional = 0x01,              // movc
-    ShiftRightLogical = 0x02,            // srl
-    ShiftRightArithmetic = 0x03,         // sra
-    ShiftLeftLogicalVariable = 0x04,     // sllv
-    ShiftRightLogicalVariable = 0x06,    // srlv
-    ShiftRightArithmeticVariable = 0x07, // srav
-    JumpRegister = 0x08,                 // jr
-    JumpAndLinkRegister = 0x09,          // jalr
-    MoveZero = 0x0a,                     // movz
-    MoveNotZero = 0x0b,                  // movn
-    SystemCall = 0x0c,                   // syscall
-    Break = 0x0d,                        // break
-    MoveFromHigh = 0x10,                 // mfhi
-    MoveToHigh = 0x11,                   // mthi
-    MoveFromLow = 0x12,                  // mflo
-    MoveToLow = 0x13,                    // mtlo
-    Multiply = 0x18,                     // mult
-    MultiplyUnsigned = 0x19,             // multu
-    Divide = 0x1a,                       // div
-    DivideUnsigned = 0x1b,               // divu
-    Add = 0x20,                          // add
-    AddUnsigned = 0x21,                  // addu
-    Subtract = 0x22,                     // sub
-    SubtractUnsigned = 0x23,             // subu
-    And = 0x24,                          // and
-    Or = 0x25,                           // or
-    Xor = 0x26,                          // xor
-    Nor = 0x27,                          // nor
-    SetLessThan = 0x2a,                  // slt
-    SetLessThanUnsigned = 0x2b,          // sltu
-    TrapGreaterEqual = 0x30,             // tge
-    TrapGreaterEqualUnsigned = 0x31,     // tgeu
-    TrapLessThan = 0x32,                 // tlt
-    TrapLessThanUnsigned = 0x33,         // tltu
-    TrapEqual = 0x34,                    // teq
-    TrapNotEqual = 0x36,                 // tne
-}
-
-impl Display for SpecialFn {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        use SpecialFn::*;
-        f.write_str(match *self {
-            ShiftLeftLogical => "sll",
-            MoveConditional => "movc",
-            ShiftRightLogical => "srl",
-            ShiftRightArithmetic => "sra",
-            ShiftLeftLogicalVariable => "sllv",
-            ShiftRightLogicalVariable => "srlv",
-            ShiftRightArithmeticVariable => "srav",
-            JumpRegister => "jr",
-            JumpAndLinkRegister => "jalr",
-            MoveZero => "movz",
-            MoveNotZero => "movn",
-            SystemCall => "syscall",
-            Break => "break",
-            MoveFromHigh => "mfhi",
-            MoveToHigh => "mthi",
-            MoveFromLow => "mflo",
-            MoveToLow => "mtlo",
-            Multiply => "mult",
-            MultiplyUnsigned => "multu",
-            Divide => "div",
-            DivideUnsigned => "divu",
-            Add => "add",
-            AddUnsigned => "addu",
-            Subtract => "sub",
-            SubtractUnsigned => "subu",
-            And => "and",
-            Or => "or",
-            Xor => "xor",
-            Nor => "nor",
-            SetLessThan => "slt",
-            SetLessThanUnsigned => "sltu",
-            TrapGreaterEqual => "tge",
-            TrapGreaterEqualUnsigned => "tgeu",
-            TrapLessThan => "tlt",
-            TrapLessThanUnsigned => "tltu",
-            TrapEqual => "teq",
-            TrapNotEqual => "tne",
-        })
-    }
+    #[error("sll")]
+    ShiftLeftLogical = 0x00,
+    #[error("movc")]
+    MoveConditional = 0x01,
+    #[error("srl")]
+    ShiftRightLogical = 0x02,
+    #[error("sra")]
+    ShiftRightArithmetic = 0x03,
+    #[error("sllv")]
+    ShiftLeftLogicalVariable = 0x04,
+    #[error("srlv")]
+    ShiftRightLogicalVariable = 0x06,
+    #[error("srav")]
+    ShiftRightArithmeticVariable = 0x07,
+    #[error("jr")]
+    JumpRegister = 0x08,
+    #[error("jalr")]
+    JumpAndLinkRegister = 0x09,
+    #[error("movz")]
+    MoveZero = 0x0a,
+    #[error("movn")]
+    MoveNotZero = 0x0b,
+    #[error("syscall")]
+    SystemCall = 0x0c,
+    #[error("break")]
+    Break = 0x0d,
+    #[error("mfhi")]
+    MoveFromHigh = 0x10,
+    #[error("mthi")]
+    MoveToHigh = 0x11,
+    #[error("mflo")]
+    MoveFromLow = 0x12,
+    #[error("mtlo")]
+    MoveToLow = 0x13,
+    #[error("mult")]
+    Multiply = 0x18,
+    #[error("multu")]
+    MultiplyUnsigned = 0x19,
+    #[error("div")]
+    Divide = 0x1a,
+    #[error("divu")]
+    DivideUnsigned = 0x1b,
+    #[error("add")]
+    Add = 0x20,
+    #[error("addu")]
+    AddUnsigned = 0x21,
+    #[error("sub")]
+    Subtract = 0x22,
+    #[error("subu")]
+    SubtractUnsigned = 0x23,
+    #[error("and")]
+    And = 0x24,
+    #[error("or")]
+    Or = 0x25,
+    #[error("xor")]
+    Xor = 0x26,
+    #[error("nor")]
+    Nor = 0x27,
+    #[error("slt")]
+    SetLessThan = 0x2a,
+    #[error("sltu")]
+    SetLessThanUnsigned = 0x2b,
+    #[error("tge")]
+    TrapGreaterEqual = 0x30,
+    #[error("tgeu")]
+    TrapGreaterEqualUnsigned = 0x31,
+    #[error("tlt")]
+    TrapLessThan = 0x32,
+    #[error("tltu")]
+    TrapLessThanUnsigned = 0x33,
+    #[error("teq")]
+    TrapEqual = 0x34,
+    #[error("tne")]
+    TrapNotEqual = 0x36,
 }

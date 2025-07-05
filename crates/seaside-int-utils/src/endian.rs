@@ -5,9 +5,9 @@
 
 #[cfg(feature = "all_zeroes")]
 use crate::AllZeroes;
+use core::fmt::{Display, Formatter, Result as FmtResult};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-use std::fmt::{Display, Formatter, Result as FmtResult};
 
 /// Indicates the intended byte order/endianness.
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]

@@ -8,13 +8,13 @@ pub use address_range::AddressRange;
 pub use runtime_data::RuntimeData;
 pub use segment::Segment;
 pub use segments::Segments;
-use serde::{Deserialize, Serialize};
 
 use crate::Validate;
 use anyhow::{Error, Result};
 use seaside_error::EngineError;
 use seaside_int_utils::AllZeroes;
 use seaside_type_aliases::Address;
+use serde::{Deserialize, Serialize};
 use traits::{Contains, Overlapping};
 
 /// Maps various memory regions to [`AddressRange`]s.

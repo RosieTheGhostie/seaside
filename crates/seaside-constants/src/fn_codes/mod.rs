@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-#![allow(unused_imports)]
 pub mod coprocessor_0;
 pub mod coprocessor_1;
 pub mod register_immediate;

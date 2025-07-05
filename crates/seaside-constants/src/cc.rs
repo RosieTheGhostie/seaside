@@ -1,3 +1,4 @@
+use core::fmt::{Display, Formatter, Result as FmtResult};
 use num_traits::FromPrimitive;
 
 #[repr(u8)]
@@ -32,5 +33,11 @@ impl FromPrimitive for ConditionCode {
         } else {
             None
         }
+    }
+}
+
+impl Display for ConditionCode {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        write!(f, "{}", *self as u8)
     }
 }

@@ -1,10 +1,10 @@
 use super::{
-    component::{FprDisplayer, GprDisplayer},
     Component, Operation,
+    component::{FprDisplayer, GprDisplayer},
 };
+use core::fmt::{Display, Formatter, Result as FmtResult};
 use seaside_int_utils::SignExtend;
 use seaside_type_aliases::Address;
-use std::fmt::{Display, Formatter, Result as FmtResult};
 
 #[derive(Debug, Default)]
 pub struct DestructuredInstruction {

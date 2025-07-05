@@ -4,14 +4,14 @@ use crate::{
     register_file::{IndexByRegister, TryIndexByRegister},
 };
 use console::Term;
+use core::{ffi::CStr, time::Duration};
 use seaside_constants::register::{CpuRegister, FpuRegister};
 use seaside_type_aliases::Address;
 use std::{
-    ffi::CStr,
     fs::OpenOptions,
     io::{Read, Write, stdin},
     thread::sleep,
-    time::{Duration, SystemTime},
+    time::SystemTime,
 };
 
 impl Interpreter {

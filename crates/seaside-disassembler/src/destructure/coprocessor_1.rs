@@ -10,8 +10,8 @@ pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> 
     let ft = fields::ft(instruction);
     let fmt = fields::fmt(instruction);
     if fmt == 8 {
-        components[0] = Component::Condition(fields::condition_from_index(ft as u8));
-        components[1] = Component::Cc(fields::cc_from_index(ft as u8));
+        components[0] = Component::Condition(fields::condition_from_fpu_register(ft));
+        components[1] = Component::Cc(fields::cc_from_fpu_register(ft));
         components[2] = Component::Offset(fields::imm(instruction));
         return Some(DestructuredInstruction::new(
             Operation::BranchCoprocessor1,
@@ -36,11 +36,11 @@ pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> 
             components[2] = Component::Fpr(fs);
         }
         MoveConditional => {
-            components[0] = Component::Condition(fields::condition_from_index(ft as u8));
+            components[0] = Component::Condition(fields::condition_from_fpu_register(ft));
             components[1] = Component::Fmt(fmt);
             components[2] = Component::Fpr(fd);
             components[3] = Component::Fpr(fs);
-            components[4] = Component::Cc(fields::cc_from_index(ft as u8));
+            components[4] = Component::Cc(fields::cc_from_fpu_register(ft));
         }
         MoveZero | MoveNotZero => {
             components[0] = Component::Fmt(fmt);
@@ -50,7 +50,7 @@ pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> 
         }
         CompareEqual | CompareLessThan | CompareLessEqual => {
             components[0] = Component::Fmt(fmt);
-            components[1] = Component::Cc(fields::cc_from_index(fd as u8));
+            components[1] = Component::Cc(fields::cc_from_fpu_register(fd));
             components[2] = Component::Fpr(fd);
             components[3] = Component::Fpr(ft);
         }

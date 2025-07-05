@@ -3,7 +3,7 @@
 //! Provides the iterator [`ByteStream`], which supports all built-in integer types.
 
 use crate::Endian;
-use std::{marker::PhantomData, slice::ChunksExact};
+use core::{marker::PhantomData, slice::ChunksExact};
 
 /// An iterator that iterates over a slice of bytes as another integer type.
 pub struct ByteStream<'a, T> {

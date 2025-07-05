@@ -9,9 +9,7 @@ use seaside_error::EngineError;
 use seaside_int_utils::AllZeroes;
 use serde::{Deserialize, Serialize};
 
-/// Collection of segments in the [`MemoryMap`].
-///
-/// [`MemoryMap`]: super::MemoryMap
+/// Collection of segments in the [`MemoryMap`](super::MemoryMap).
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Segments {
     pub text: Segment,

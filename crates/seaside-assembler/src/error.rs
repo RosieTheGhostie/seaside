@@ -1,5 +1,4 @@
 use crate::ParseError;
-use std::io::Error as IoError;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -7,7 +6,7 @@ pub enum AssembleError {
     #[error("{0}")]
     Parse(#[from] ParseError),
     #[error("{0}")]
-    Io(#[from] IoError),
+    Io(#[from] std::io::Error),
     #[error("found duplicate definitions of a symbol")]
     MultipleDefinitions,
     #[error("no definition provided for an implicitly declared symbol")]

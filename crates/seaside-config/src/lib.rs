@@ -12,11 +12,11 @@ pub use register_defaults::RegisterDefaults;
 pub use validate::Validate;
 
 use anyhow::{Context, Error, Result};
+use core::str::FromStr;
 use seaside_error::EngineError;
 use seaside_int_utils::{AllZeroes, Endian};
 use semver::Version;
 use serde::{Deserialize, Serialize};
-use std::str::FromStr;
 use version::VersionComparison;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

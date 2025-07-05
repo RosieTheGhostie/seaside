@@ -13,7 +13,7 @@ use std::{fs::read_to_string, path::PathBuf};
 /// Finds and parses a seaside configuration file.
 ///
 /// If the user does not specify an explicit path to the config file, it will search for a file
-/// called 'Seaside.bin' in the current working directory or seaside's config directory. The latter
+/// called 'Seaside.toml' in the current working directory or seaside's config directory. The latter
 /// depends on the operating system.
 pub fn get_config(args: &CmdArgs) -> Result<Config> {
     // The borrow checker requires an explicit binding to the temporary produced by

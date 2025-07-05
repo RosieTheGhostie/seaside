@@ -6,17 +6,14 @@ pub use service::Service;
 
 use crate::Validate;
 use anyhow::{Error, Result};
+use core::fmt::{Formatter, Result as FmtResult};
 use seaside_error::EngineError;
 use seaside_int_utils::AllZeroes;
 use serde::{
     Deserialize, Serialize,
     de::{MapAccess, Visitor},
 };
-use std::{
-    collections::{HashMap, hash_map::Iter as HashMapIter},
-    fmt::{Formatter, Result as FmtResult},
-    result::Result as StdResult,
-};
+use std::collections::{HashMap, hash_map::Iter as HashMapIter};
 
 #[derive(Clone, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct Services {
@@ -27,7 +24,7 @@ pub struct Services {
 }
 
 impl<'de> Deserialize<'de> for Services {
-    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    fn deserialize<D>(deserializer: D) -> core::result::Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
@@ -97,7 +94,7 @@ impl<'de> Visitor<'de> for ServicesVisitor {
         formatter.write_str("a mapping from service codes to services")
     }
 
-    fn visit_map<A>(self, mut access: A) -> StdResult<Self::Value, A::Error>
+    fn visit_map<A>(self, mut access: A) -> core::result::Result<Self::Value, A::Error>
     where
         A: MapAccess<'de>,
     {
