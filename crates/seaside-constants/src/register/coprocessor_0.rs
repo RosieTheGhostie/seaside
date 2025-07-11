@@ -29,10 +29,10 @@ impl FromStr for Coprocessor0Register {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.strip_prefix('$').unwrap_or(s) {
-            "vaddr" => Ok(Self::VirtualAddr),
-            "status" => Ok(Self::Status),
-            "cause" => Ok(Self::Cause),
-            "epc" => Ok(Self::ErrorPc),
+            "vaddr" | "8" => Ok(Self::VirtualAddr),
+            "status" | "12" => Ok(Self::Status),
+            "cause" | "13" => Ok(Self::Cause),
+            "epc" | "14" => Ok(Self::ErrorPc),
             "" => Err(ParseError::Empty),
             _ => Err(ParseError::BadValue),
         }

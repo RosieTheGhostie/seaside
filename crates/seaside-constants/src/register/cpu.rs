@@ -1,4 +1,4 @@
-use super::ParseError;
+use super::{IndexedRegister, ParseError};
 use core::{
     fmt::{Display, Formatter, Result as FmtResult, Write},
     str::FromStr,
@@ -78,8 +78,8 @@ impl FromStr for CpuRegister {
             [b's', b'p'] => Ok(Self::StackPtr),
             [b's', index @ b'0'..=b'7'] => Ok(Self::saved(index - b'0')),
             [b't', index @ b'0'..=b'9'] => Ok(Self::temp(index - b'0')),
-            [b'v', b'0'] => Ok(Self::Kernel0),
-            [b'v', b'1'] => Ok(Self::Kernel1),
+            [b'v', b'0'] => Ok(Self::Val0),
+            [b'v', b'1'] => Ok(Self::Val1),
             _ => Err(ParseError::BadValue),
         }
     }
@@ -117,6 +117,14 @@ impl CpuRegister {
 
     pub const fn name(&self) -> &'static str {
         Self::NAMES[*self as usize]
+    }
+
+    pub fn parse_indexed(s: &str) -> Result<Self, ParseError> {
+        if let Ok(indexed) = IndexedRegister::from_str(s) {
+            Ok(indexed.to_cpu())
+        } else {
+            s.parse()
+        }
     }
 
     const fn arg(index: u8) -> Self {

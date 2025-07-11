@@ -1,4 +1,4 @@
-use super::ParseError;
+use super::{IndexedRegister, ParseError};
 use core::{
     fmt::{Display, Formatter, Result as FmtResult, Write},
     str::FromStr,
@@ -109,5 +109,13 @@ impl FpuRegister {
 
     pub const fn is_double_aligned(&self) -> bool {
         (*self as u8) % 2 == 0
+    }
+
+    pub fn parse_indexed(s: &str) -> Result<Self, ParseError> {
+        if let Ok(indexed) = IndexedRegister::from_str(s) {
+            Ok(indexed.to_fpu())
+        } else {
+            s.parse()
+        }
     }
 }
