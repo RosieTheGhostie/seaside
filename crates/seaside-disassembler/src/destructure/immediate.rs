@@ -13,52 +13,45 @@ pub fn destructure(opcode: Opcode, instruction: Instruction) -> Option<Destructu
     match opcode {
         RegisterImmediate => return destructure_regimm(rs, rt, imm),
         BranchEqual | BranchNotEqual => {
-            components[0] = Component::Gpr(rs);
-            components[1] = Component::Gpr(rt);
+            components[0] = Component::CpuRegister(rs);
+            components[1] = Component::CpuRegister(rt);
             components[2] = Component::Offset(imm);
         }
         BranchLessEqualZero | BranchGreaterThanZero => {
-            components[0] = Component::Gpr(rs);
+            components[0] = Component::CpuRegister(rs);
             components[1] = Component::Offset(imm);
         }
         AddImmediate
         | AddImmediateUnsigned
         | SetLessThanImmediate
         | SetLessThanImmediateUnsigned => {
-            components[0] = Component::Gpr(rt);
-            components[1] = Component::Gpr(rs);
+            components[0] = Component::CpuRegister(rt);
+            components[1] = Component::CpuRegister(rs);
             components[2] = Component::Immediate(imm);
         }
         AndImmediate | OrImmediate | XorImmediate => {
-            components[0] = Component::Gpr(rt);
-            components[1] = Component::Gpr(rs);
+            components[0] = Component::CpuRegister(rt);
+            components[1] = Component::CpuRegister(rs);
             components[2] = Component::HexImmediate(imm);
         }
         LoadUpperImmediate => {
-            components[0] = Component::Gpr(rt);
+            components[0] = Component::CpuRegister(rt);
             components[1] = Component::HexImmediate(imm);
         }
-        LoadByte
-        | LoadHalf
-        | LoadWordLeft
-        | LoadWord
-        | LoadByteUnsigned
-        | LoadHalfUnsigned
-        | LoadWordRight
-        | StoreByte
-        | StoreHalf
-        | StoreWordLeft
-        | StoreWord
-        | StoreConditional
-        | StoreWordRight
-        | LoadLinked
-        | LoadWordCoprocessor1
+        LoadByte | LoadHalf | LoadWordLeft | LoadWord | LoadByteUnsigned | LoadHalfUnsigned
+        | LoadWordRight | StoreByte | StoreHalf | StoreWordLeft | StoreWord | StoreConditional
+        | StoreWordRight | LoadLinked => {
+            components[0] = Component::CpuRegister(rt);
+            components[1] = Component::Immediate(imm);
+            components[2] = Component::WrappedCpuRegister(rs);
+        }
+        LoadWordCoprocessor1
         | LoadDoubleCoprocessor1
         | StoreWordCoprocessor1
         | StoreDoubleCoprocessor1 => {
-            components[0] = Component::Gpr(rt);
+            components[0] = Component::FpuRegister(rt.to_fpu());
             components[1] = Component::Immediate(imm);
-            components[2] = Component::WrappedGpr(rs);
+            components[2] = Component::WrappedCpuRegister(rs);
         }
         _ => return None,
     }
@@ -75,7 +68,7 @@ fn destructure_regimm(
 ) -> Option<DestructuredInstruction> {
     use RegisterImmediateFn::*;
     let mut components = [
-        Component::Gpr(rs),
+        Component::CpuRegister(rs),
         Component::default(),
         Component::default(),
         Component::default(),

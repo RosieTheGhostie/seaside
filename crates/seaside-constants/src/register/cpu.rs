@@ -127,6 +127,10 @@ impl CpuRegister {
         }
     }
 
+    pub const fn into_index(self) -> usize {
+        self as usize
+    }
+
     const fn arg(index: u8) -> Self {
         assert!(index <= 3, "invalid index for argument register");
         unsafe { core::mem::transmute::<u8, Self>(Self::Arg0 as u8 + index) }

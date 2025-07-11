@@ -107,15 +107,19 @@ impl FpuRegister {
         "f27", "f28", "f29", "f30", "f31",
     ];
 
-    pub const fn is_double_aligned(&self) -> bool {
-        (*self as u8) % 2 == 0
-    }
-
     pub fn parse_indexed(s: &str) -> Result<Self, ParseError> {
         if let Ok(indexed) = IndexedRegister::from_str(s) {
             Ok(indexed.to_fpu())
         } else {
             s.parse()
         }
+    }
+
+    pub const fn into_index(self) -> usize {
+        self as usize
+    }
+
+    pub const fn is_double_aligned(&self) -> bool {
+        (*self as u8) % 2 == 0
     }
 }

@@ -18,6 +18,8 @@ macro_rules! make_registers_format {
             use ::core::{
                 fmt::{Formatter, Result as FmtResult},
                 iter::zip,
+                option::Option::*,
+                result::Result::{self, *},
                 str::FromStr,
             };
             use serde::{
@@ -25,6 +27,7 @@ macro_rules! make_registers_format {
                 de::{Deserializer, MapAccess, Visitor},
                 ser::SerializeMap,
             };
+            use std::string::String;
 
             pub struct RegisterSetVisitor;
 
@@ -42,7 +45,7 @@ macro_rules! make_registers_format {
                     let mut register_set = <Self::Value>::default();
                     while let Some((key, value)) = access.next_entry::<String, u32>()? {
                         if let Ok(register) = <$register_t>::from_str(&key) {
-                            register_set[register as usize] = value;
+                            register_set[register.into_index()] = value;
                         }
                         // NOTE: We can't raise an error if the key was invalid because M::Error
                         //       is too generic to provide any semblance of a constructor.

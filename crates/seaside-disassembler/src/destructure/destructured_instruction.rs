@@ -1,7 +1,4 @@
-use super::{
-    Component, Operation,
-    component::{FprDisplayer, GprDisplayer},
-};
+use super::{Component, Operation};
 use core::fmt::{Display, Formatter, Result as FmtResult};
 use seaside_int_utils::SignExtend;
 use seaside_type_aliases::Address;
@@ -49,23 +46,24 @@ impl Display for DestructuredInstruction {
             match component {
                 Component::Empty => break,
                 Component::Fmt(fmt) => write!(f, "{fmt}"),
-                Component::Gpr(index) => write!(f, " {}", GprDisplayer(index)),
-                Component::WrappedGpr(index) => write!(f, "({})", GprDisplayer(index)),
-                Component::Fpr(index) => write!(f, " {}", FprDisplayer(index)),
+                Component::CpuRegister(register) => write!(f, " {register:#}"),
+                Component::WrappedCpuRegister(register) => write!(f, "({register:#})"),
+                Component::Coprocessor0Register(register) => write!(f, " {register:#}"),
+                Component::FpuRegister(register) => write!(f, " {register:#}"),
                 Component::Cc(cc) => write!(f, " {cc}"),
                 Component::Condition(c) => write!(f, "{}", if c { 't' } else { 'f' }),
                 Component::Shamt(shamt) => write!(f, " {shamt}"),
                 Component::Immediate(imm) => write!(f, " {}", imm as i16),
-                Component::HexImmediate(imm) => write!(f, " 0x{imm:04x}"),
+                Component::HexImmediate(imm) => write!(f, " {imm:#06x}"),
                 Component::Offset(offset) => {
                     let offset: i32 = <u16 as SignExtend<i32>>::sign_extend(&offset) << 2;
                     let address = (self.address + 4).wrapping_add_signed(offset);
-                    write!(f, " 0x{address:08x}")
+                    write!(f, " {address:#010x}")
                 }
                 Component::Code(code) => write!(f, " {code}"),
                 Component::Index(index) => {
                     let address = ((self.address + 4) & 0xf0000000) | (index << 2);
-                    write!(f, " 0x{address:08x}")
+                    write!(f, " {address:#010x}")
                 }
             }?;
         }

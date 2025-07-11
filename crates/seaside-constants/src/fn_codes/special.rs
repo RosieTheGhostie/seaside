@@ -5,7 +5,7 @@ use thiserror::Error; // these aren't errors, but i want to convert them to stri
 pub enum SpecialFn {
     #[error("sll")]
     ShiftLeftLogical = 0x00,
-    #[error("movc")]
+    #[error("mov")] // will be properly suffixed later
     MoveConditional = 0x01,
     #[error("srl")]
     ShiftRightLogical = 0x02,

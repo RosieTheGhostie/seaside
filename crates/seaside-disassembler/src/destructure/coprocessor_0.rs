@@ -7,13 +7,13 @@ use seaside_type_aliases::Instruction;
 pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> {
     use Coprocessor0Fn::*;
     let rt = fields::rt(instruction);
-    let rd = fields::rd(instruction);
-    let r#fn = Coprocessor0Fn::from_u8(fields::r#fn(instruction))?;
+    let rd = fields::rd(instruction).to_indexed();
+    let r#fn = Coprocessor0Fn::from_u8(fields::rs_raw(instruction))?;
     let mut components = [Component::default(); 5];
     match r#fn {
         MoveFromCoprocessor0 | MoveToCoprocessor0 => {
-            components[0] = Component::Gpr(rt);
-            components[1] = Component::Gpr(rd);
+            components[0] = Component::CpuRegister(rt);
+            components[1] = Component::Coprocessor0Register(rd.try_into_coprocessor_0()?);
         }
         ErrorReturn => {}
     }

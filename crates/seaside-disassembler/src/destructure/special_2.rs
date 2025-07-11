@@ -13,17 +13,17 @@ pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> 
     let mut components = [Component::default(); 5];
     match r#fn {
         MultiplyAdd | MultiplyAddUnsigned | MultiplySubtract | MultiplySubtractUnsigned => {
-            components[0] = Component::Gpr(rs);
-            components[1] = Component::Gpr(rt);
+            components[0] = Component::CpuRegister(rs);
+            components[1] = Component::CpuRegister(rt);
         }
         Multiply => {
-            components[0] = Component::Gpr(rd);
-            components[1] = Component::Gpr(rs);
-            components[2] = Component::Gpr(rt);
+            components[0] = Component::CpuRegister(rd);
+            components[1] = Component::CpuRegister(rs);
+            components[2] = Component::CpuRegister(rt);
         }
         CountLeadingZeroes | CountLeadingOnes => {
-            components[0] = Component::Gpr(rd);
-            components[1] = Component::Gpr(rs);
+            components[0] = Component::CpuRegister(rd);
+            components[1] = Component::CpuRegister(rs);
         }
     }
     Some(DestructuredInstruction::new(

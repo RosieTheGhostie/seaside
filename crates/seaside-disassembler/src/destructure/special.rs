@@ -13,20 +13,20 @@ pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> 
     let mut components = [Component::default(); 5];
     match r#fn {
         ShiftLeftLogical | ShiftRightLogical | ShiftRightArithmetic => {
-            components[0] = Component::Gpr(rd);
-            components[1] = Component::Gpr(rt);
+            components[0] = Component::CpuRegister(rd);
+            components[1] = Component::CpuRegister(rt);
             components[2] = Component::Shamt(fields::shamt(instruction));
         }
         ShiftLeftLogicalVariable | ShiftRightLogicalVariable | ShiftRightArithmeticVariable => {
-            components[0] = Component::Gpr(rd);
-            components[1] = Component::Gpr(rt);
-            components[2] = Component::Gpr(rs);
+            components[0] = Component::CpuRegister(rd);
+            components[1] = Component::CpuRegister(rt);
+            components[2] = Component::CpuRegister(rs);
         }
         MoveZero | MoveNotZero | Add | AddUnsigned | Subtract | SubtractUnsigned | And | Or
         | Xor | Nor | SetLessThan | SetLessThanUnsigned => {
-            components[0] = Component::Gpr(rd);
-            components[1] = Component::Gpr(rs);
-            components[2] = Component::Gpr(rt);
+            components[0] = Component::CpuRegister(rd);
+            components[1] = Component::CpuRegister(rs);
+            components[2] = Component::CpuRegister(rt);
         }
         Multiply
         | MultiplyUnsigned
@@ -38,18 +38,22 @@ pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> 
         | TrapLessThanUnsigned
         | TrapEqual
         | TrapNotEqual => {
-            components[0] = Component::Gpr(rs);
-            components[1] = Component::Gpr(rt);
+            components[0] = Component::CpuRegister(rs);
+            components[1] = Component::CpuRegister(rt);
         }
-        JumpRegister | JumpAndLinkRegister | MoveToHigh | MoveToLow => {
-            components[0] = Component::Gpr(rs);
+        JumpRegister | MoveToHigh | MoveToLow => {
+            components[0] = Component::CpuRegister(rs);
         }
-        MoveFromHigh | MoveFromLow => components[0] = Component::Gpr(rd),
+        JumpAndLinkRegister => {
+            components[0] = Component::CpuRegister(rd);
+            components[1] = Component::CpuRegister(rs);
+        }
+        MoveFromHigh | MoveFromLow => components[0] = Component::CpuRegister(rd),
         Break => components[0] = Component::Code(fields::code(instruction)),
         MoveConditional => {
             components[0] = Component::Condition(fields::condition_from_cpu_register(rt));
-            components[1] = Component::Gpr(rd);
-            components[2] = Component::Gpr(rs);
+            components[1] = Component::CpuRegister(rd);
+            components[2] = Component::CpuRegister(rs);
             components[3] = Component::Cc(fields::cc_from_cpu_register(rt));
         }
         SystemCall => {}

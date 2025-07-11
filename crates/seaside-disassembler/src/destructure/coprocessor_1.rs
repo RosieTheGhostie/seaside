@@ -25,34 +25,34 @@ pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> 
     match r#fn {
         Add | Subtract | Multiply | Divide => {
             components[0] = Component::Fmt(fmt);
-            components[1] = Component::Fpr(fd);
-            components[2] = Component::Fpr(fs);
-            components[3] = Component::Fpr(ft);
+            components[1] = Component::FpuRegister(fd);
+            components[2] = Component::FpuRegister(fs);
+            components[3] = Component::FpuRegister(ft);
         }
         SquareRoot | AbsoluteValue | Move | Negate | RoundWord | TruncateWord | CeilingWord
         | FloorWord | ConvertToSingle | ConvertToDouble | ConvertToWord => {
             components[0] = Component::Fmt(fmt);
-            components[1] = Component::Fpr(fd);
-            components[2] = Component::Fpr(fs);
+            components[1] = Component::FpuRegister(fd);
+            components[2] = Component::FpuRegister(fs);
         }
         MoveConditional => {
             components[0] = Component::Condition(fields::condition_from_fpu_register(ft));
             components[1] = Component::Fmt(fmt);
-            components[2] = Component::Fpr(fd);
-            components[3] = Component::Fpr(fs);
+            components[2] = Component::FpuRegister(fd);
+            components[3] = Component::FpuRegister(fs);
             components[4] = Component::Cc(fields::cc_from_fpu_register(ft));
         }
         MoveZero | MoveNotZero => {
             components[0] = Component::Fmt(fmt);
-            components[1] = Component::Fpr(fs);
-            components[2] = Component::Fpr(fd);
-            components[3] = Component::Gpr(ft.to_cpu());
+            components[1] = Component::FpuRegister(fd);
+            components[2] = Component::FpuRegister(fs);
+            components[3] = Component::CpuRegister(ft.to_cpu());
         }
         CompareEqual | CompareLessThan | CompareLessEqual => {
             components[0] = Component::Fmt(fmt);
             components[1] = Component::Cc(fields::cc_from_fpu_register(fd));
-            components[2] = Component::Fpr(fd);
-            components[3] = Component::Fpr(ft);
+            components[2] = Component::FpuRegister(fs);
+            components[3] = Component::FpuRegister(ft);
         }
     }
     Some(DestructuredInstruction::new(
