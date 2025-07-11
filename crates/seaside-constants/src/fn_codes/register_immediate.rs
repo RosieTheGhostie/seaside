@@ -7,6 +7,10 @@ pub enum RegisterImmediateFn {
     BranchLessThanZero = 0x00,
     #[error("bgez")]
     BranchGreaterEqualZero = 0x01,
+    // #[error(bltzl)]
+    // BranchLessThanZeroLikely = 0x02,
+    // #[error(bgezl)]
+    // BranchGreaterEqualZeroLikely = 0x03,
     #[error("tgei")]
     TrapGreaterEqualImmediate = 0x08,
     #[error("tgeiu")]
@@ -23,4 +27,8 @@ pub enum RegisterImmediateFn {
     BranchLessThanZeroAndLink = 0x10,
     #[error("bgezal")]
     BranchGreaterEqualZeroAndLink = 0x11,
+    // #[error("bltzall")]
+    // BranchLessThanZeroAndLinkLikely = 0x12,
+    // #[error("bgezall")]
+    // BranchGreaterEqualZeroAndLinkLikely = 0x13,
 }

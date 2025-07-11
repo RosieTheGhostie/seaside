@@ -4,17 +4,11 @@ use thiserror::Error; // these aren't errors, but i want to convert them to stri
 #[derive(Clone, Copy, Debug, Eq, Error, FromPrimitive, PartialEq)]
 pub enum NumberFormat {
     #[error(".s")]
-    SingleNoPrefix = 0,
+    Single = 0x10,
     #[error(".d")]
-    DoubleNoPrefix = 1,
+    Double = 0x11,
     #[error(".w")]
-    WordNoPrefix = 4,
-    // LongNoPrefix = 5,
-    #[error(".s")]
-    Single = 16,
-    #[error(".d")]
-    Double = 17,
-    #[error(".w")]
-    Word = 20,
-    // Long = 21,
+    Word = 0x14,
+    // #[error(".l")]
+    // Long = 0x15,
 }

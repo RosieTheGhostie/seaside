@@ -5,34 +5,53 @@ use crate::{
 use num_traits::{FromPrimitive, Zero};
 use seaside_constants::{
     NumberFormat,
-    fn_codes::Coprocessor1Fn,
+    fn_codes::{Coprocessor1Fn, Coprocessor1RegisterImmediateFn},
     register::{CpuRegister, FpuRegister},
 };
 use seaside_disassembler::fields;
 use seaside_type_aliases::Instruction;
 
 impl Interpreter {
-    /// Executes `instruction`, which must follow the "coprocessor 1" instruction format:
+    /// Executes `instruction`, which must follow one of the "coprocessor 1" instruction formats:
     ///
     /// ```text
-    /// 010001 x0x0x xxxxx xxxxx xxxxx xxxxxx
-    /// opcode  fmt   $ft   $fs   $fd    fn
+    ///   op    fmt   $ft   $fs   $fd    fn
+    /// 010001 xxxxx xxxxx xxxxx xxxxx xxxxxx
+    /// cop. 1
     /// ```
     ///
     /// Some instructions specify a condition flag (`cc`). If the instruction only writes to the
     /// flag, `cc` is found in the field `$fs` as shown:
     ///
     /// ```text
-    /// 010001 10x0x xxxxx xxx 00 xxxxx 0xx00x
-    /// opcode  fmt   $ft  cc      $fd    fn
+    ///   op    fmt   $ft   $fs  cc       fn
+    /// 010001 1000x xxxxx xxxxx xxx 00 xxxxxx
+    /// cop. 1
     /// ```
     ///
     /// If the instruction needs a boolean condition to compare with the condition flag, `cc` and
     /// the condition can be found in the field `$ft` instead:
     ///
     /// ```text
-    /// 010001 10x0x xxx 0 x xxxxx xxxxx 11xxx0
-    /// opcode  fmt  cc    c  $fs   $fd    fn
+    ///                    tf
+    ///   op    fmt  cc    ↓  $fs   $fd   fn
+    /// 010001 1000x xxx 0 x xxxxx xxxxx 010001
+    /// cop. 1                             ↑
+    ///                                 movt.fmt
+    /// ```
+    ///
+    /// Finally, there are also two versions for the so-called "register immediate" subclass of
+    /// instructions:
+    ///
+    /// ```text
+    ///                 nd tf
+    ///   op    fn   cc  ↓ ↓      offset
+    /// 010001 01000 xxx x x xxxxxxxxxxxxxxxx
+    /// cop. 1  bc1
+    ///
+    ///   op    fn    $rt   $fs   <unused>
+    /// 010001 00xxx xxxxx xxxxx 00000000000
+    /// cop. 1
     /// ```
     pub fn execute_coprocessor_1(&mut self, instruction: Instruction) -> Result<(), Exception> {
         use NumberFormat::*;
@@ -40,8 +59,17 @@ impl Interpreter {
         let fs = fields::fs(instruction);
         let fd = fields::fd(instruction);
         let fmt = fields::fmt(instruction);
-        if fmt == 8 {
-            return self.state.bc1c(ft, instruction);
+        match Coprocessor1RegisterImmediateFn::from_u8(fmt) {
+            Some(Coprocessor1RegisterImmediateFn::MoveFromCoprocessor1) => {
+                return self.state.mfc1(ft.to_cpu(), self.state.registers.read(fs));
+            }
+            Some(Coprocessor1RegisterImmediateFn::MoveToCoprocessor1) => {
+                return self.state.mtc1(fs, self.state.registers.read(ft.to_cpu()));
+            }
+            Some(Coprocessor1RegisterImmediateFn::BranchCoprocessor1Flag) => {
+                return self.state.bc1c(ft, instruction);
+            }
+            None => {}
         }
         let r#fn = match Coprocessor1Fn::from_u8(fields::r#fn(instruction)) {
             Some(r#fn) => r#fn,
@@ -51,12 +79,6 @@ impl Interpreter {
             Some(Single) => self.execute_coprocessor_1_single(ft, fs, fd, r#fn),
             Some(Double) => self.execute_coprocessor_1_double(ft, fs, fd, r#fn),
             Some(Word) => self.execute_coprocessor_1_word(fs, fd, r#fn),
-            Some(SingleNoPrefix) if r#fn == Coprocessor1Fn::Add => {
-                self.state.mfc1(ft.to_cpu(), self.state.registers.read(fd))
-            }
-            Some(WordNoPrefix) if r#fn == Coprocessor1Fn::Add => {
-                self.state.mtc1(fd, self.state.registers.read(ft.to_cpu()))
-            }
             _ => Err(Exception::ReservedInstruction),
         }
     }
@@ -136,7 +158,7 @@ impl Interpreter {
     }
 
     /// Executes `instruction`, which must follow the "coprocessor 1" instruction format and have
-    /// the `fmt` field set to [`0b00100`][`NumberFormat::Word`].
+    /// the `fmt` field set to [`0b00100`](NumberFormat::Word).
     fn execute_coprocessor_1_word(
         &mut self,
         fs: FpuRegister,
@@ -455,15 +477,15 @@ impl InterpreterState {
         Ok(())
     }
 
-    /// Stores `fd_value` in CPU register `rt`.
-    fn mfc1(&mut self, rt: CpuRegister, fd_value: f32) -> Result<(), Exception> {
-        self.registers.write(rt, fd_value.to_bits());
+    /// Stores `fs_value` in CPU register `rt`.
+    fn mfc1(&mut self, rt: CpuRegister, fs_value: f32) -> Result<(), Exception> {
+        self.registers.write(rt, fs_value.to_bits());
         Ok(())
     }
 
-    /// Stores `rt_value` in FPU register `fd`.
-    fn mtc1(&mut self, fd: FpuRegister, rt_value: u32) -> Result<(), Exception> {
-        self.registers.write(fd, rt_value);
+    /// Stores `rt_value` in FPU register `fs`.
+    fn mtc1(&mut self, fs: FpuRegister, rt_value: u32) -> Result<(), Exception> {
+        self.registers.write(fs, rt_value);
         Ok(())
     }
 }

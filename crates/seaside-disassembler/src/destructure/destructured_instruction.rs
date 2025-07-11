@@ -34,7 +34,7 @@ impl Display for DestructuredInstruction {
             RegisterImmediateFn(r#fn) => write!(f, "{fn}"),
             Coprocessor0Fn(r#fn) => write!(f, "{fn}"),
             Coprocessor1Fn(r#fn) => write!(f, "{fn}"),
-            BranchCoprocessor1 => write!(f, "bc1"),
+            Coprocessor1RegisterImmediateFn(r#fn) => write!(f, "{fn}"),
             Special2Fn(r#fn) => write!(f, "{fn}"),
         }?;
         let mut needs_comma: bool = false;

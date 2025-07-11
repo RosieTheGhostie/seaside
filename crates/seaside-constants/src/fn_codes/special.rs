@@ -29,6 +29,8 @@ pub enum SpecialFn {
     SystemCall = 0x0c,
     #[error("break")]
     Break = 0x0d,
+    // #[error("sync")]
+    // Synchronize = 0x0f,
     #[error("mfhi")]
     MoveFromHigh = 0x10,
     #[error("mthi")]
@@ -37,6 +39,12 @@ pub enum SpecialFn {
     MoveFromLow = 0x12,
     #[error("mtlo")]
     MoveToLow = 0x13,
+    // #[error("dsllv")]
+    // DoubleShiftLeftLogicalValue = 0x14,
+    // #[error("dsrlv")]
+    // DoubleShiftRightLogicalValue = 0x16,
+    // #[error("dsrav")]
+    // DoubleShiftRightArithmeticValue = 0x17,
     #[error("mult")]
     Multiply = 0x18,
     #[error("multu")]
@@ -45,6 +53,14 @@ pub enum SpecialFn {
     Divide = 0x1a,
     #[error("divu")]
     DivideUnsigned = 0x1b,
+    // #[error("dmult")]
+    // DoubleMultiply = 0x1c,
+    // #[error("dmultu")]
+    // DoubleMultiplyUnsigned = 0x1d,
+    // #[error("ddiv")]
+    // DoubleDivide = 0x1e,
+    // #[error("ddivu")]
+    // DoubleDivideUnsigned = 0x1f,
     #[error("add")]
     Add = 0x20,
     #[error("addu")]
@@ -65,6 +81,14 @@ pub enum SpecialFn {
     SetLessThan = 0x2a,
     #[error("sltu")]
     SetLessThanUnsigned = 0x2b,
+    // #[error("dadd")]
+    // DoubleAdd = 0x2c,
+    // #[error("daddu")]
+    // DoubleAddUnsigned = 0x2d,
+    // #[error("dsub")]
+    // DoubleSubtract = 0x2e,
+    // #[error("dsubu")]
+    // DoubleSubtractUnsigned = 0x2f,
     #[error("tge")]
     TrapGreaterEqual = 0x30,
     #[error("tgeu")]
@@ -77,4 +101,16 @@ pub enum SpecialFn {
     TrapEqual = 0x34,
     #[error("tne")]
     TrapNotEqual = 0x36,
+    // #[error("dsll")]
+    // DoubleShiftLeftLogical = 0x38,
+    // #[error("dsrl")]
+    // DoubleShiftRightLogical = 0x3a,
+    // #[error("dsra")]
+    // DoubleShiftRightArithmetic = 0x3b,
+    // #[error("dsll32")]
+    // DoubleShiftLeftLogical32 = 0x3c,
+    // #[error("dsrl32")]
+    // DoubleShiftRightLogical32 = 0x3e,
+    // #[error("dsra32")]
+    // DoubleShiftRightAritmetic32 = 0x3f,
 }

@@ -1,7 +1,10 @@
 use super::{Component, DestructuredInstruction, Operation};
 use crate::fields;
 use num_traits::FromPrimitive;
-use seaside_constants::{NumberFormat, fn_codes::Coprocessor1Fn};
+use seaside_constants::{
+    NumberFormat,
+    fn_codes::{Coprocessor1Fn, Coprocessor1RegisterImmediateFn},
+};
 use seaside_type_aliases::Instruction;
 
 pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> {
@@ -9,14 +12,28 @@ pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> 
     let mut components = [Component::default(); 5];
     let ft = fields::ft(instruction);
     let fmt = fields::fmt(instruction);
-    if fmt == 8 {
-        components[0] = Component::Condition(fields::condition_from_fpu_register(ft));
-        components[1] = Component::Cc(fields::cc_from_fpu_register(ft));
-        components[2] = Component::Offset(fields::imm(instruction));
-        return Some(DestructuredInstruction::new(
-            Operation::BranchCoprocessor1,
-            components,
-        ));
+    match Coprocessor1RegisterImmediateFn::from_u8(fmt) {
+        Some(
+            r#fn @ (Coprocessor1RegisterImmediateFn::MoveFromCoprocessor1
+            | Coprocessor1RegisterImmediateFn::MoveToCoprocessor1),
+        ) => {
+            components[0] = Component::CpuRegister(ft.to_cpu());
+            components[1] = Component::FpuRegister(fields::fs(instruction));
+            return Some(DestructuredInstruction::new(
+                Operation::Coprocessor1RegisterImmediateFn(r#fn),
+                components,
+            ));
+        }
+        Some(r#fn @ Coprocessor1RegisterImmediateFn::BranchCoprocessor1Flag) => {
+            components[0] = Component::Condition(fields::condition_from_fpu_register(ft));
+            components[1] = Component::Cc(fields::cc_from_fpu_register(ft));
+            components[2] = Component::Offset(fields::imm(instruction));
+            return Some(DestructuredInstruction::new(
+                Operation::Coprocessor1RegisterImmediateFn(r#fn),
+                components,
+            ));
+        }
+        None => {}
     }
     let fmt = NumberFormat::from_u8(fmt)?;
     let fs = fields::fs(instruction);

@@ -1,6 +1,9 @@
 use seaside_constants::{
-    fn_codes::{Coprocessor0Fn, Coprocessor1Fn, RegisterImmediateFn, Special2Fn, SpecialFn},
     Opcode,
+    fn_codes::{
+        Coprocessor0Fn, Coprocessor1Fn, Coprocessor1RegisterImmediateFn, RegisterImmediateFn,
+        Special2Fn, SpecialFn,
+    },
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -10,7 +13,7 @@ pub enum Operation {
     RegisterImmediateFn(RegisterImmediateFn),
     Coprocessor0Fn(Coprocessor0Fn),
     Coprocessor1Fn(Coprocessor1Fn),
-    BranchCoprocessor1,
+    Coprocessor1RegisterImmediateFn(Coprocessor1RegisterImmediateFn),
     Special2Fn(Special2Fn),
 }
 
