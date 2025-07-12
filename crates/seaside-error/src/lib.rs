@@ -1,3 +1,6 @@
+#[cfg(feature = "rich")]
+pub mod rich;
+
 use thiserror::Error;
 
 #[derive(Clone, Copy, Debug, Eq, Error, Hash, Ord, PartialEq, PartialOrd)]
