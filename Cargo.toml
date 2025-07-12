@@ -18,10 +18,10 @@ seaside-int-utils = { version = "*", path = "crates/seaside-int-utils" }
 seaside-interpreter = { version = "*", path = "crates/seaside-interpreter" }
 seaside-type-aliases = { version = "*", path = "crates/seaside-type-aliases" }
 serde = "1.0.219"
-toml = "0.8.22"
+toml = "0.9.2"
 
 [dependencies.clap]
-version = "4.5"
+version = "4.5.41"
 features = ["cargo", "derive"]
 
 [dependencies.minimal-logging]

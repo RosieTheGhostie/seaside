@@ -1,519 +1,584 @@
-pub mod error;
-pub mod macros;
-pub mod node;
+mod expected;
+mod expr;
+mod operand;
+mod value;
 
-pub use error::ParseError;
-pub use node::Node;
+pub use expr::Expr;
+pub use operand::Operand;
+pub use value::Value;
 
-use crate::{
-    directives::{DataTypeDirective, SegmentDirective},
-    operation::macros::{coprocessor_0, coprocessor_1, register_immediate, special, special_2},
-    BasicOperator, Operand, Token,
+use crate::{error::ParseError, token::Token};
+use const_format::formatcp;
+use logos::{Lexer, Logos, SpannedIter};
+use seaside_error::rich::{
+    Label, RichError, Span, ToErrorCode,
+    span::{combine_spans, consume_span},
 };
-use anyhow::{Context, Error, Result};
-use logos::Lexer;
-use macros::{assert_token, assert_token_or_none, get_operand, parse_ops};
-use std::collections::VecDeque;
 
-pub struct Parser<'source> {
-    lexer: Lexer<'source, Token>,
-    peeked: VecDeque<Token>,
+/// The type returned by the [`Parser`] [iterator](Iterator).
+///
+/// It's essentially an alias usable outside the context of the [`Iterator`], which is useful for
+/// writing sub-parser methods.
+pub type ParserItem<'src> = Result<(Expr<'src>, Span), RichError>;
+
+/// An [iterator](Iterator) that parses a stream of [token](Token)s.
+///
+/// # Examples
+///
+/// ```
+/// # use logos::Logos;
+/// # use crate::{parser::Parser, token::Token};
+/// const SRC_NAME: &str = "sample.asm";
+/// const SRC: &str = r#".data
+/// kHello: .asciiz "Hello, World!\n"
+///
+/// .text
+/// main:
+///     addiu $v0, $0, 4
+///     lui $a0, 0x1001
+///     syscall
+///
+///     main.epilogue:
+///         addiu $v0, $0, 10
+///         syscall
+///     main.endepilogue:
+/// main.end:
+/// "#;
+///
+/// let mut n_errors: usize = 0;
+/// for expr_or_err in Parser::new(Token::lexer(SRC)) {
+///     if let Err(err) = expr_or_err {
+///         n_errors += 1;
+///         let _ = err.report(SRC, SRC_NAME);
+///     }
+/// }
+/// assert_eq!(n_errors, 0, "Parsing failed!");
+/// ```
+pub struct Parser<'src> {
+    /// The underlying stream of [token](Token)s derived from the [lexer](Lexer).
+    tokens: SpannedIter<'src, Token<'src>>,
+    /// A queue of [token](Token)s that we've peeked at, but have yet to actually use.
+    peeked: Vec<(Token<'src>, Span)>,
+    /// The [span](Span) of the current [expression](Expr) being parsed.
+    expr_span: Span,
+    /// A representation of what [token](Token)(s) the parser expected to find.
+    ///
+    /// This is used to generate better error messages.
+    expected: &'static str,
 }
 
-impl Iterator for Parser<'_> {
-    type Item = Result<Node>;
+impl<'src> Parser<'src> {
+    pub fn new(source: &'src str) -> Self {
+        Token::lexer(source).into()
+    }
 
-    fn next(&mut self) -> Option<Self::Item> {
-        let token: Token = match self.next_token()? {
-            Ok(token) => token,
-            Err(_) => return Some(Err(Error::new(ParseError::UnknownToken))),
+    /// Gets the next unprocessed [token](Token) and its [span](Span).
+    ///
+    /// This is different from querying the `tokens` iterator because the method first checks for
+    /// any tokens in the `peeked` queue.
+    ///
+    /// # See Also
+    ///
+    /// - [`Parser::next_substantial_token`]
+    fn next_token(&mut self) -> Option<(Token<'src>, Span)> {
+        if let Some((token, span)) = self.peeked.pop() {
+            Some((token, span))
+        } else {
+            self.tokens
+                .next()
+                .map(|(result, span)| (result.into(), span))
+        }
+    }
+
+    /// Yields the given expression as an item for the [`Parser`] [iterator][Iterator].
+    fn r#yield(&self, expr: Expr<'src>) -> ParserItem<'src> {
+        Ok((expr, self.expr_span.clone()))
+    }
+
+    /// Merges the given span with the current `expr_span`.
+    ///
+    /// This should typically be called each time a [token](Token)'s information is added to an
+    /// [expression](Expr).
+    const fn consume_span(&mut self, span: Span) {
+        consume_span(&mut self.expr_span, span);
+    }
+
+    /// Constructs a new [`RichError`] from an ordinary error.
+    fn new_error<E>(&self, err: E) -> RichError
+    where
+        E: ToErrorCode + ToString,
+    {
+        RichError::new(err, self.expr_span.clone())
+    }
+
+    /// Constructs a new [`RichError`] for when an unexpected token is encountered.
+    ///
+    /// To tell the user what was expected, set the `expected` field to the desired value before
+    /// invoking this method.
+    fn new_unexpected_token_error(&self, narrow_span: Span) -> RichError {
+        self.new_error(ParseError::UnexpectedToken)
+            .with_label(Label::new(narrow_span).with_message(format!("expected {}", self.expected)))
+    }
+
+    /// Constructs a new [`RichError`] for when the end of the file is reached too soon.
+    ///
+    /// This has very similar semantics to
+    /// [`new_unexpected_token_error`](Parser::new_unexpected_token_error), as it also reads from
+    /// the `expected` field.
+    fn new_premature_eof_error(&self) -> RichError {
+        let span = self.expr_span.end..self.expr_span.end;
+        self.new_error(ParseError::PrematureEof)
+            .with_label(Label::new(span).with_message(format!("expected {}", self.expected)))
+    }
+
+    /// Concludes a parsing iteration for an [expression](Expr) meant to end at the end of the line.
+    ///
+    /// The given callback should construct the [expression](Expr) from all the data gathered
+    /// throughout the relevant iteration.
+    fn expect_line_end<F>(&mut self, callback: F) -> ParserItem<'src>
+    where
+        F: FnOnce() -> Expr<'src>,
+    {
+        self.expected = expected::NEWLINE;
+        match self.next_token() {
+            Some((Token::NewLine, _)) | None => self.r#yield(callback()),
+            Some(spanned_token) => Err(self.peek_and_throw_unexpected(spanned_token)),
+        }
+    }
+
+    /// Adds the spanned [token](Token) provided to the `peeked` queue, then generates a
+    /// [`RichError`] via the [`new_unexpected_token_error`](Parser::new_unexpected_token_error)
+    /// method.
+    ///
+    /// This is useful when the [token](Token) in question is potentially meaningful as parsing
+    /// continues, but is still invalid in the current context.
+    fn peek_and_throw_unexpected(&mut self, spanned_token: (Token<'src>, Span)) -> RichError {
+        let (token, span) = spanned_token;
+        self.peeked.push((token, span.clone()));
+        self.new_unexpected_token_error(span)
+    }
+
+    /// Attempts to parse a [segment header](Expr::SegmentHeader).
+    ///
+    /// The [directive](Token::Directive) [token](Token) is assumed to have been processed already,
+    /// with its name being passed through the `name` parameter.
+    fn parse_segment_header(&mut self, name: &'src str) -> ParserItem<'src> {
+        self.expected = formatcp!("{} or {}", expected::INT_LIT, expected::NEWLINE);
+        let address = match self.next_token() {
+            Some((Token::Int(address @ 0..=0xffff_ffff), span)) => {
+                self.consume_span(span);
+                Some(address as u32)
+            }
+            Some((Token::Int(_), span)) => {
+                return Err(self
+                    .new_error(ParseError::ValueOutsideRange)
+                    .with_narrow_span(span)
+                    .with_help("addresses must be in the range 0..=0xffffffff"));
+            }
+            Some((Token::NewLine, _)) | None => None,
+            Some(spanned_token) => return Err(self.peek_and_throw_unexpected(spanned_token)),
         };
-        Some(match token {
-            Token::NewLine => return self.next(),
-            Token::BasicOperator(operator) => self.parse_instruction(operator),
-            Token::Label(label) => self.parse_label(label),
-            Token::SegmentDirective(directive) => self.parse_segment_header(directive),
-            Token::DataTypeDirective(DataTypeDirective::Align) => self.parse_align_command(),
-            Token::DataTypeDirective(DataTypeDirective::Ascii) => self.parse_string(false),
-            Token::DataTypeDirective(DataTypeDirective::Asciiz) => self.parse_string(true),
-            Token::DataTypeDirective(DataTypeDirective::Byte) => self.parse_byte_array(),
-            Token::DataTypeDirective(DataTypeDirective::Double) => self.parse_double_array(),
-            Token::DataTypeDirective(DataTypeDirective::Float) => self.parse_float_array(),
-            Token::DataTypeDirective(DataTypeDirective::Half) => self.parse_half_array(),
-            Token::DataTypeDirective(DataTypeDirective::Space) => self.parse_space_command(),
-            Token::DataTypeDirective(DataTypeDirective::Word) => self.parse_word_array(),
-            token => Err(Error::new(
-                ParseError::UnexpectedToken,
-            )).with_context(|| format!("unexpected token: {token:?} (expected a NewLine, BasicOperator, Label, SegmentDirective, or DataTypeDirective)")),
+        self.r#yield(Expr::SegmentHeader {
+            directive: name.parse().unwrap(),
+            address,
         })
     }
-}
 
-impl<'source> Parser<'source> {
-    pub fn new(lexer: Lexer<'source, Token>) -> Self {
-        Self {
-            lexer,
-            peeked: VecDeque::new(),
-        }
-    }
-}
-
-impl Parser<'_> {
-    fn parse_instruction(&mut self, operator: BasicOperator) -> Result<Node> {
-        use BasicOperator::*;
-        let operands = match operator {
-            special!(SystemCall) | coprocessor_0!(ErrorReturn) => parse_ops!(self),
-            special![
-                JumpRegister,
-                MoveFromHigh,
-                MoveToHigh,
-                MoveFromLow,
-                MoveToLow,
-            ] => parse_ops!(self, gpr),
-            special!(Break) => parse_ops!(self, code?),
-            Jump | JumpAndLink => parse_ops!(self, label),
-            special![
-                Multiply,
-                MultiplyUnsigned,
-                Divide,
-                DivideUnsigned,
-                TrapGreaterEqual,
-                TrapGreaterEqualUnsigned,
-                TrapLessThan,
-                TrapLessThanUnsigned,
-                TrapEqual,
-                TrapNotEqual
-            ]
-            | special_2![
-                CountLeadingZeroes,
-                CountLeadingOnes,
-                MultiplyAdd,
-                MultiplyAddUnsigned,
-                MultiplySubtract,
-                MultiplySubtractUnsigned
-            ] => parse_ops!(self, gpr, gpr),
-            special!(JumpAndLinkRegister) => parse_ops!(self, gpr, gpr?),
-            coprocessor_0![MoveFromCoprocessor0, MoveToCoprocessor0] => parse_ops!(self, gpr, exr),
-            register_immediate![
-                TrapGreaterEqualImmediate,
-                TrapGreaterEqualImmediateUnsigned,
-                TrapLessThanImmediate,
-                TrapLessThanImmediateUnsigned,
-                TrapEqualImmediate,
-                TrapNotEqualImmediate,
-            ]
-            | LoadUpperImmediate => parse_ops!(self, gpr, i16),
-            register_immediate![
-                BranchLessThanZero,
-                BranchGreaterEqualZero,
-                BranchLessThanZeroAndLink,
-                BranchGreaterEqualZeroAndLink,
-            ]
-            | BranchLessEqualZero
-            | BranchGreaterThanZero => parse_ops!(self, gpr, label),
-            coprocessor_1![
-                <Single | Double>
-                SquareRoot,
-                AbsoluteValue,
-                Move,
-                Negate,
-                RoundWord,
-                TruncateWord,
-                CeilingWord,
-                FloorWord,
-                ConvertToWord,
-            ]
-            | coprocessor_1!(<Double | Word> ConvertToSingle)
-            | coprocessor_1!(<Single | Word> ConvertToDouble) => parse_ops!(self, fpr, fpr),
-            special![
-                ShiftLeftLogicalVariable,
-                ShiftRightLogicalVariable,
-                ShiftRightArithmeticVariable,
-                MoveZero,
-                MoveNotZero,
-                Add,
-                AddUnsigned,
-                Subtract,
-                SubtractUnsigned,
-                And,
-                Or,
-                Xor,
-                Nor,
-                SetLessThan,
-                SetLessThanUnsigned,
-            ]
-            | special_2!(Multiply) => parse_ops!(self, gpr, gpr, gpr),
-            special!(MoveConditional, true | false) => parse_ops!(self, gpr, gpr, cc?),
-            special![ShiftLeftLogical, ShiftRightLogical, ShiftRightArithmetic] => {
-                parse_ops!(self, gpr, gpr, shamt)
+    /// Attempts to parse an [align command](Expr::AlignCommand).
+    ///
+    /// The [directive](Token::Directive) [token](Token) is assumed to have been processed already.
+    fn parse_align_command(&mut self) -> ParserItem<'src> {
+        self.expected = expected::INT_LIT;
+        let alignment = match self.next_token() {
+            Some((Token::Int(alignment @ 0..=3), span)) => {
+                self.consume_span(span);
+                alignment as u8
             }
-            AddImmediate
-            | AddImmediateUnsigned
-            | SetLessThanImmediate
-            | SetLessThanImmediateUnsigned => parse_ops!(self, gpr, gpr, i16),
-            AndImmediate | OrImmediate | XorImmediate => parse_ops!(self, gpr, gpr, u16),
-            BranchEqual | BranchNotEqual => parse_ops!(self, gpr, gpr, label),
-            coprocessor_1![<Single | Double> MoveZero, MoveNotZero] => {
-                parse_ops!(self, fpr, fpr, gpr)
+            Some((Token::Int(_), span)) => {
+                return Err(self
+                    .new_error(ParseError::ValueOutsideRange)
+                    .with_narrow_span(span)
+                    .with_help("alignment must be either 0, 1, 2, or 3"));
             }
-            coprocessor_1![<Single | Double> Add, Subtract, Multiply, Divide] => {
-                parse_ops!(self, fpr, fpr, fpr)
-            }
-            coprocessor_1![<Single | Double> MoveConditional, true | false] => {
-                parse_ops!(self, fpr, fpr, cc)
-            }
-            coprocessor_1![<Single | Double> CompareEqual, CompareLessThan, CompareLessEqual] => {
-                parse_ops!(self, cc?, fpr, fpr)
-            }
-            LoadByte | LoadHalf | LoadWordLeft | LoadWord | LoadByteUnsigned | LoadHalfUnsigned
-            | LoadWordRight | StoreByte | StoreHalf | StoreWordLeft | StoreWord
-            | StoreConditional | StoreWordRight | LoadLinked => {
-                self.parse_load_or_store_to_gpr()?
-            }
-            LoadWordCoprocessor1
-            | LoadDoubleCoprocessor1
-            | StoreWordCoprocessor1
-            | StoreDoubleCoprocessor1 => self.parse_load_or_store_to_fpr()?,
-            _ => return Err(Error::new(ParseError::InternalLogicIssue)),
+            Some(spanned_token) => return Err(self.peek_and_throw_unexpected(spanned_token)),
+            None => return Err(self.new_premature_eof_error()),
         };
-        Ok(Node::Instruction(operator, operands))
+        self.expect_line_end(|| Expr::AlignCommand { alignment })
     }
 
-    fn parse_load_or_store_to_gpr(&mut self) -> Result<[Option<Operand>; 3]> {
-        let r0 = get_operand!(self, gpr);
-        assert_token!(self, Comma);
-        let offset = get_operand!(self, i16);
-        let r1 = get_operand!(self, wrapped_gpr);
-        assert_token_or_none!(self, NewLine);
-        Ok([Some(r0), Some(offset), Some(r1)])
+    /// Attempts to parse a [space command](Expr::SpaceCommand).
+    ///
+    /// The [directive](Token::Directive) [token](Token) is assumed to have been processed already.
+    fn parse_space_command(&mut self) -> ParserItem<'src> {
+        self.expected = expected::INT_LIT;
+        let n_bytes = match self.next_token() {
+            Some((Token::Int(n_bytes @ 0..=0xffff_ffff), span)) => {
+                self.consume_span(span);
+                n_bytes as u32
+            }
+            Some((Token::Int(_), span)) => {
+                return Err(self
+                    .new_error(ParseError::ValueOutsideRange)
+                    .with_narrow_span(span)
+                    .with_help("the .space directive takes a u32 as input"));
+            }
+            Some(spanned_token) => return Err(self.peek_and_throw_unexpected(spanned_token)),
+            None => return Err(self.new_premature_eof_error()),
+        };
+        self.expect_line_end(|| Expr::SpaceCommand { n_bytes })
     }
 
-    fn parse_load_or_store_to_fpr(&mut self) -> Result<[Option<Operand>; 3]> {
-        let r0 = get_operand!(self, fpr);
-        assert_token!(self, Comma);
-        let offset = get_operand!(self, i16);
-        let r1 = get_operand!(self, wrapped_gpr);
-        assert_token_or_none!(self, NewLine);
-        Ok([Some(r0), Some(offset), Some(r1)])
-    }
-}
-
-impl Parser<'_> {
-    fn next_token(&mut self) -> Option<Result<Token, ()>> {
-        if let Some(token) = self.peeked.pop_front() {
-            Some(Ok(token))
-        } else {
-            self.lexer.next()
-        }
-    }
-
-    fn parse_segment_header(&mut self, directive: SegmentDirective) -> Result<Node> {
+    /// Attempts to parse a [`eqv` macro](Expr::EqvMacro).
+    ///
+    /// The [directive](Token::Directive) [token](Token) is assumed to have been processed already.
+    fn parse_eqv_macro(&mut self) -> ParserItem<'src> {
+        // This is definitely not a correct implementation, as I'm struggling to wrap my mind around
+        // the mechanics of the `.eqv` directive.
+        self.expected = expected::IDENT;
+        let name = match self.next_token() {
+            Some((Token::Ident(name), span)) => {
+                self.consume_span(span);
+                name
+            }
+            Some(spanned_token) => return Err(self.peek_and_throw_unexpected(spanned_token)),
+            None => return Err(self.new_premature_eof_error()),
+        };
+        self.expected = expected::COMMA;
         match self.next_token() {
-            Some(Ok(Token::IntLiteral(addr))) => {
-                Ok(Node::SegmentHeader(directive, Some(addr as u32)))
-            }
-            Some(Ok(token)) => {
-                self.peeked.push_back(token);
-                Ok(Node::SegmentHeader(directive, None))
-            }
-            Some(Err(_)) => Err(Error::new(ParseError::UnknownToken)),
-            None => Ok(Node::SegmentHeader(directive, None)),
+            Some((Token::Ctrl(','), span)) => consume_span(&mut self.expr_span, span),
+            Some(spanned_token) => return Err(self.peek_and_throw_unexpected(spanned_token)),
+            None => return Err(self.new_premature_eof_error()),
         }
+        self.expected = expected::EXPR;
+        let backup_expr_span = self.expr_span.clone();
+        let expr = match self.next() {
+            Some(Ok((expr, span))) => {
+                self.expr_span = combine_spans([backup_expr_span, span]);
+                expr
+            }
+            Some(Err(err)) => return Err(err),
+            None => return Err(self.new_premature_eof_error()),
+        };
+        self.expect_line_end(|| Expr::EqvMacro {
+            name,
+            expr: Box::new(expr),
+        })
     }
 
-    fn parse_byte_array(&mut self) -> Result<Node> {
-        let mut bytes: Vec<i8> = vec![];
-        let mut needs_comma: bool = false;
-        loop {
-            let token = self.next_token();
-            match token {
-                Some(Ok(Token::NewLine)) => continue,
-                Some(Ok(Token::IntLiteral(int))) if needs_comma => {
-                    return Err(Error::new(
-                        ParseError::UnexpectedToken,
-                    )).with_context(|| format!("unexpected token: IntLiteral({int}) (expected a Comma or the end of the array)"));
-                }
-                Some(Ok(Token::IntLiteral(int))) => match <i32 as TryInto<i8>>::try_into(int) {
-                    Ok(byte) => bytes.push(byte),
-                    Err(_) => {
-                        return Err(Error::new(ParseError::ValueOutsideRange)).with_context(|| {
-                            format!("{int} is outside the valid range for an i8")
-                        });
-                    }
-                },
-                Some(Ok(Token::Comma)) if needs_comma => {}
-                Some(Ok(Token::Comma)) => {
-                    return Err(Error::new(ParseError::UnexpectedToken)).with_context(|| {
-                        "unexpected token: Comma (expected an IntLiteral or the end of the array)"
-                    });
-                }
-                Some(Ok(token)) => {
-                    self.peeked.push_back(token);
-                    return Ok(Node::ByteArray(bytes));
-                }
-                Some(Err(_)) => return Err(Error::new(ParseError::UnknownToken)),
-                None => return Ok(Node::ByteArray(bytes)),
+    /// Attempts to parse an [include command](Expr::IncludeCommand).
+    ///
+    /// The [directive](Token::Directive) [token](Token) is assumed to have been processed already.
+    fn parse_include_command(&mut self) -> ParserItem<'src> {
+        self.expected = expected::STRING_LIT;
+        let file_path = match self.next_token() {
+            Some((Token::String(file_path), span)) => {
+                self.consume_span(span);
+                file_path
             }
-            needs_comma = !needs_comma;
-        }
+            Some(spanned_token) => return Err(self.peek_and_throw_unexpected(spanned_token)),
+            None => return Err(self.new_premature_eof_error()),
+        };
+        self.expect_line_end(|| Expr::IncludeCommand { file_path })
     }
 
-    fn parse_half_array(&mut self) -> Result<Node> {
-        let mut halves: Vec<i16> = vec![];
-        let mut needs_comma: bool = false;
-        loop {
-            let token = self.next_token();
-            match token {
-                Some(Ok(Token::NewLine)) => continue,
-                Some(Ok(Token::IntLiteral(int))) if needs_comma => {
-                    return Err(Error::new(
-                        ParseError::UnexpectedToken,
-                    )).with_context(|| format!("unexpected token: IntLiteral({int}) (expected a Comma or the end of the array)"));
-                }
-                Some(Ok(Token::IntLiteral(int))) => match <i32 as TryInto<i16>>::try_into(int) {
-                    Ok(half) => halves.push(half),
-                    Err(_) => {
-                        return Err(Error::new(ParseError::ValueOutsideRange)).with_context(|| {
-                            format!("{int} is outside the valid range for an i16")
-                        });
-                    }
-                },
-                Some(Ok(Token::Comma)) if needs_comma => {}
-                Some(Ok(Token::Comma)) => {
-                    return Err(Error::new(ParseError::UnexpectedToken)).with_context(|| {
-                        "unexpected token: Comma (expected an IntLiteral or the end of the array)"
-                    });
-                }
-                Some(Ok(token)) => {
-                    self.peeked.push_back(token);
-                    return Ok(Node::HalfArray(halves));
-                }
-                Some(Err(_)) => return Err(Error::new(ParseError::UnknownToken)),
-                None => return Ok(Node::HalfArray(halves)),
+    /// Attempts to parse a [set command](Expr::SetCommand).
+    ///
+    /// The [directive](Token::Directive) [token](Token) is assumed to have been processed already.
+    fn parse_set_command(&mut self) -> ParserItem<'src> {
+        self.expected = expected::COMMAND;
+        let command = match self.next_token() {
+            Some((Token::Ident(command), span)) => {
+                self.consume_span(span);
+                command
             }
-            needs_comma = !needs_comma;
-        }
+            Some(spanned_token) => return Err(self.peek_and_throw_unexpected(spanned_token)),
+            None => return Err(self.new_premature_eof_error()),
+        };
+        self.expect_line_end(|| Expr::SetCommand { command })
     }
 
-    fn parse_word_array(&mut self) -> Result<Node, Error> {
-        let mut words: Vec<i32> = vec![];
-        let mut needs_comma: bool = false;
-        loop {
-            let token = self.next_token();
-            match token {
-                Some(Ok(Token::NewLine)) => continue,
-                Some(Ok(Token::IntLiteral(int))) if needs_comma => {
-                    return Err(Error::new(
-                        ParseError::UnexpectedToken,
-                    )).with_context(|| format!("unexpected token: IntLiteral({int}) (expected a Comma or the end of the array)"));
-                }
-                Some(Ok(Token::IntLiteral(int))) => words.push(int),
-                Some(Ok(Token::Comma)) if needs_comma => {}
-                Some(Ok(Token::Comma)) => {
-                    return Err(Error::new(ParseError::UnexpectedToken)).with_context(|| {
-                        "unexpected token: Comma (expected an IntLiteral or the end of the array)"
-                    });
-                }
-                Some(Ok(token)) => {
-                    self.peeked.push_back(token);
-                    return Ok(Node::WordArray(words));
-                }
-                Some(Err(_)) => return Err(Error::new(ParseError::UnknownToken)),
-                None => return Ok(Node::WordArray(words)),
+    /// Attempts to parse a [string literal](Expr::String).
+    ///
+    /// The [directive](Token::Directive) [token](Token) is assumed to have been processed already,
+    /// with its name being passed through the `directive` parameter.
+    fn parse_string_literal(&mut self, directive: &'src str) -> ParserItem<'src> {
+        self.expected = expected::STRING_LIT;
+        let value = match self.next_token() {
+            Some((Token::String(file_path), span)) => {
+                self.consume_span(span);
+                file_path
             }
-            needs_comma = !needs_comma;
-        }
+            Some(spanned_token) => return Err(self.peek_and_throw_unexpected(spanned_token)),
+            None => return Err(self.new_premature_eof_error()),
+        };
+        self.expect_line_end(|| Expr::String {
+            directive: directive.parse().unwrap(),
+            value,
+        })
     }
 
-    fn parse_float_array(&mut self) -> Result<Node, Error> {
-        let mut floats: Vec<f32> = vec![];
-        let mut needs_comma: bool = false;
-        loop {
-            let token = self.next_token();
-            match token {
-                Some(Ok(Token::NewLine)) => continue,
-                Some(Ok(Token::FloatLiteral(double))) if needs_comma => {
-                    return Err(Error::new(
-                        ParseError::UnexpectedToken,
-                    )).with_context(|| format!("unexpected token: FloatLiteral({double}) (expected a Comma or the end of the array)"));
-                }
-                Some(Ok(Token::FloatLiteral(double))) => floats.push(double as f32),
-                Some(Ok(Token::Comma)) if needs_comma => {}
-                Some(Ok(Token::Comma)) => {
-                    return Err(Error::new(ParseError::UnexpectedToken)).with_context(|| {
-                        "unexpected token: Comma (expected a FloatLiteral or the end of the array)"
-                    });
-                }
-                Some(Ok(token)) => {
-                    self.peeked.push_back(token);
-                    return Ok(Node::FloatArray(floats));
-                }
-                Some(Err(_)) => return Err(Error::new(ParseError::UnknownToken)),
-                None => return Ok(Node::FloatArray(floats)),
-            }
-            needs_comma = !needs_comma;
-        }
-    }
-
-    fn parse_double_array(&mut self) -> Result<Node, Error> {
-        let mut doubles: Vec<f64> = vec![];
-        let mut needs_comma: bool = false;
-        loop {
-            let token = self.next_token();
-            match token {
-                Some(Ok(Token::NewLine)) => continue,
-                Some(Ok(Token::FloatLiteral(double))) if needs_comma => {
-                    return Err(Error::new(
-                        ParseError::UnexpectedToken,
-                    )).with_context(|| format!("unexpected token: FloatLiteral({double}) (expected a Comma or the end of the array)"));
-                }
-                Some(Ok(Token::FloatLiteral(double))) => doubles.push(double),
-                Some(Ok(Token::Comma)) if needs_comma => {}
-                Some(Ok(Token::Comma)) => {
-                    return Err(Error::new(ParseError::UnexpectedToken)).with_context(|| {
-                        "unexpected token: Comma (expected a FloatLiteral or the end of the array)"
-                    });
-                }
-                Some(Ok(token)) => {
-                    self.peeked.push_back(token);
-                    return Ok(Node::DoubleArray(doubles));
-                }
-                Some(Err(_)) => return Err(Error::new(ParseError::UnknownToken)),
-                None => return Ok(Node::DoubleArray(doubles)),
-            }
-            needs_comma = !needs_comma;
-        }
-    }
-
-    fn parse_string(&mut self, append_nul: bool) -> Result<Node, Error> {
+    /// Attempts to parse an [array of values](Expr::ValueArray).
+    ///
+    /// The [directive](Token::Directive) [token](Token) is assumed to have been processed already,
+    /// with its name being passed through the `directive` parameter.
+    fn parse_value_array(&mut self, directive: &'src str) -> ParserItem<'src> {
+        let mut values = Vec::new();
+        let mut last_span;
+        self.expected = formatcp!("{} or {}", expected::INT_LIT, expected::FLOAT_LIT);
         match self.next_token() {
-            Some(Ok(Token::StringLiteral(mut string))) => {
-                if append_nul {
-                    string.push('\0');
-                }
-                Ok(Node::String(string))
+            Some((Token::Int(n), span)) => {
+                values.push((Value::Int(n), span.clone()));
+                last_span = span;
             }
-            Some(Ok(Token::NewLine)) => self.parse_string(append_nul),
-            Some(Ok(token)) => Err(Error::new(ParseError::UnexpectedToken)).with_context(|| {
-                format!("unexpected token: {token:?} (expected a StringLiteral or a NewLine)")
-            }),
-            Some(Err(_)) => Err(Error::new(ParseError::UnknownToken)),
-            None => Err(Error::new(ParseError::PrematureEof)),
-        }
-    }
-
-    fn parse_align_command(&mut self) -> Result<Node, Error> {
-        match self.next_token() {
-            Some(Ok(Token::IntLiteral(x))) if (0..4).contains(&x) => {
-                Ok(Node::AlignCommand(x as u8))
+            Some((Token::Float(x), span)) => {
+                values.push((Value::Float(x), span.clone()));
+                last_span = span;
             }
-            Some(Ok(Token::IntLiteral(_))) => Err(Error::new(ParseError::ValueOutsideRange))
-                .with_context(|| ".align can only accept an alignment on the range 0..=3"),
-            Some(Ok(token)) => Err(Error::new(ParseError::UnexpectedToken))
-                .with_context(|| format!("unexpected token: {token:?} (expected an IntLiteral)")),
-            Some(Err(_)) => Err(Error::new(ParseError::UnknownToken)),
-            None => Err(Error::new(ParseError::PrematureEof)),
+            Some(spanned_token) => return Err(self.peek_and_throw_unexpected(spanned_token)),
+            None => return Err(self.new_premature_eof_error()),
         }
-    }
-
-    fn parse_space_command(&mut self) -> Result<Node, Error> {
-        match self.next_token() {
-            Some(Ok(Token::IntLiteral(x))) if x >= 0 => Ok(Node::ByteArray(vec![0; x as usize])),
-            Some(Ok(Token::IntLiteral(_))) => Err(Error::new(ParseError::ValueOutsideRange))
-                .with_context(|| ".space can only accept a non-negative number of bytes"),
-            Some(Ok(token)) => Err(Error::new(ParseError::UnexpectedToken))
-                .with_context(|| format!("unexpected token: {token:?} (expected an IntLiteral)")),
-            Some(Err(_)) => Err(Error::new(ParseError::UnknownToken)),
-            None => Err(Error::new(ParseError::PrematureEof)),
-        }
-    }
-
-    fn parse_label(&mut self, label: String) -> Result<Node, Error> {
-        match self.next_token() {
-            Some(Ok(Token::Colon)) => Ok(Node::LabelDefinition(label)),
-            Some(Ok(token)) => Err(Error::new(ParseError::UnexpectedToken))
-                .with_context(|| format!("unexpected token: {token:?} (expected a Colon)")),
-            Some(Err(_)) => Err(Error::new(ParseError::UnknownToken)),
-            None => Err(Error::new(ParseError::PrematureEof)),
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn segment_header_no_address() {
-        use logos::Logos;
-
-        const SOURCE: &str = r#".text"#;
-        let expected: Node = Node::SegmentHeader(SegmentDirective::Text, None);
-        let mut parser = Parser::new(Token::lexer(SOURCE));
-        match parser.next() {
-            Some(Ok(got)) => assert_eq!(expected, got),
-            Some(Err(_)) => panic!("parsing failed (expected: {expected:?})"),
-            None => panic!("parsing ended unexpectedly"),
-        }
-        assert!(parser.next().is_none(), "parser had leftover nodes");
-    }
-
-    #[test]
-    fn segment_header_with_address() {
-        use logos::Logos;
-
-        const SOURCE: &str = r#".text 0x00400000"#;
-        let expected: Node = Node::SegmentHeader(SegmentDirective::Text, Some(0x00400000));
-        let mut parser = Parser::new(Token::lexer(SOURCE));
-        match parser.next() {
-            Some(Ok(got)) => assert_eq!(expected, got),
-            Some(Err(_)) => panic!("parsing failed (expected: {expected:?})"),
-            None => panic!("parsing ended unexpectedly"),
-        }
-        assert!(parser.next().is_none(), "parser had leftover nodes");
-    }
-
-    #[test]
-    fn small_procedure() {
-        use crate::constants::register;
-        use logos::Logos;
-
-        const SOURCE: &str = r#".text
-Square:
-    mult $a0, $a1
-    mflo $v0
-    mfhi $v1
-    jr $ra"#;
-        let expected_nodes: [Node; 6] = [
-            Node::SegmentHeader(SegmentDirective::Text, None),
-            Node::LabelDefinition("Square".to_string()),
-            Node::Instruction(
-                special!(Multiply),
-                [
-                    Some(Operand::Register(register::A0)),
-                    Some(Operand::Register(register::A1)),
-                    None,
-                ],
-            ),
-            Node::Instruction(
-                special!(MoveFromLow),
-                [Some(Operand::Register(register::V0)), None, None],
-            ),
-            Node::Instruction(
-                special!(MoveFromHigh),
-                [Some(Operand::Register(register::V1)), None, None],
-            ),
-            Node::Instruction(
-                special!(JumpRegister),
-                [Some(Operand::Register(register::RA)), None, None],
-            ),
-        ];
-        let parser = Parser::new(Token::lexer(SOURCE));
-        for (expected, got) in std::iter::zip(expected_nodes, parser) {
-            assert_eq!(
-                expected,
-                got.unwrap_or_else(|_| panic!("parsing failed (expected: {expected:?})"))
+        loop {
+            self.expected = formatcp!("{} or {}", expected::COMMA, expected::NEWLINE);
+            match self.next_token() {
+                Some((Token::Ctrl(','), span)) => last_span = span,
+                Some((Token::NewLine, _)) | None => break,
+                Some(spanned_token) => return Err(self.peek_and_throw_unexpected(spanned_token)),
+            }
+            self.expected = formatcp!(
+                "{}, {}, or {}",
+                expected::INT_LIT,
+                expected::FLOAT_LIT,
+                expected::NEWLINE,
             );
+            match self.next_token() {
+                Some((Token::Int(n), span)) => {
+                    values.push((Value::Int(n), span.clone()));
+                    last_span = span;
+                }
+                Some((Token::Float(x), span)) => {
+                    values.push((Value::Float(x), span.clone()));
+                    last_span = span;
+                }
+                // If the lexer didn't merge adjacent new lines, this would be problematic.
+                Some((Token::NewLine, _)) => {}
+                Some(spanned_token) => return Err(self.peek_and_throw_unexpected(spanned_token)),
+                None => break,
+            }
+        }
+        self.consume_span(last_span);
+        self.r#yield(Expr::ValueArray {
+            directive: directive.parse().unwrap(),
+            values,
+        })
+    }
+
+    /// Attempts to parse a [wrapped register](Operand::WrappedRegister).
+    ///
+    /// The opening parenthesis [token](Token) is assumed to have been processed already.
+    fn parse_wrapped_register(&mut self) -> Result<(Operand<'src>, Span), RichError> {
+        self.expected = expected::REGISTER;
+        let name = match self.next_token() {
+            Some((Token::Register(name), span)) => {
+                self.consume_span(span.clone());
+                name
+            }
+            Some(spanned_token) => return Err(self.peek_and_throw_unexpected(spanned_token)),
+            None => return Err(self.new_premature_eof_error()),
+        };
+        self.expected = expected::R_PAREN;
+        match self.next_token() {
+            Some((Token::Ctrl(')'), span)) => {
+                self.consume_span(span);
+                Ok((Operand::WrappedRegister(name), self.expr_span.clone()))
+            }
+            Some(spanned_token) => Err(self.peek_and_throw_unexpected(spanned_token)),
+            None => Err(self.new_premature_eof_error()),
+        }
+    }
+
+    /// Attempts to parse an [expression](Expr) starting with an [identifier](Token::Ident)
+    /// [token](Token).
+    ///
+    /// The [identifier](Token::Ident) [token](Token) is assumed to have been processed already,
+    /// with its name being passed through the `ident` parameter.
+    ///
+    /// The resulting [expression](Expr) can be either a [label definition](Expr::LabelDef) or an
+    /// [instruction](Expr::Instruction). Technically speaking, a
+    /// [macro defined via `eqv`](Expr::EqvMacro) should also be an option, but I haven't
+    /// implemented that yet.
+    fn parse_ident(&mut self, ident: &'src str) -> ParserItem<'src> {
+        #[derive(Clone, Copy, Debug)]
+        enum CommaStatus {
+            CannotHave { just_saw_comma: bool },
+            CanHave,
+            Need,
+        }
+
+        impl CommaStatus {
+            pub const fn can_have(&self) -> bool {
+                !matches!(self, Self::CannotHave { just_saw_comma: _ })
+            }
+        }
+
+        let mut operands = Vec::new();
+        /*
+        // Not necessary, but this is what we're expecting.
+        self.expected = formatcp!(
+            "{}, {}, or {}",
+            expected::COLON,
+            expected::OPERAND,
+            expected::NEWLINE,
+        );
+        */
+        match self.next_token() {
+            Some((Token::Ctrl(':'), span)) => {
+                self.consume_span(span);
+                return self.r#yield(Expr::LabelDef { ident });
+            }
+            Some(spanned_token) => self.peeked.push(spanned_token),
+            None => {}
+        }
+        let mut comma_status = CommaStatus::CannotHave {
+            just_saw_comma: false,
+        };
+        loop {
+            match self.next_token() {
+                Some((Token::Error(err), span)) => {
+                    return Err(self.new_error(err).with_narrow_span(span));
+                }
+                Some((Token::NewLine, _)) | None => {
+                    return if !matches!(
+                        comma_status,
+                        CommaStatus::CannotHave {
+                            just_saw_comma: true
+                        }
+                    ) {
+                        self.r#yield(Expr::Instruction {
+                            operator: ident,
+                            operands,
+                        })
+                    } else {
+                        self.expected = expected::OPERAND;
+                        Err(self.new_unexpected_token_error(Span {
+                            start: self.expr_span.end,
+                            end: self.expr_span.end + 1,
+                        }))
+                    };
+                }
+                Some((Token::Ctrl(','), span)) => match comma_status {
+                    CommaStatus::CannotHave { just_saw_comma: _ } => {
+                        self.expected = formatcp!("{} or {}", expected::OPERAND, expected::NEWLINE);
+                        return Err(self.peek_and_throw_unexpected((Token::Ctrl(','), span)));
+                    }
+                    CommaStatus::CanHave | CommaStatus::Need => {
+                        self.consume_span(span);
+                        comma_status = CommaStatus::CannotHave {
+                            just_saw_comma: true,
+                        };
+                    }
+                },
+                Some(spanned_token) if matches!(comma_status, CommaStatus::Need) => {
+                    self.expected = expected::COMMA;
+                    return Err(self.peek_and_throw_unexpected(spanned_token));
+                }
+                Some((Token::Int(n), span)) if !comma_status.can_have() => {
+                    operands.push((Operand::Int(n), span.clone()));
+                    self.consume_span(span);
+                    comma_status = CommaStatus::CanHave;
+                }
+                Some((Token::Register(name), span)) if !comma_status.can_have() => {
+                    operands.push((Operand::Register(name), span.clone()));
+                    self.consume_span(span);
+                    comma_status = CommaStatus::Need;
+                }
+                Some((Token::Ctrl('('), span)) => {
+                    self.consume_span(span);
+                    let (operand, span) = self.parse_wrapped_register()?;
+                    operands.push((operand, span.clone()));
+                    self.consume_span(span);
+                    comma_status = CommaStatus::Need;
+                }
+                Some((Token::Ident(label), span)) if !comma_status.can_have() => {
+                    operands.push((Operand::Label(label), span.clone()));
+                    self.consume_span(span);
+                    comma_status = CommaStatus::Need;
+                }
+                Some((token, span)) => {
+                    self.expected = match comma_status {
+                        CommaStatus::CannotHave { just_saw_comma: _ } => {
+                            formatcp!("{} or {}", expected::OPERAND, expected::NEWLINE)
+                        }
+                        CommaStatus::CanHave => formatcp!(
+                            "{}, {}, or {}",
+                            expected::WRAPPED_REGISTER,
+                            expected::COMMA,
+                            expected::NEWLINE,
+                        ),
+                        CommaStatus::Need => {
+                            formatcp!("{} or {}", expected::COMMA, expected::NEWLINE)
+                        }
+                    };
+                    return Err(self.peek_and_throw_unexpected((token, span)));
+                }
+            }
+        }
+    }
+}
+
+impl<'src> Iterator for Parser<'src> {
+    type Item = ParserItem<'src>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let (token, span) = self.next_token()?;
+        self.expr_span = span.clone();
+        self.expected = formatcp!(
+            "{}, {}, or {}",
+            expected::DIRECTIVE,
+            expected::IDENT,
+            expected::NEWLINE,
+        );
+        match token {
+            // A newline on its own isn't meaningful, so we can just skip it.
+            Token::NewLine => self.next(),
+
+            Token::Directive(name @ ("text" | "ktext" | "extern" | "data" | "kdata")) => {
+                Some(self.parse_segment_header(name))
+            }
+
+            Token::Directive("align") => Some(self.parse_align_command()),
+            Token::Directive("space") => Some(self.parse_space_command()),
+            Token::Directive("eqv") => Some(self.parse_eqv_macro()),
+            Token::Directive("include") => Some(self.parse_include_command()),
+            Token::Directive("set") => Some(self.parse_set_command()),
+
+            Token::Directive(directive @ ("ascii" | "asciiz")) => {
+                Some(self.parse_string_literal(directive))
+            }
+            Token::Directive(directive @ ("byte" | "double" | "float" | "half" | "word")) => {
+                Some(self.parse_value_array(directive))
+            }
+
+            Token::Directive(_) => Some(Err(self
+                .new_error(ParseError::UnknownDirective)
+                .with_narrow_span(span))),
+
+            Token::Ident(ident) => Some(self.parse_ident(ident)),
+
+            Token::Error(err) => Some(Err(self.new_error(err).with_narrow_span(span))),
+            _ => Some(Err(self.new_unexpected_token_error(span))),
+        }
+    }
+}
+
+impl<'src> From<Lexer<'src, Token<'src>>> for Parser<'src> {
+    fn from(lexer: Lexer<'src, Token<'src>>) -> Self {
+        Self {
+            tokens: lexer.spanned(),
+            peeked: Vec::new(),
+            expr_span: Span::default(),
+            // In most situations, you'd probably want to set this to a useful value. I don't bother
+            // here, though, because its value will be overwritten by the time it's ever read.
+            expected: "",
         }
     }
 }

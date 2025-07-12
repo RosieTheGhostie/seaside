@@ -5,6 +5,8 @@ use thiserror::Error;
 
 #[derive(Clone, Copy, Debug, Eq, Error, Hash, Ord, PartialEq, PartialOrd)]
 pub enum EngineError {
+    #[error("assembly failed")]
+    AssemblyFailure,
     #[error("something went wrong outside the engine's control")]
     ExternalFailure,
     #[error("something went wrong in the engine's internal logic")]
@@ -21,8 +23,6 @@ pub enum EngineError {
     NotFound,
     #[error("this version of seaside is incompatible with the config provided")]
     OutdatedVersion,
-    #[error("the source code provided is semantically incorrect")]
-    SemanticError,
-    #[error("the source code provided is syntactically incorrect")]
-    SyntaxError,
+    #[error("parsing failed")]
+    ParsingFailure,
 }
