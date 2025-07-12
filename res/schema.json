@@ -64,52 +64,15 @@
               "description": "Allow use of pseudo-instructions and formats.\n\nAs of seaside v1.2.0, this setting does nothing, but support for this feature will eventually be introduced.",
               "type": "boolean",
               "default": true
-            },
-            "directives": {
-              "description": "Which special directives to allow.",
-              "type": ["object", "string"],
-              "enum": ["all", "recommended", "none"],
-              "properties": {
-                "asciiz": {
-                  "description": "Enables the .asciiz directive, which creates a zero-delimited string literal.",
-                  "type": "boolean",
-                  "default": true
-                },
-                "eqv": {
-                  "description": "Enables the .eqv directive, which behaves similarly to the #define macro in C.",
-                  "type": "boolean",
-                  "default": false
-                },
-                "global": {
-                  "description": "Enables the .global and .globl directives, which both place the specified labels in the global scope.",
-                  "type": "boolean",
-                  "default": true
-                },
-                "include": {
-                  "description": "Enables the .include directive, which behaves similarly to the #include macro in C.",
-                  "type": "boolean",
-                  "default": true
-                },
-                "macros": {
-                  "description": "Enables the .macro and .end_macro directives, which help define a MARS-style macro.",
-                  "type": "boolean",
-                  "default": false
-                },
-                "set": {
-                  "description": "Enables the .set directive, which allows programs to dynamically change assembler settings.",
-                  "type": "boolean",
-                  "default": false
-                }
-              }
             }
           }
         },
         "system_services": {
-          "description": "Set system calls available to the interpreter.\n\nAttempting to call a disabled system call will result in a SyscallFailure exception. The same goes for syscalls that haven't been implemented, even if they are enabled.",
+          "description": "Set system services available to the interpreter.\n\nAttempting to call an unmapped service will result in a SyscallFailure exception. The same goes for syscalls that haven't been implemented, even if they are mapped.",
           "$ref": "#/$defs/system_services"
         },
         "syscalls": {
-          "description": "Set system calls available to the interpreter.\n\nAttempting to call a disabled system call will result in a SyscallFailure exception. The same goes for syscalls that haven't been implemented, even if they are enabled.",
+          "description": "Set system services available to the interpreter.\n\nAttempting to call an unmapped service will result in a SyscallFailure exception. The same goes for syscalls that haven't been implemented, even if they are mapped.",
           "$ref": "#/$defs/system_services",
           "deprecated": true
         }

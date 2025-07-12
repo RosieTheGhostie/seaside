@@ -33,6 +33,11 @@ pub enum Expr<'src> {
         /// The path of the file to include.
         file_path: &'src str,
     },
+    /// A command to make labels visible from other files.
+    GlobalCommand {
+        /// The labels to make global.
+        labels: Vec<(&'src str, Span)>,
+    },
     /// A C-style macro using the `.eqv` directive.
     EqvMacro {
         /// The name of the macro to define.
@@ -91,6 +96,17 @@ impl Display for Expr<'_> {
             Self::AlignCommand { alignment } => write!(f, ".align {alignment}"),
             Self::SpaceCommand { n_bytes } => write!(f, ".space {n_bytes}"),
             Self::IncludeCommand { file_path } => write!(f, ".include {file_path:?}"),
+            Self::GlobalCommand { labels } => {
+                write!(f, ".global ")?;
+                let mut iter = labels.iter();
+                if let Some((first, _)) = iter.next() {
+                    write!(f, "{first}")?;
+                    for (label, _) in iter {
+                        write!(f, ", {label}")?;
+                    }
+                }
+                Ok(())
+            }
             Self::EqvMacro { name, expr } => write!(f, ".eqv {name}, {expr}"),
             Self::SetCommand { command } => write!(f, ".set {command}"),
             Self::ValueArray { directive, values } => {

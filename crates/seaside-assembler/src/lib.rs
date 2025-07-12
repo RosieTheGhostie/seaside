@@ -108,15 +108,15 @@ impl<'src> Assembler<'src> {
                         .with_note(".space only supported in data segments"));
                 }
             }
-            Expr::IncludeCommand { file_path: _ } => {
+            Expr::IncludeCommand { .. } | Expr::GlobalCommand { .. } => {
                 return Err(RichError::new(AssembleError::UnsupportedDirective, span)
-                    .with_note("support for .include not yet planned"));
+                    .with_note("multiple file support not yet planned"));
             }
-            Expr::EqvMacro { name: _, expr: _ } => {
+            Expr::EqvMacro { .. } => {
                 return Err(RichError::new(AssembleError::UnsupportedDirective, span)
                     .with_note("support for .eqv planned for seaside v1.4.0"));
             }
-            Expr::SetCommand { command: _ } => {
+            Expr::SetCommand { .. } => {
                 return Err(RichError::new(AssembleError::UnsupportedDirective, span)
                     .with_note("support for .set planned for seaside v1.4.0"));
             }

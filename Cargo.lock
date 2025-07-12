@@ -569,23 +569,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "seaside-bitflags-serde"
-version = "0.1.0"
-dependencies = [
- "bitflags",
- "heck",
- "serde",
-]
-
-[[package]]
 name = "seaside-config"
 version = "1.2.0"
 dependencies = [
  "anyhow",
- "bitflags",
  "heck",
  "num-traits",
- "seaside-bitflags-serde",
  "seaside-constants",
  "seaside-error",
  "seaside-int-utils",
