@@ -3,6 +3,9 @@ name = "seaside"
 version = "1.2.0"
 authors = ["RosieTheGhostie <rosetheghost.dev@gmail.com>"]
 edition = "2024"
+readme = "README.md"
+repository = "https://github.com/RosieTheGhostie/seaside"
+license = "MIT"
 
 [dependencies]
 anyhow = "1.0"
