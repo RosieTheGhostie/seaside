@@ -7,16 +7,16 @@ edition = "2024"
 [dependencies]
 anyhow = "1.0"
 directories = "6.0"
-seaside-assembler = { version = "*", path = "crates/seaside-assembler" }
-seaside-config = { version = "*", path = "crates/seaside-config" }
-seaside-constants = { version = "*", path = "crates/seaside-constants" }
+seaside-assembler = { version = "*", path = "crates/assembler" }
+seaside-config = { version = "*", path = "crates/config" }
+seaside-constants = { version = "*", path = "crates/constants" }
 seaside-disassembler = { version = "*", features = [
 	"full",
-], path = "crates/seaside-disassembler" }
-seaside-error = { version = "*", path = "crates/seaside-error" }
-seaside-int-utils = { version = "*", path = "crates/seaside-int-utils" }
-seaside-interpreter = { version = "*", path = "crates/seaside-interpreter" }
-seaside-type-aliases = { version = "*", path = "crates/seaside-type-aliases" }
+], path = "crates/disassembler" }
+seaside-error = { version = "*", path = "crates/error" }
+seaside-int-utils = { version = "*", path = "crates/int-utils" }
+seaside-interpreter = { version = "*", path = "crates/interpreter" }
+seaside-type-aliases = { version = "*", path = "crates/type-aliases" }
 serde = "1.0.219"
 toml = "0.9.2"
 

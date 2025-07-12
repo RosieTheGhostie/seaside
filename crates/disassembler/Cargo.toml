@@ -11,11 +11,11 @@ path = "src/lib.rs"
 
 [dependencies]
 num-traits = "0.2"
-seaside-constants = { version = "*", path = "../seaside-constants" }
+seaside-constants = { version = "*", path = "../constants" }
 seaside-int-utils = { version = "*", features = [
 	"sign_extend",
-], path = "../seaside-int-utils" }
-seaside-type-aliases = { version = "*", path = "../seaside-type-aliases" }
+], path = "../int-utils" }
+seaside-type-aliases = { version = "*", path = "../type-aliases" }
 
 [dependencies.attribute-pseudoblock]
 version = "0.1"

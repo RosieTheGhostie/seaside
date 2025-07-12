@@ -13,15 +13,15 @@ path = "src/lib.rs"
 anyhow = "1.0.98"
 heck = "0.5.0"
 num-traits = "0.2.19"
-seaside-constants = { version = "*", path = "../seaside-constants" }
-seaside-error = { version = "*", path = "../seaside-error" }
+seaside-constants = { version = "*", path = "../constants" }
+seaside-error = { version = "*", path = "../error" }
 seaside-int-utils = { version = "*", features = [
 	"all_zeroes",
 	"endian",
 	"serde",
-], path = "../seaside-int-utils" }
-seaside-service-group = { version = "0.1.0", path = "../seaside-service-group" }
-seaside-type-aliases = { version = "*", path = "../seaside-type-aliases" }
+], path = "../int-utils" }
+seaside-service-group = { version = "0.1.0", path = "../service-group" }
+seaside-type-aliases = { version = "*", path = "../type-aliases" }
 semver = "1.0.26"
 serde = { version = "1.0.219", features = ["derive"] }
 strum = { version = "0.27.1", features = ["derive"] }

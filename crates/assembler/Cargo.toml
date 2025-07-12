@@ -1,0 +1,23 @@
+[package]
+name = "seaside-assembler"
+description = "The MIPS32 assembler for seaside"
+version = "0.2.0"
+authors = ["RosieTheGhostie <rosetheghost.dev@gmail.com>"]
+edition = "2024"
+
+[lib]
+crate-type = ["lib"]
+path = "src/lib.rs"
+
+[dependencies]
+ariadne = "0.5.1"
+const_format = { version = "0.2.34", features = ["fmt"] }
+logos = "0.15.0"
+seaside-config = { version = "*", path = "../config" }
+seaside-constants = { version = "*", path = "../constants" }
+seaside-error = { version = "*", path = "../error", features = ["rich"] }
+seaside-int-utils = { version = "*", path = "../int-utils", features = [
+	"endian",
+] }
+seaside-type-aliases = { version = "*", path = "../type-aliases" }
+thiserror = "2.0.12"

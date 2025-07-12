@@ -11,20 +11,20 @@ path = "src/lib.rs"
 
 [dependencies]
 anyhow = "1.0.98"
-console = "0.15.11"
+console = "0.16.0"
 num-traits = "0.2"
 rand = "0.9.1"
-seaside-config = { version = "*", path = "../seaside-config" }
-seaside-constants = { version = "*", path = "../seaside-constants" }
+seaside-config = { version = "*", path = "../config" }
+seaside-constants = { version = "*", path = "../constants" }
 seaside-disassembler = { version = "*", default-features = false, features = [
 	"fields",
-], path = "../seaside-disassembler" }
-seaside-error = { version = "*", path = "../seaside-error" }
+], path = "../disassembler" }
+seaside-error = { version = "*", path = "../error" }
 seaside-int-utils = { version = "*", features = [
 	"byte_stream",
 	"endian",
-], path = "../seaside-int-utils" }
-seaside-type-aliases = { version = "*", path = "../seaside-type-aliases" }
+], path = "../int-utils" }
+seaside-type-aliases = { version = "*", path = "../type-aliases" }
 strum = "0.27.1"
 thiserror = "2.0.12"
 
