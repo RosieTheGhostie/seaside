@@ -11,7 +11,7 @@ use crate::{error::ParseError, token::Token};
 use const_format::formatcp;
 use logos::{Lexer, Logos, SpannedIter};
 use seaside_error::rich::{
-    Label, RichError, Span, ToErrorCode,
+    Label, RichError, RichResult, Span, ToErrorCode,
     span::{combine_spans, consume_span},
 };
 
@@ -76,10 +76,6 @@ impl<'src> Parser<'src> {
     ///
     /// This is different from querying the `tokens` iterator because the method first checks for
     /// any tokens in the `peeked` queue.
-    ///
-    /// # See Also
-    ///
-    /// - [`Parser::next_substantial_token`]
     fn next_token(&mut self) -> Option<(Token<'src>, Span)> {
         if let Some((token, span)) = self.peeked.pop() {
             Some((token, span))
@@ -279,6 +275,47 @@ impl<'src> Parser<'src> {
             None => return Err(self.new_premature_eof_error()),
         };
         self.expect_line_end(|| Expr::IncludeCommand { file_path })
+    }
+
+    /// Attempts to parse a [global command](Expr::GlobalCommand).
+    ///
+    /// The [directive](Token::Directive) [token](Token) is assumed to have been processed already.
+    fn parse_global_command(&mut self) -> ParserItem<'src> {
+        fn parse_label<'src>(
+            this: &mut Parser<'src>,
+            last_span: &mut Span,
+            labels: &mut Vec<(&'src str, Span)>,
+        ) -> RichResult<()> {
+            this.expected = expected::IDENT;
+            match this.next_token() {
+                Some((Token::Ident(label), span)) => {
+                    labels.push((label, span.clone()));
+                    *last_span = span;
+                    Ok(())
+                }
+                Some(spanned_token @ (Token::NewLine, _)) => {
+                    Err(this.peek_and_throw_unexpected(spanned_token))
+                }
+                Some(spanned_token) => Err(this.peek_and_throw_unexpected(spanned_token)),
+                None => Err(this.new_premature_eof_error()),
+            }
+        }
+
+        let mut labels = Vec::new();
+        let mut last_span = Span::default();
+        parse_label(self, &mut last_span, &mut labels)?;
+        loop {
+            self.expected = formatcp!("{} or {}", expected::COMMA, expected::NEWLINE);
+            match self.next_token() {
+                Some((Token::Ctrl(','), span)) => last_span = span,
+                Some((Token::NewLine, _)) | None => break,
+                Some(spanned_token) => return Err(self.peek_and_throw_unexpected(spanned_token)),
+            }
+            parse_label(self, &mut last_span, &mut labels)?;
+        }
+
+        self.consume_span(last_span);
+        self.r#yield(Expr::GlobalCommand { labels })
     }
 
     /// Attempts to parse a [set command](Expr::SetCommand).
@@ -549,6 +586,7 @@ impl<'src> Iterator for Parser<'src> {
             Token::Directive("space") => Some(self.parse_space_command()),
             Token::Directive("eqv") => Some(self.parse_eqv_macro()),
             Token::Directive("include") => Some(self.parse_include_command()),
+            Token::Directive("global" | "globl") => Some(self.parse_global_command()),
             Token::Directive("set") => Some(self.parse_set_command()),
 
             Token::Directive(directive @ ("ascii" | "asciiz")) => {
