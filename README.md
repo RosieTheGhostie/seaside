@@ -20,13 +20,14 @@ Assemble MIPS source code into raw binary files for execution.
 - [ ] Pseudo-instructions and extended formats
 - [ ] MARS-style macros
 - [ ] Support for `.set`
+- [ ] Support for `.eqv`
 
 ### Interpreter (*mostly implemented*)
 
 Run programs seamlessly with the power of the seaside interpreter.
 
 - [X] 136/136 basic instructions supported by MARS
-- [ ] 27/39 system calls supported by MARS
+- [ ] 27/39 system services supported by MARS
   - [X] 8/8 printing services
   - [X] 5/5 user input services
   - [X] 4/4 file services
@@ -52,9 +53,10 @@ Change the behavior of the seaside engine to your preference.
 - [X] Default values of registers
 - [X] Crash handler
 - [X] Current working directory for file IO
-- [X] Toggle self-modifying code
-- [X] Toggle individual system calls
-- [X] Toggle individual directives
+- [X] Self-modifying code[^1]
+- [X] Delay slot[^1]
+- [X] System service mapping
+- [X] Ability to free heap allocations
 - [ ] + more!!!
 
 ### [Debug Adapter Protocol (DAP)](https://microsoft.github.io/debug-adapter-protocol/) Compatibility (*not implemented*)
@@ -128,3 +130,5 @@ seaside has extensive configuration options, as described [above](#configuration
 If seaside is ran in a directory with a file named 'Seaside.toml', that file will be used to set up the engine. Otherwise, it will attempt to find 'Seaside.toml' in its own root directory. For this reason, you should never move or delete the configuration file shipped with seaside.
 
 Extensive documentation of the available configuration options can be found [here](https://github.com/RosieTheGhostie/seaside/wiki/Configuration-Manual).
+
+[^1]: The option exists in the config, but it doesn't do anything yet.
