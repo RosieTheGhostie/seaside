@@ -1,6 +1,6 @@
 [package]
 name = "seaside"
-version = "1.2.0"
+version = "1.3.0"
 authors = ["RosieTheGhostie <rosetheghost.dev@gmail.com>"]
 edition = "2024"
 readme = "README.md"

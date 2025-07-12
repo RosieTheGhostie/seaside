@@ -548,7 +548,7 @@ checksum = "8a0d197bd2c9dc6e53b84da9556a69ba4cdfab8619eb41a8bd1cc2027a0f6b1d"
 
 [[package]]
 name = "seaside"
-version = "1.2.0"
+version = "1.3.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -583,7 +583,7 @@ dependencies = [
 
 [[package]]
 name = "seaside-config"
-version = "1.2.0"
+version = "1.3.0"
 dependencies = [
  "anyhow",
  "heck",

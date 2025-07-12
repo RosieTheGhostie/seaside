@@ -1,7 +1,7 @@
 [package]
 name = "seaside-config"
 description = "Configuration support for seaside"
-version = "1.2.0"                                          # must match the version of seaside
+version = "1.3.0"                                          # must match the version of seaside
 authors = ["RosieTheGhostie <rosetheghost.dev@gmail.com>"]
 edition = "2024"
 
