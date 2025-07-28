@@ -85,49 +85,87 @@ As of v1.2, seaside can assemble programs itself, so external tools like MARS ar
 
 ## Installation
 
-I plan to make this process more streamlined at some point (maybe with package managers or a dedicated installer), but for now, it's a bit complicated. If you have ideas for how to improve the installation process, *please* let me know.
+When installing seaside, you have two options: run the installer, or compile from source.
 
-### Prerequisites
+### Option A. Using the Installer (recommended)
+
+The [seaside installer](https://github.com/RosieTheGhostie/seaside-installer) streamlines the process of installing, updating, and uninstalling seaside. It handles all the OS-dependent stuff for you, making for a much simpler and safer experience.
+
+Start by downloading the [latest release](https://github.com/RosieTheGhostie/seaside-installer/releases/latest) of the seaside installer. Newer versions of the installer don't necessarily allow you to install newer/older versions of seaside, but they may be less buggy and have more features.
+
+Once the installer is on your system, navigate to the directory it's in via the terminal and run it. This should print the installer's usage. From this point, run whichever command best fits your needs.
+
+### Option B. Compiling from Source
+
+If you wish to compile seaside yourself (for some reason), that is an option, too; however, it will require much more setup to get working.
+
+#### Prerequisites
 
 As with any other Rust app, you'll need [cargo](https://doc.rust-lang.org/cargo/) to compile it. I won't go into detail on how to install that here, but you can find some information about it [here](https://doc.rust-lang.org/cargo/getting-started/installation.html).
 
 Other than that, seaside shouldn't need anything else to be installed on your computer.
 
-### Compilation
+#### Compilation
 
 1. Navigate to seaside's root directory. This is the directory containing 'Cargo.toml'.
 2. In your terminal/command prompt of choice, enter the following command:
     ```bash
-    cargo build --release
+    cargo build -r
     ```
 3. Sit back and watch the Rust compiler do its magic.
 
-> [!NOTE]
-> On Linux, cargo demands that you append `-Znext-lockfile-bump` to the build command. No idea why.
-
 At this point, you should find the seaside executable in './target/release'. You may delete all other files in './target' if you wish, but leaving them around will speed up future compilations.
 
-## Post-Installation
+#### Putting Stuff in the Right Directories
 
-Although seaside will technically work now, there are some things I would recommend doing to get the best experience.
+For the best experience, it is crucial to put files in the right place.
 
-### Adding seaside to the System Path
+##### 'Seaside.toml'
 
-To avoid typing out the full executable path every time you want to run seaside, you can add it to your system path. This process will vary wildly by operating system, so I won't attempt to describe it here.
+seaside expects its global configuration file to be in a very specific location on your computer. This location is (like most other things going forward) OS-dependent.
 
-Regardless of your OS, the directory you'll append to your system path will be the parent of the seaside executable. The easiest way to find this is to run the following command from the seaside root directory:
+- **Linux:** /home/*user*/.config/seaside/Seaside.toml
+- **Windows:** C:\\Users\\*user*\\AppData\\Roaming\\seaside\\config\\Seaside.toml
 
-```bash
-cargo run -- exe-path
-```
+Replace *user* with your username.
 
-This will print the absolute path of the executable. Simply remove the executable from the end of that path to get the parent's path.
+I recommend copying 'Seaside.toml' from the 'res' directory of this repository to the correct location for your machine.
+
+##### The seaside Executable
+
+While not technically required, having seaside in a specific location can expedite its use later on.
+
+- **Linux:** /usr/local/bin/seaside
+- **Windows:** C:\\ProgramData\\seaside\\seaside.exe
+
+> [!NOTE]
+> 'ProgramData' is a hidden folder on Windows.
+
+On Linux, this step makes it possible to run seaside anywhere on your computer without referring to it by path. Windows, on the other hand, requires a bit more setup to achieve this.
+
+#### Adding seaside to 'Path' (Windows only)
+
+Start by pulling up the start menu (most easily done by pressing the \[Win\] key). Type in "path", which should bring up something that says "Edit the system environment variables". If so, open it and click the button that says "Environment Variables".
+
+> [!TIP]
+> If that didn't work for whatever reason, it's not too hard to go there yourself.
+>
+> 1. Open up Control Panel
+> 2. In the search bar, type in "environment"
+> 3. Under "System", click "Edit environment variables for your account"
+
+Scrolling through the user variables, you should find one named "Path". This is a list of directories Windows will search whenever a command is executed. Double-click on it to open the editing interface.
+
+> [!NOTE]
+> This variable exists on Linux, too, but we didn't need to mess with it there because we used a directory that's already in the path.
+
+Click the "New" button and type in "C:\\ProgramData\\seaside". Once you press \[Enter\], click the "OK" buttons on both windows to commit your changes.
 
 ### Configuration
 
 seaside has extensive configuration options, as described [above](#configuration-mostly-implemented). These are designed to mimic MARS' default settings out of the box, but you are welcome to change them however you see fit.
 
-If seaside is ran in a directory with a file named 'Seaside.toml', that file will be used to set up the engine. Otherwise, it will attempt to find 'Seaside.toml' in its own root directory. For this reason, you should never move or delete the configuration file shipped with seaside.
+If seaside is ran in a directory with a file named 'Seaside.toml', that file will be used to set up the engine. Otherwise, it will use the global 'Seaside.toml'.
 
 Extensive documentation of the available configuration options can be found [here](https://github.com/RosieTheGhostie/seaside/wiki/Configuration-Manual).
 

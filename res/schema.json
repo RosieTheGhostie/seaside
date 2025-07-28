@@ -68,11 +68,11 @@
           }
         },
         "system_services": {
-          "description": "Set system services available to the interpreter.\n\nAttempting to call an unmapped service will result in a SyscallFailure exception. The same goes for syscalls that haven't been implemented, even if they are mapped.",
+          "description": "Set system services available to the interpreter.\n\nAttempting to call an unmapped service will result in a SyscallFailure exception. The same goes for services that haven't been implemented, even if they are mapped.",
           "$ref": "#/$defs/system_services"
         },
         "syscalls": {
-          "description": "Set system services available to the interpreter.\n\nAttempting to call an unmapped service will result in a SyscallFailure exception. The same goes for syscalls that haven't been implemented, even if they are mapped.",
+          "description": "Set system services available to the interpreter.\n\nAttempting to call an unmapped service will result in a SyscallFailure exception. The same goes for services that haven't been implemented, even if they are mapped.",
           "$ref": "#/$defs/system_services",
           "deprecated": true
         }
