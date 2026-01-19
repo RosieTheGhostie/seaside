@@ -7,8 +7,9 @@ pseudoblock! {
     #![cfg(feature = "disassembler")]
     mod destructure;
 
-    use destructure::destructure;
     use seaside_type_aliases::{Address, Instruction};
+
+    use destructure::destructure;
 
     pub fn disassemble_advanced(
         instruction: Instruction,

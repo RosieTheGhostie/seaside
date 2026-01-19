@@ -21,11 +21,13 @@ pub fn generate_code(ident: Ident, variants: Punctuated<Variant, Token![,]>) -> 
             Self::#variant_ident(x) => write!(f, #fmt_str),
         });
     }
+
     branches.push(quote! {
         {
             ::core::result::Result::Err(::strum::ParseError::VariantNotFound)
         }
     });
+
     quote! {
         impl ::core::str::FromStr for #ident {
             type Err = ::strum::ParseError;

@@ -1,4 +1,5 @@
 use core::num::{ParseFloatError, ParseIntError};
+
 use seaside_error::rich::ToErrorCode;
 use thiserror::Error;
 
@@ -7,9 +8,11 @@ pub enum LexError {
     /// A miscellaneous error.
     #[error("{0}")]
     Unspecified(&'static str),
+
     /// The lexer identified an integer, but it couldn't be stored in an [`i64`].
     #[error("{0}")]
     InvalidInteger(&'static str),
+
     /// The lexer identified a floating point number, but it couldn't be stored in an [`f64`].
     #[error("float is outside the valid range for its data type")]
     InvalidFloat,

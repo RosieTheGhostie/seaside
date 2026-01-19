@@ -1,19 +1,20 @@
+pub use expr::Expr;
+pub use operand::Operand;
+pub use value::Value;
+
 mod expected;
 mod expr;
 mod operand;
 mod value;
 
-pub use expr::Expr;
-pub use operand::Operand;
-pub use value::Value;
-
-use crate::{error::ParseError, token::Token};
 use const_format::formatcp;
 use logos::{Lexer, Logos, SpannedIter};
 use seaside_error::rich::{
     Label, RichError, RichResult, Span, ToErrorCode,
     span::{combine_spans, consume_span},
 };
+
+use crate::{error::ParseError, token::Token};
 
 /// The type returned by the [`Parser`] [iterator](Iterator).
 ///

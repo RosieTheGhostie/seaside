@@ -1,11 +1,12 @@
-use super::{Component, DestructuredInstruction, Operation};
-use crate::fields;
 use num_traits::FromPrimitive;
 use seaside_constants::{
     NumberFormat,
     fn_codes::{Coprocessor1Fn, Coprocessor1RegisterImmediateFn},
 };
 use seaside_type_aliases::Instruction;
+
+use super::{Component, DestructuredInstruction, Operation};
+use crate::fields;
 
 pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> {
     use Coprocessor1Fn::*;
@@ -35,6 +36,7 @@ pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> 
         }
         None => {}
     }
+
     let fmt = NumberFormat::from_u8(fmt)?;
     let fs = fields::fs(instruction);
     let fd = fields::fd(instruction);
@@ -72,6 +74,7 @@ pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> 
             components[3] = Component::FpuRegister(ft);
         }
     }
+
     Some(DestructuredInstruction::new(
         Operation::Coprocessor1Fn(r#fn),
         components,

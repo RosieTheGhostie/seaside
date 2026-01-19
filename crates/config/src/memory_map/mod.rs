@@ -9,12 +9,13 @@ pub use runtime_data::RuntimeData;
 pub use segment::Segment;
 pub use segments::Segments;
 
-use crate::Validate;
-use anyhow::{Error, Result};
+use anyhow::{Context, Error, Result};
 use seaside_error::EngineError;
 use seaside_int_utils::AllZeroes;
 use seaside_type_aliases::Address;
 use serde::{Deserialize, Serialize};
+
+use crate::Validate;
 use traits::{Contains, Overlapping};
 
 /// Maps various memory regions to [`AddressRange`]s.
@@ -80,8 +81,9 @@ impl Validate for MemoryMap {
         } else {
             None
         };
+
         match error_msg {
-            Some(msg) => Err(Error::new(EngineError::InvalidConfig).context(msg)),
+            Some(msg) => Err(Error::new(EngineError::InvalidConfig)).context(msg),
             None => self.segments.validate(),
         }
     }

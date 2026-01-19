@@ -1,4 +1,5 @@
 use core::cmp::Ordering;
+
 use semver::Version;
 use serde::{Deserialize, Deserializer, Serializer};
 

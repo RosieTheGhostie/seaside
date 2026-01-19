@@ -1,5 +1,5 @@
-use super::macros::*;
 use core::str::FromStr;
+
 use seaside_constants::{
     NumberFormat, Opcode,
     fn_codes::{
@@ -7,6 +7,8 @@ use seaside_constants::{
         Special2Fn, SpecialFn,
     },
 };
+
+use super::macros::*;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Operator {

@@ -6,10 +6,11 @@ mod special;
 mod special_2;
 mod syscall;
 
-use crate::{Exception, Interpreter};
 use seaside_constants::InstructionFormat;
 use seaside_disassembler::fields;
 use seaside_type_aliases::Instruction;
+
+use crate::{Exception, Interpreter};
 
 impl Interpreter {
     pub fn execute(&mut self, instruction: Instruction) -> Result<(), Exception> {

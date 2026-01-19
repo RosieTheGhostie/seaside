@@ -10,9 +10,9 @@ pub enum InstructionFormat {
 }
 
 impl From<Opcode> for InstructionFormat {
-    fn from(value: Opcode) -> Self {
+    fn from(opcode: Opcode) -> Self {
         use Opcode::*;
-        match value {
+        match opcode {
             Special => Self::Special,
             Jump | JumpAndLink => Self::Jump,
             Coprocessor0 => Self::Coprocessor0,

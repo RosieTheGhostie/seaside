@@ -1,6 +1,8 @@
-use crate::error::LexError;
-use core::fmt::{Display, Formatter, Result as FmtResult, Write};
+use core::fmt::{self, Display, Formatter, Write};
+
 use logos::Logos;
+
+use crate::error::LexError;
 
 /// A single "atom" in a MIPS Assembly program.
 #[derive(Clone, Debug, Logos, PartialEq)]
@@ -14,6 +16,7 @@ pub enum Token<'src> {
     /// One or more newline characters.
     #[regex(r"[\r\n]+")]
     NewLine,
+
     /// A control character.
     ///
     /// This currently includes commas (`,`), colons (`:`), and parentheses (`(` & `)`).
@@ -26,12 +29,14 @@ pub enum Token<'src> {
     #[regex(r"[+-]?\d+", |lex| lex.slice().parse(), priority = 3)]
     #[regex(r"0[xX][0-9A-Fa-f]+", |lex| i64::from_str_radix(&lex.slice()[2..], 16))]
     Int(i64),
+
     /// A floating-point literal.
     #[regex(
         r"[+-]?(\d+([.]\d*)?([eE][+-]?\d+)?|[.]\d+([eE][+-]?\d+)?)",
         |lex| lex.slice().parse(),
     )]
     Float(f64),
+
     /// A string literal.
     ///
     /// The quotes are not stored.
@@ -47,11 +52,13 @@ pub enum Token<'src> {
     /// The `$` is not stored.
     #[regex(r"\$[a-z0-9]+", |lex| &lex.slice()[1..])]
     Register(&'src str),
+
     /// An assembler directive.
     ///
     /// The `.` is not stored.
     #[regex(r"\.[a-z]+", |lex| &lex.slice()[1..])]
     Directive(&'src str),
+
     /// An identifier.
     ///
     /// These are usually just operators (e.g., `addiu`), but they can also be labels.
@@ -60,7 +67,7 @@ pub enum Token<'src> {
 }
 
 impl Display for Token<'_> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             Self::Error(err) => write!(f, "Error({err})"),
             Self::NewLine => write!(f, r"\n"),

@@ -1,7 +1,3 @@
-use crate::{
-    Exception, Interpreter, InterpreterState,
-    register_file::{IndexByRegister, TryIndexByRegister},
-};
 use num_traits::{FromPrimitive, Zero};
 use seaside_constants::{
     NumberFormat,
@@ -10,6 +6,11 @@ use seaside_constants::{
 };
 use seaside_disassembler::fields;
 use seaside_type_aliases::Instruction;
+
+use crate::{
+    Exception, Interpreter, InterpreterState,
+    register_file::{IndexByRegister, TryIndexByRegister},
+};
 
 impl Interpreter {
     /// Executes `instruction`, which must follow one of the "coprocessor 1" instruction formats:
@@ -71,10 +72,10 @@ impl Interpreter {
             }
             None => {}
         }
-        let r#fn = match Coprocessor1Fn::from_u8(fields::r#fn(instruction)) {
-            Some(r#fn) => r#fn,
-            None => return Err(Exception::ReservedInstruction),
-        };
+
+        let r#fn = Coprocessor1Fn::from_u8(fields::r#fn(instruction))
+            .ok_or(Exception::ReservedInstruction)?;
+
         match NumberFormat::from_u8(fmt) {
             Some(Single) => self.execute_coprocessor_1_single(ft, fs, fd, r#fn),
             Some(Double) => self.execute_coprocessor_1_double(ft, fs, fd, r#fn),
@@ -269,10 +270,11 @@ impl InterpreterState {
     fn bc1c(&mut self, ft: FpuRegister, instruction: Instruction) -> Result<(), Exception> {
         let cc = fields::cc_from_fpu_register(ft);
         let condition = fields::condition_from_fpu_register(ft);
-        let offset = (instruction & 0xffff) as u16;
+        let offset = (instruction & u16::MAX as Instruction) as u16;
         if self.registers.read_fpu_flag(cc) == condition {
             self.branch(offset);
         }
+
         Ok(())
     }
 

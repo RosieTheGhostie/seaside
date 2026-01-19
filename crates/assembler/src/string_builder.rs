@@ -1,6 +1,8 @@
-use crate::error::AssembleError;
 use core::str::CharIndices;
+
 use seaside_error::rich::{RichError, RichResult, Span};
+
+use crate::error::AssembleError;
 
 pub struct StringBuilder<'src> {
     raw: CharIndices<'src>,

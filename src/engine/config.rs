@@ -4,12 +4,14 @@
 //! - [`get_config`]: Finds and parses a configuration file.
 //! - [`find_global_config`]: Finds the global configuration file.
 
-use super::{lazy_project_dirs::PROJECT_DIRS, resolve};
-use crate::CmdArgs;
-use anyhow::{Error, Result};
+use std::{fs::read_to_string, path::PathBuf};
+
+use anyhow::{Context, Error, Result};
 use seaside_config::{Config, Validate};
 use seaside_error::EngineError;
-use std::{fs::read_to_string, path::PathBuf};
+
+use super::{lazy_project_dirs::PROJECT_DIRS, resolve};
+use crate::CmdArgs;
 
 /// Tries to find and parse a seaside configuration file.
 ///
@@ -43,7 +45,7 @@ const SEASIDE_TOML: &str = "Seaside.toml";
 ///
 /// This first searches the current working directory, but if it cannot find it there, it will move
 /// on to the directory designated by the operating system for seaside's configuration files.
-fn find_seaside_toml() -> Result<PathBuf, Error> {
+fn find_seaside_toml() -> Result<PathBuf> {
     let path = PathBuf::from(SEASIDE_TOML);
     if path.exists() {
         Ok(path)
@@ -59,7 +61,7 @@ fn find_seaside_toml() -> Result<PathBuf, Error> {
 /// the case in [`find_seaside_toml`].
 fn _find_global_config(seaside_toml: Option<PathBuf>, ensure_exists: bool) -> Result<PathBuf> {
     let seaside_toml = seaside_toml.unwrap_or_else(|| PathBuf::from(SEASIDE_TOML));
-    resolve(PROJECT_DIRS.config_dir()?, seaside_toml, ensure_exists).ok_or_else(|| {
-        Error::new(EngineError::NotFound).context(format!("couldn't find '{SEASIDE_TOML}'"))
-    })
+    resolve(PROJECT_DIRS.config_dir()?, seaside_toml, ensure_exists)
+        .ok_or_else(|| Error::new(EngineError::NotFound))
+        .with_context(|| format!("couldn't find '{SEASIDE_TOML}'"))
 }

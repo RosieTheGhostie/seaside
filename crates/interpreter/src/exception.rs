@@ -1,52 +1,52 @@
-use crate::SyscallFailureKind;
 use seaside_type_aliases::Address;
 use thiserror::Error;
 
+use crate::SyscallFailureKind;
+
 #[derive(Clone, Copy, Debug, Eq, Error, Hash, Ord, PartialEq, PartialOrd)]
+#[repr(u32)]
 pub enum Exception {
     #[error("malformed instruction")]
-    MalformedInstruction,
-    #[error("invalid load (address: 0x{0:08x})")]
-    InvalidLoad(Address),
-    #[error("invalid load (address: 0x{0:08x})")]
-    InvalidStore(Address),
+    MalformedInstruction = 0,
+
+    #[error("invalid load (address: {0:#010x})")]
+    InvalidLoad(Address) = 4,
+
+    #[error("invalid load (address: {0:#010x})")]
+    InvalidStore(Address) = 5,
+
     #[error("{0}")]
-    SyscallFailure(#[from] SyscallFailureKind),
+    SyscallFailure(#[from] SyscallFailureKind) = 8,
+
     #[error("break exception thrown")]
-    Break,
+    Break = 9,
+
     #[error("encountered reserved instruction")]
-    ReservedInstruction,
+    ReservedInstruction = 10,
+
     #[error("integer overflow/underflow")]
-    IntegerOverflowOrUnderflow,
+    IntegerOverflowOrUnderflow = 12,
+
     #[error("trapped")]
-    Trap,
+    Trap = 13,
+
     #[error("tried to divide by zero")]
-    DivideByZero,
+    DivideByZero = 15,
+
     #[error("floating-point operation overflowed")]
-    FloatOverflow,
+    FloatOverflow = 16,
+
     #[error("floating-point operation underflowed")]
-    FloatUnderflow,
+    FloatUnderflow = 17,
+
     #[error("the interpreter did a goof (pls contact rose)")]
-    InterpreterFailure, // hopefully you never see this one
+    InterpreterFailure = 21, // hopefully you never see this one
 }
 
 impl Exception {
     pub const fn code(&self) -> u32 {
-        use Exception::*;
-        match *self {
-            MalformedInstruction => 0,
-            InvalidLoad(_) => 4,
-            InvalidStore(_) => 5,
-            SyscallFailure(_) => 8,
-            Break => 9,
-            ReservedInstruction => 10,
-            IntegerOverflowOrUnderflow => 12,
-            Trap => 13,
-            DivideByZero => 15,
-            FloatOverflow => 16,
-            FloatUnderflow => 17,
-            InterpreterFailure => 21,
-        }
+        // https://doc.rust-lang.org/reference/items/enumerations.html#r-items.enum.discriminant.access-memory
+        unsafe { *(self as *const Self as *const u32) }
     }
 
     pub const fn vaddr(&self) -> Option<Address> {

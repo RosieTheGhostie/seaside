@@ -1,8 +1,9 @@
-use super::{Component, DestructuredInstruction, Operation};
-use crate::fields;
 use num_traits::FromPrimitive;
 use seaside_constants::fn_codes::Coprocessor0Fn;
 use seaside_type_aliases::Instruction;
+
+use super::{Component, DestructuredInstruction, Operation};
+use crate::fields;
 
 pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> {
     use Coprocessor0Fn::*;
@@ -17,6 +18,7 @@ pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> 
         }
         ErrorReturn => {}
     }
+
     Some(DestructuredInstruction::new(
         Operation::Coprocessor0Fn(r#fn),
         components,

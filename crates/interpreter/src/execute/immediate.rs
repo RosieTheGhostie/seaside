@@ -1,8 +1,3 @@
-use crate::{
-    Exception, Interpreter, InterpreterState,
-    memory::Region,
-    register_file::{IndexByRegister, TryIndexByRegister},
-};
 use num_traits::FromPrimitive;
 use seaside_constants::{
     Opcode,
@@ -10,7 +5,13 @@ use seaside_constants::{
 };
 use seaside_disassembler::fields;
 use seaside_int_utils::{Endian, SignExtend};
-use seaside_type_aliases::Instruction;
+use seaside_type_aliases::{Address, Instruction};
+
+use crate::{
+    Exception, Interpreter, InterpreterState,
+    memory::Region,
+    register_file::{IndexByRegister, TryIndexByRegister},
+};
 
 impl Interpreter {
     /// Executes `instruction`, which must follow the "immediate" instruction format:
@@ -79,7 +80,7 @@ impl Interpreter {
         imm: u16,
     ) -> Result<(), Exception> {
         use seaside_constants::fn_codes::RegisterImmediateFn::{self, *};
-        let r#fn = RegisterImmediateFn::from_u8(rt as u8).ok_or(Exception::ReservedInstruction)?;
+        let r#fn = RegisterImmediateFn::from_u8(rt as _).ok_or(Exception::ReservedInstruction)?;
         match r#fn {
             BranchLessThanZero => self.state.bltz(rs_value, imm, false),
             BranchGreaterEqualZero => self.state.bgez(rs_value, imm, false),
@@ -101,6 +102,7 @@ impl InterpreterState {
         if rs_value == rt_value {
             self.branch(offset);
         }
+
         Ok(())
     }
 
@@ -109,6 +111,7 @@ impl InterpreterState {
         if rs_value != rt_value {
             self.branch(offset);
         }
+
         Ok(())
     }
 
@@ -117,6 +120,7 @@ impl InterpreterState {
         if rs_value as i32 <= 0 {
             self.branch(offset);
         }
+
         Ok(())
     }
 
@@ -125,6 +129,7 @@ impl InterpreterState {
         if rs_value as i32 > 0 {
             self.branch(offset);
         }
+
         Ok(())
     }
 
@@ -149,6 +154,7 @@ impl InterpreterState {
         let imm: i32 = imm.sign_extend();
         self.registers
             .write(rt, u32::wrapping_add_signed(rs_value, imm));
+
         Ok(())
     }
 
@@ -157,17 +163,17 @@ impl InterpreterState {
     fn slti(&mut self, rt: CpuRegister, rs_value: u32, imm: u16) -> Result<(), Exception> {
         let rs_value = rs_value as i32;
         let imm: i32 = imm.sign_extend();
-        self.registers
-            .write(rt, if rs_value < imm { 1u32 } else { 0u32 });
+        self.registers.write(rt, if rs_value < imm { 1 } else { 0 });
+
         Ok(())
     }
 
     /// If `rs_value` (interpreted as an unsigned integer) is less than `imm`, stores the value 1 in
     /// CPU register `rt`. Otherwise, stores the value 0 in `rt`.
     fn sltiu(&mut self, rt: CpuRegister, rs_value: u32, imm: u16) -> Result<(), Exception> {
-        let imm = <u16 as SignExtend<i32>>::sign_extend(&imm) as u32;
-        self.registers
-            .write(rt, if rs_value < imm { 1u32 } else { 0u32 });
+        let imm: u32 = <u16 as SignExtend<i32>>::sign_extend(&imm) as _;
+        self.registers.write(rt, if rs_value < imm { 1 } else { 0 });
+
         Ok(())
     }
 
@@ -204,9 +210,10 @@ impl InterpreterState {
     /// to currently inaccessible memory.
     fn lb(&mut self, rt: CpuRegister, rs_value: u32, offset: u16) -> Result<(), Exception> {
         let offset: i32 = offset.sign_extend();
-        let address = u32::wrapping_add_signed(rs_value, offset);
+        let address = Address::wrapping_add_signed(rs_value, offset);
         let value: i32 = self.memory.read_u8(address)?.sign_extend();
         self.registers.write(rt, value);
+
         Ok(())
     }
 
@@ -219,9 +226,10 @@ impl InterpreterState {
     /// to currently inaccessible memory or if the address is not aligned to 2 bytes.
     fn lh(&mut self, rt: CpuRegister, rs_value: u32, offset: u16) -> Result<(), Exception> {
         let offset: i32 = offset.sign_extend();
-        let address = u32::wrapping_add_signed(rs_value, offset);
+        let address = Address::wrapping_add_signed(rs_value, offset);
         let value: i32 = self.memory.read_u16(address, true)?.sign_extend();
         self.registers.write(rt, value);
+
         Ok(())
     }
 
@@ -233,18 +241,19 @@ impl InterpreterState {
         offset: u16,
     ) -> Result<(), Exception> {
         let offset: i32 = offset.sign_extend();
-        let address = u32::wrapping_add_signed(rs_value, offset);
+        let address = Address::wrapping_add_signed(rs_value, offset);
         let word_address = address & 0xfffffffc;
-        let shift: u32 = {
+        let shift = {
             let shift = (address % 4) << 3;
             match self.memory.endian() {
-                Endian::Big => shift,
                 Endian::Little => 24 - shift,
+                Endian::Big => shift,
             }
         };
-        let mask: u32 = !(u32::MAX << shift);
-        let loaded: u32 = self.memory.read_u32(word_address, false)? << shift;
+        let mask = !(u32::MAX << shift);
+        let loaded = self.memory.read_u32(word_address, false)? << shift;
         self.registers.write(rt, (rt_value & mask) | loaded);
+
         Ok(())
     }
 
@@ -256,9 +265,10 @@ impl InterpreterState {
     /// to currently inaccessible memory or if the address is not aligned to 4 bytes.
     fn lw(&mut self, rt: CpuRegister, rs_value: u32, offset: u16) -> Result<(), Exception> {
         let offset: i32 = offset.sign_extend();
-        let address = u32::wrapping_add_signed(rs_value, offset);
-        let value: u32 = self.memory.read_u32(address, true)?;
+        let address = Address::wrapping_add_signed(rs_value, offset);
+        let value = self.memory.read_u32(address, true)?;
         self.registers.write(rt, value);
+
         Ok(())
     }
 
@@ -270,9 +280,10 @@ impl InterpreterState {
     /// to currently inaccessible memory.
     fn lbu(&mut self, rt: CpuRegister, rs_value: u32, offset: u16) -> Result<(), Exception> {
         let offset: i32 = offset.sign_extend();
-        let address = u32::wrapping_add_signed(rs_value, offset);
-        let value = self.memory.read_u8(address)? as u32;
+        let address = Address::wrapping_add_signed(rs_value, offset);
+        let value: u32 = self.memory.read_u8(address)? as _;
         self.registers.write(rt, value);
+
         Ok(())
     }
 
@@ -285,9 +296,10 @@ impl InterpreterState {
     /// to currently inaccessible memory or if the address is not aligned to 2 bytes.
     fn lhu(&mut self, rt: CpuRegister, rs_value: u32, offset: u16) -> Result<(), Exception> {
         let offset: i32 = offset.sign_extend();
-        let address = u32::wrapping_add_signed(rs_value, offset);
-        let value = self.memory.read_u16(address, true)? as u32;
+        let address = Address::wrapping_add_signed(rs_value, offset);
+        let value: u32 = self.memory.read_u16(address, true)? as _;
         self.registers.write(rt, value);
+
         Ok(())
     }
 
@@ -299,18 +311,19 @@ impl InterpreterState {
         offset: u16,
     ) -> Result<(), Exception> {
         let offset: i32 = offset.sign_extend();
-        let address = u32::wrapping_add_signed(rs_value, offset);
+        let address = Address::wrapping_add_signed(rs_value, offset);
         let word_address = address & 0xfffffffc;
-        let shift: u32 = {
+        let shift = {
             let shift = (address % 4) << 3;
             match self.memory.endian() {
-                Endian::Big => 24 - shift,
                 Endian::Little => shift,
+                Endian::Big => 24 - shift,
             }
         };
-        let mask: u32 = !(u32::MAX >> shift);
-        let loaded: u32 = self.memory.read_u32(word_address, false)? >> shift;
+        let mask = !(u32::MAX >> shift);
+        let loaded = self.memory.read_u32(word_address, false)? >> shift;
         self.registers.write(rt, (rt_value & mask) | loaded);
+
         Ok(())
     }
 
@@ -323,8 +336,8 @@ impl InterpreterState {
     /// to currently inaccessible memory.
     fn sb(&mut self, rs_value: u32, rt_value: u32, offset: u16) -> Result<(), Exception> {
         let offset: i32 = offset.sign_extend();
-        let address = u32::wrapping_add_signed(rs_value, offset);
-        let byte = (rt_value & u8::MAX as u32) as u8;
+        let address = Address::wrapping_add_signed(rs_value, offset);
+        let byte: u8 = (rt_value & u8::MAX as u32) as _;
         self.memory.write_u8(address, byte)
     }
 
@@ -337,8 +350,8 @@ impl InterpreterState {
     /// to currently inaccessible memory or if the address is not aligned to 2 bytes.
     fn sh(&mut self, rs_value: u32, rt_value: u32, offset: u16) -> Result<(), Exception> {
         let offset: i32 = offset.sign_extend();
-        let address = u32::wrapping_add_signed(rs_value, offset);
-        let half = (rt_value & u16::MAX as u32) as u16;
+        let address = Address::wrapping_add_signed(rs_value, offset);
+        let half: u16 = (rt_value & u16::MAX as u32) as _;
         self.memory.write_u16(address, half, true)
     }
 
@@ -346,16 +359,16 @@ impl InterpreterState {
         let offset: i32 = offset.sign_extend();
         let address = u32::wrapping_add_signed(rs_value, offset);
         let word_address = address & 0xfffffffc;
-        let shift: u32 = {
+        let shift = {
             let shift = (address % 4) << 3;
             match self.memory.endian() {
-                Endian::Big => shift,
                 Endian::Little => 24 - shift,
+                Endian::Big => shift,
             }
         };
-        let mask: u32 = !(u32::MAX >> shift);
-        let to_store: u32 = rt_value >> shift;
-        let old_value: u32 = self.memory.read_u32(word_address, true)?;
+        let mask = !(u32::MAX >> shift);
+        let to_store = rt_value >> shift;
+        let old_value = self.memory.read_u32(word_address, true)?;
         self.memory
             .write_u32(word_address, (old_value & mask) | to_store, true)
     }
@@ -368,7 +381,7 @@ impl InterpreterState {
     /// to currently inaccessible memory or if the address is not aligned to 4 bytes.
     fn sw(&mut self, rs_value: u32, rt_value: u32, offset: u16) -> Result<(), Exception> {
         let offset: i32 = offset.sign_extend();
-        let address = u32::wrapping_add_signed(rs_value, offset);
+        let address = Address::wrapping_add_signed(rs_value, offset);
         self.memory.write_u32(address, rt_value, true)
     }
 
@@ -393,25 +406,27 @@ impl InterpreterState {
         offset: u16,
     ) -> Result<(), Exception> {
         self.sw(rs_value, rt_value, offset)?;
-        // always succeeds because seaside doesn't simulate multiple processors
-        self.registers.write(rt, 1u32);
+
+        // This always succeeds because seaside doesn't simulate multiple processors.
+        self.registers.write(rt, true as u32);
+
         Ok(())
     }
 
     fn swr(&mut self, rs_value: u32, rt_value: u32, offset: u16) -> Result<(), Exception> {
         let offset: i32 = offset.sign_extend();
-        let address = u32::wrapping_add_signed(rs_value, offset);
+        let address = Address::wrapping_add_signed(rs_value, offset);
         let word_address = address & 0xfffffffc;
-        let shift: u32 = {
+        let shift = {
             let shift = (address % 4) << 3;
             match self.memory.endian() {
-                Endian::Big => 24 - shift,
                 Endian::Little => shift,
+                Endian::Big => 24 - shift,
             }
         };
-        let mask: u32 = !(u32::MAX << shift);
-        let to_store: u32 = rt_value << shift;
-        let old_value: u32 = self.memory.read_u32(word_address, true)?;
+        let mask = !(u32::MAX << shift);
+        let to_store = rt_value << shift;
+        let old_value = self.memory.read_u32(word_address, true)?;
         self.memory
             .write_u32(word_address, (old_value & mask) | to_store, true)
     }
@@ -427,7 +442,6 @@ impl InterpreterState {
     /// Raises an [invalid load][Exception::InvalidLoad] exception if the computed address points
     /// to currently inaccessible memory or if the address is not aligned to 4 bytes.
     fn ll(&mut self, rt: CpuRegister, rs_value: u32, offset: u16) -> Result<(), Exception> {
-        // identical to lw in current version of seaside
         self.lw(rt, rs_value, offset)
     }
 
@@ -439,9 +453,10 @@ impl InterpreterState {
     /// to currently inaccessible memory or if the address is not aligned to 4 bytes.
     fn lwc1(&mut self, ft: FpuRegister, rs_value: u32, offset: u16) -> Result<(), Exception> {
         let offset: i32 = offset.sign_extend();
-        let address = u32::wrapping_add_signed(rs_value, offset);
+        let address = Address::wrapping_add_signed(rs_value, offset);
         let value = self.memory.read_u32(address, true)?;
         self.registers.write(ft, value);
+
         Ok(())
     }
 
@@ -454,7 +469,7 @@ impl InterpreterState {
     /// divisible by two.
     fn ldc1(&mut self, ft: FpuRegister, rs_value: u32, offset: u16) -> Result<(), Exception> {
         let offset: i32 = offset.sign_extend();
-        let address = u32::wrapping_add_signed(rs_value, offset);
+        let address = Address::wrapping_add_signed(rs_value, offset);
         let value = self.memory.read_u64(address, true)?;
         self.registers.try_write(ft, value)
     }
@@ -467,7 +482,7 @@ impl InterpreterState {
     /// to currently inaccessible memory or if the address is not aligned to 4 bytes.
     fn swc1(&mut self, ft: FpuRegister, rs_value: u32, offset: u16) -> Result<(), Exception> {
         let offset: i32 = offset.sign_extend();
-        let address = u32::wrapping_add_signed(rs_value, offset);
+        let address = Address::wrapping_add_signed(rs_value, offset);
         let ft_value = self.registers.read(ft);
         self.memory.write_u32(address, ft_value, true)
     }
@@ -481,7 +496,7 @@ impl InterpreterState {
     /// divisible by two.
     fn sdc1(&mut self, ft: FpuRegister, rs_value: u32, offset: u16) -> Result<(), Exception> {
         let offset: i32 = offset.sign_extend();
-        let address = u32::wrapping_add_signed(rs_value, offset);
+        let address = Address::wrapping_add_signed(rs_value, offset);
         let ft_value = self.registers.try_read(ft)?;
         self.memory.write_u64(address, ft_value, true)
     }
@@ -493,20 +508,24 @@ impl InterpreterState {
             if link {
                 self.link();
             }
+
             self.branch(offset);
         }
+
         Ok(())
     }
 
     /// If `rs_value` is non-negative, branches `offset` instructions ahead. Also performs a link if
     /// `link` is set to `true`.
     fn bgez(&mut self, rs_value: u32, offset: u16, link: bool) -> Result<(), Exception> {
-        if (rs_value as i32) >= 0 {
+        if rs_value as i32 >= 0 {
             if link {
                 self.link();
             }
+
             self.branch(offset);
         }
+
         Ok(())
     }
 
@@ -518,7 +537,7 @@ impl InterpreterState {
     /// Raises a [trap][Exception::Trap] exception when the condition described above passes.
     fn tgei(&mut self, rs_value: u32, imm: u16) -> Result<(), Exception> {
         let imm: i32 = imm.sign_extend();
-        if (rs_value as i32) >= imm {
+        if rs_value as i32 >= imm {
             Err(Exception::Trap)
         } else {
             Ok(())
@@ -532,7 +551,7 @@ impl InterpreterState {
     ///
     /// Raises a [trap][Exception::Trap] exception when the condition described above passes.
     fn tgeiu(&mut self, rs_value: u32, imm: u16) -> Result<(), Exception> {
-        if rs_value >= (imm as u32) {
+        if rs_value >= imm as u32 {
             Err(Exception::Trap)
         } else {
             Ok(())
@@ -561,35 +580,37 @@ impl InterpreterState {
     ///
     /// Raises a [trap][Exception::Trap] exception when the condition described above passes.
     fn tltiu(&mut self, rs_value: u32, imm: u16) -> Result<(), Exception> {
-        if rs_value < (imm as u32) {
+        if rs_value < imm as u32 {
             Err(Exception::Trap)
         } else {
             Ok(())
         }
     }
 
-    /// If `rs_value` is equal to the sign-extended `imm`, raises a [trap][Exception::Trap] exception.
+    /// If `rs_value` is equal to the sign-extended `imm`, raises a [trap][Exception::Trap]
+    /// exception.
     ///
     /// # Exceptions
     ///
     /// Raises a [trap][Exception::Trap] exception when the condition described above passes.
     fn teqi(&mut self, rs_value: u32, imm: u16) -> Result<(), Exception> {
         let imm: i32 = imm.sign_extend();
-        if (rs_value as i32) == imm {
+        if rs_value as i32 == imm {
             Err(Exception::Trap)
         } else {
             Ok(())
         }
     }
 
-    /// If `rs_value` is not equal to the sign-extended `imm`, raises a [trap][Exception::Trap] exception.
+    /// If `rs_value` is not equal to the sign-extended `imm`, raises a [trap][Exception::Trap]
+    /// exception.
     ///
     /// # Exceptions
     ///
     /// Raises a [trap][Exception::Trap] exception when the condition described above passes.
     fn tnei(&mut self, rs_value: u32, imm: u16) -> Result<(), Exception> {
         let imm: i32 = imm.sign_extend();
-        if (rs_value as i32) != imm {
+        if rs_value as i32 != imm {
             Err(Exception::Trap)
         } else {
             Ok(())

@@ -62,6 +62,7 @@ impl RichError {
             Some(label) => new_label.with_message(label.message),
             None => new_label,
         });
+
         self
     }
 

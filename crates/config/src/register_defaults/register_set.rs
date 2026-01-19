@@ -1,4 +1,5 @@
 use core::str::FromStr;
+
 use num_traits::{FromPrimitive, ToPrimitive};
 
 /// A set of related registers.
@@ -13,28 +14,30 @@ pub trait RegisterSet: FromStr + FromPrimitive + ToPrimitive {
 macro_rules! make_registers_format {
     ($module_name:ident for $register_t:ty) => {
         mod $module_name {
-            use super::*;
-            use crate::register_defaults::Registers;
             use ::core::{
-                fmt::{Formatter, Result as FmtResult},
+                fmt::{self, Formatter},
                 iter::zip,
                 option::Option::*,
                 result::Result::{self, *},
                 str::FromStr,
             };
+            use std::string::String;
+
             use serde::{
                 Serializer,
                 de::{Deserializer, MapAccess, Visitor},
                 ser::SerializeMap,
             };
-            use std::string::String;
+
+            use super::*;
+            use crate::register_defaults::Registers;
 
             pub struct RegisterSetVisitor;
 
             impl<'de> Visitor<'de> for RegisterSetVisitor {
                 type Value = Registers<{ <$register_t>::N_REGISTERS }>;
 
-                fn expecting(&self, formatter: &mut Formatter) -> FmtResult {
+                fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
                     formatter.write_str("a set of register defaults")
                 }
 

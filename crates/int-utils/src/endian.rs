@@ -3,11 +3,13 @@
 //! Provides the enum [`Endian`], which indicates the intended byte order/endianness. This
 //! information can be seamlessly processed via [`serde`] if desired.
 
-#[cfg(feature = "all_zeroes")]
-use crate::AllZeroes;
-use core::fmt::{Display, Formatter, Result as FmtResult};
+use core::fmt::{self, Display, Formatter};
+
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+
+#[cfg(feature = "all_zeroes")]
+use crate::AllZeroes;
 
 /// Indicates the intended byte order/endianness.
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
@@ -21,13 +23,14 @@ pub enum Endian {
     #[default]
     #[cfg_attr(feature = "serde", serde(alias = "little", alias = "lsb"))]
     Little,
+
     /// Bytes are stored in descending order of significance.
     #[cfg_attr(feature = "serde", serde(alias = "big", alias = "msb"))]
     Big,
 }
 
 impl Display for Endian {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
             Endian::Little => "little",
             Endian::Big => "big",
@@ -38,8 +41,8 @@ impl Display for Endian {
 // This is needed to derive the `Serialize` trait for some reason.
 #[cfg(feature = "serde")]
 impl From<Endian> for String {
-    fn from(value: Endian) -> Self {
-        value.to_string()
+    fn from(endianness: Endian) -> Self {
+        endianness.to_string()
     }
 }
 

@@ -8,6 +8,7 @@ pub enum Value {
     /// An integer literal.
     #[error("{0}")]
     Int(i64),
+
     /// A floating-point literal.
     #[error("{0}")]
     Float(f64),

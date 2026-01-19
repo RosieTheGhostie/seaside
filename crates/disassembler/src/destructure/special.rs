@@ -1,8 +1,9 @@
-use super::{Component, DestructuredInstruction, Operation};
-use crate::fields;
 use num_traits::FromPrimitive;
 use seaside_constants::fn_codes::SpecialFn;
 use seaside_type_aliases::Instruction;
+
+use super::{Component, DestructuredInstruction, Operation};
+use crate::fields;
 
 pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> {
     use SpecialFn::*;
@@ -58,6 +59,7 @@ pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> 
         }
         SystemCall => {}
     };
+
     Some(DestructuredInstruction::new(
         Operation::SpecialFn(r#fn),
         components,

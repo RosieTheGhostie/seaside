@@ -5,28 +5,33 @@ pub use register_set::RegisterSet;
 pub use registers::Registers;
 
 use num_traits::Zero;
-use register_set::make_registers_format;
 use seaside_constants::register::{Coprocessor0Register, CpuRegister, FpuRegister};
 use serde::{Deserialize, Serialize};
+
+use register_set::make_registers_format;
 
 #[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct RegisterDefaults {
     #[serde(default = "u32::default", skip_serializing_if = "u32::is_zero")]
     pub hi: u32,
+
     #[serde(default = "u32::default", skip_serializing_if = "u32::is_zero")]
     pub lo: u32,
+
     #[serde(
         with = "cpu_format",
         default = "Registers::<32>::default",
         skip_serializing_if = "Registers::<32>::is_default"
     )]
     pub general_purpose: Registers<32>,
+
     #[serde(
         with = "coprocessor_0_format",
         default = "Registers::<4>::default",
         skip_serializing_if = "Registers::<4>::is_default"
     )]
     pub coprocessor_0: Registers<4>,
+
     #[serde(
         with = "fpu_format",
         default = "Registers::<32>::default",
@@ -43,8 +48,6 @@ impl Default for RegisterDefaults {
         let mut coprocessor_0 = Registers::<4>::default();
         coprocessor_0[1] = 0x0000ff11; // `status` lives at index 1
 
-        // I was going to use the `..Default::default()` syntax, but clippy said that'd would cause
-        // an infinite recursion for some reason :L
         Self {
             hi: Default::default(),
             lo: Default::default(),

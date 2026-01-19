@@ -1,4 +1,5 @@
 use core::mem::transmute;
+
 use num_traits::FromPrimitive;
 use seaside_constants::{
     ConditionCode, Opcode,

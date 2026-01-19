@@ -1,14 +1,16 @@
 mod cmd_args;
 mod engine;
 
-use anyhow::{Error, Result};
-use clap::Parser;
-use cmd_args::{AssemblyArgs, CmdArgs, Commands, DisassemblyArgs, DisassemblyTarget, RunArgs};
-use minimal_logging::macros::{fatalln, grayln};
-use seaside_config::Config;
 use std::env::current_exe;
 
-use crate::cmd_args::ConfigPathArgs;
+use anyhow::Result;
+use clap::Parser;
+use minimal_logging::macros::{fatalln, grayln};
+use seaside_config::Config;
+
+use cmd_args::{
+    AssemblyArgs, CmdArgs, Commands, ConfigPathArgs, DisassemblyArgs, DisassemblyTarget, RunArgs,
+};
 
 fn main() {
     let args: CmdArgs = CmdArgs::parse();
@@ -19,7 +21,7 @@ fn main() {
             return;
         }
     };
-    if let Err(error) = match args.command {
+    if let Err(err) = match args.command {
         Commands::Run(RunArgs { directory, argv }) => {
             match engine::init_interpreter(config, directory, argv) {
                 Ok(mut interpreter) => engine::run(&mut interpreter).map(|exit_code| {
@@ -58,16 +60,16 @@ fn main() {
         Commands::Experiment => experimental_code(),
         _ => unreachable!("disassemble subcommand will always have exactly one argument"),
     } {
-        fatalln!("{error}");
+        fatalln!("{err}");
     }
 }
 
-fn print_exe_path() -> Result<(), Error> {
+fn print_exe_path() -> Result<()> {
     println!("{}", current_exe()?.display());
     Ok(())
 }
 
-fn print_config_path(ensure_exists: bool) -> Result<(), Error> {
+fn print_config_path(ensure_exists: bool) -> Result<()> {
     println!("{}", engine::find_global_config(ensure_exists)?.display());
     Ok(())
 }

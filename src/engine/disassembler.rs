@@ -3,12 +3,13 @@
 //! Provides the wrapper functions [`disassemble_instruction`] and [`disassemble_segment`],
 //! which disassemble their respective objects into a human-readable assembly representation.
 
+use std::path::Path;
+
 use anyhow::{Error, Result};
 use seaside_config::Config;
 use seaside_error::EngineError;
 use seaside_int_utils::ByteStream;
 use seaside_type_aliases::{Address, Instruction};
-use std::path::PathBuf;
 
 /// Prints the human-readable assembly form of `instruction`.
 ///
@@ -28,11 +29,19 @@ pub fn disassemble_instruction(instruction: Instruction, address: Option<Address
     }
 }
 
-pub fn disassemble_segment(
+/// Prints the human-readable assembly form of the segment at the specified path.
+///
+/// If `address` is not [`None`], that value is interpreted as the instruction's address for the
+/// purposes of branches and jumps.
+pub fn disassemble_segment<P>(
     config: Config,
-    segment: PathBuf,
+    segment: P,
     start_address: Option<Address>,
-) -> Result<(), Error> {
+) -> Result<()>
+where
+    P: AsRef<Path>,
+{
+    let segment = segment.as_ref();
     let mut address = if let Some(address) = start_address {
         address
     } else if segment.ends_with("text") {

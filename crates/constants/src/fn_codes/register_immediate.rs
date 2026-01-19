@@ -5,30 +5,47 @@ use thiserror::Error; // these aren't errors, but i want to convert them to stri
 pub enum RegisterImmediateFn {
     #[error("bltz")]
     BranchLessThanZero = 0x00,
+
     #[error("bgez")]
     BranchGreaterEqualZero = 0x01,
-    // #[error(bltzl)]
-    // BranchLessThanZeroLikely = 0x02,
-    // #[error(bgezl)]
-    // BranchGreaterEqualZeroLikely = 0x03,
+
+    #[cfg(feature = "unimplemented")]
+    #[error("bltzl")]
+    BranchLessThanZeroLikely = 0x02,
+
+    #[cfg(feature = "unimplemented")]
+    #[error("bgezl")]
+    BranchGreaterEqualZeroLikely = 0x03,
+
     #[error("tgei")]
     TrapGreaterEqualImmediate = 0x08,
+
     #[error("tgeiu")]
     TrapGreaterEqualImmediateUnsigned = 0x09,
+
     #[error("tlti")]
     TrapLessThanImmediate = 0x0a,
+
     #[error("tltiu")]
     TrapLessThanImmediateUnsigned = 0x0b,
+
     #[error("teqi")]
     TrapEqualImmediate = 0x0c,
+
     #[error("tnei")]
     TrapNotEqualImmediate = 0x0e,
+
     #[error("bltzal")]
     BranchLessThanZeroAndLink = 0x10,
+
     #[error("bgezal")]
     BranchGreaterEqualZeroAndLink = 0x11,
-    // #[error("bltzall")]
-    // BranchLessThanZeroAndLinkLikely = 0x12,
-    // #[error("bgezall")]
-    // BranchGreaterEqualZeroAndLinkLikely = 0x13,
+
+    #[cfg(feature = "unimplemented")]
+    #[error("bltzall")]
+    BranchLessThanZeroAndLinkLikely = 0x12,
+
+    #[cfg(feature = "unimplemented")]
+    #[error("bgezall")]
+    BranchGreaterEqualZeroAndLinkLikely = 0x13,
 }

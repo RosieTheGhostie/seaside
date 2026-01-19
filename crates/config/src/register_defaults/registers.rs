@@ -1,4 +1,5 @@
 use core::ops::{Deref, Index, IndexMut};
+
 use seaside_constants::register::{CpuRegister, FpuRegister};
 
 /// The values of `N` 32-bit registers stored contiguously in memory.

@@ -1,7 +1,8 @@
-use super::traits::{Contains, Overlapping};
 use seaside_int_utils::AllZeroes;
 use seaside_type_aliases::Address;
 use serde::{Deserialize, Serialize};
+
+use super::traits::{Contains, Overlapping};
 
 /// An inclusive range of [`Address`]es.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]

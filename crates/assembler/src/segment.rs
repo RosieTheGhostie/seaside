@@ -1,12 +1,14 @@
-use crate::{
-    directives::StringDirective, error::AssembleError, parser::Value, string_builder::StringBuilder,
-};
+use std::path::PathBuf;
+
 use seaside_error::rich::{Label, RichError, RichResult, Span};
 use seaside_int_utils::Endian;
 use seaside_type_aliases::Address;
-use std::{fs::write, path::PathBuf};
 
-#[derive(Clone, Debug, PartialEq)]
+use crate::{
+    directives::StringDirective, error::AssembleError, parser::Value, string_builder::StringBuilder,
+};
+
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SegmentBuildInfo {
     pub base: Address,
     pub next: Address,
@@ -23,7 +25,7 @@ impl SegmentBuildInfo {
     }
 
     pub fn export(self, path: PathBuf) -> std::io::Result<()> {
-        write(path, &self.bytes)
+        std::fs::write(path, &self.bytes)
     }
 
     pub fn jump_ahead_to(&mut self, expr_span: Span, address: Address) -> RichResult<()> {

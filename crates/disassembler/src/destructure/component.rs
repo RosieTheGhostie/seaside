@@ -7,6 +7,7 @@ use seaside_constants::{
 pub enum Component {
     #[default]
     Empty,
+
     Fmt(NumberFormat),
     CpuRegister(CpuRegister),
     WrappedCpuRegister(CpuRegister),
@@ -31,7 +32,7 @@ impl Component {
     pub fn should_precede_with_comma(&self) -> bool {
         !matches!(
             *self,
-            Self::Empty | Self::Fmt(_) | Self::WrappedCpuRegister(_) | Self::Condition(_)
+            Self::Empty | Self::Fmt(_) | Self::WrappedCpuRegister(_) | Self::Condition(_),
         )
     }
 }

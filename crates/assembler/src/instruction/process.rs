@@ -1,10 +1,11 @@
-use crate::{error::AssembleError, parser::Operand};
 use seaside_constants::{
     ConditionCode,
     register::{Coprocessor0Register, CpuRegister, FpuRegister},
 };
 use seaside_error::rich::{Label, RichError, RichResult, Span};
 use seaside_type_aliases::Address;
+
+use crate::{error::AssembleError, parser::Operand};
 
 pub enum Destination<'src> {
     Address(u32, Span),

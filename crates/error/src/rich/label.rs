@@ -1,5 +1,6 @@
-use super::span::Span;
 use ariadne::ReportBuilder;
+
+use super::Span;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Label {

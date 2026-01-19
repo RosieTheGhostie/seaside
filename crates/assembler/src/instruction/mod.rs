@@ -1,21 +1,22 @@
 pub mod operator;
 
+pub use operator::Operator;
+
 mod assemble;
 mod macros;
 mod process;
 
-pub use operator::Operator;
-
-use crate::{error::AssembleError, parser::Operand};
-use assemble::insert;
-use macros::*;
-use process::{Destination, maybe, maybe_or};
 use seaside_constants::{
     ConditionCode, Opcode,
     register::{CpuRegister, FpuRegister},
 };
 use seaside_error::rich::{RichError, RichResult, Span};
 use seaside_type_aliases::{Address, Instruction};
+
+use crate::{error::AssembleError, parser::Operand};
+use assemble::insert;
+use macros::*;
+use process::{Destination, maybe, maybe_or};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum ProcessedInstruction<'src> {

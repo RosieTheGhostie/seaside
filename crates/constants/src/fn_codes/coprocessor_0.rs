@@ -5,8 +5,10 @@ use thiserror::Error; // these aren't errors, but i want to convert them to stri
 pub enum Coprocessor0Fn {
     #[error("mfc0")]
     MoveFromCoprocessor0 = 0x00,
+
     #[error("mtc0")]
     MoveToCoprocessor0 = 0x04,
+
     #[error("eret")]
     ErrorReturn = 0x10,
 }

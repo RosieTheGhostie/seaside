@@ -3,12 +3,14 @@
 //! Provides the wrapper functions [`init_interpreter`] and [`run`], which initialize and run the
 //! interpreter, respectively.
 
-use super::resolve;
+use std::{env::set_current_dir, path::PathBuf};
+
 use anyhow::{Context, Error, Result};
 use seaside_config::Config;
 use seaside_error::EngineError;
 use seaside_interpreter::Interpreter;
-use std::{env::set_current_dir, path::PathBuf};
+
+use super::resolve;
 
 /// Initializes the interpreter in preparation for execution via the [`run`] function.
 pub fn init_interpreter(
@@ -18,22 +20,18 @@ pub fn init_interpreter(
 ) -> Result<Interpreter> {
     if !directory.is_dir() {
         return Err(Error::new(EngineError::InvalidProjectDirectory))
-            .with_context(|| "expected project path to be a directory");
+            .context("expected project path to be a directory");
     }
     if config.project_directory_is_cwd {
-        set_current_dir(&directory).map_err(|_| {
-            Error::new(EngineError::ExternalFailure).context(format!(
-                "failed to change the cwd to {}",
-                directory.display()
-            ))
-        })?;
+        set_current_dir(&directory)
+            .map_err(|_| Error::new(EngineError::ExternalFailure))
+            .with_context(|| format!("failed to change the cwd to {}", directory.display()))?;
 
-        directory = ".".parse()?;
+        directory = PathBuf::from(".");
     }
-    let text = resolve(&directory, "text", true).ok_or_else(|| {
-        Error::new(EngineError::InvalidProjectDirectory)
-            .context("missing 'text' file in project directory")
-    })?;
+    let text = resolve(&directory, "text", true)
+        .ok_or_else(|| Error::new(EngineError::InvalidProjectDirectory))
+        .context("missing 'text' file in project directory")?;
     let r#extern = resolve(&directory, "extern", true);
     let data = resolve(&directory, "data", true);
     let ktext = resolve(&directory, "ktext", true);

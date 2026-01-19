@@ -7,9 +7,10 @@ pub use data_memory::DataMemory;
 pub use instruction_memory::InstructionMemory;
 pub use regions::{DataRegion, Region, TextRegion};
 
-use crate::Exception;
 use seaside_int_utils::Endian;
 use seaside_type_aliases::{Address, Instruction};
+
+use crate::Exception;
 
 pub struct Memory {
     instruction_memory: InstructionMemory,
@@ -25,45 +26,45 @@ impl Region for Memory {
     fn read_u8(&self, address: Address) -> Result<u8, Exception> {
         self.instruction_memory
             .read_u8(address)
-            .or(self.data_memory.read_u8(address))
+            .or_else(|_| self.data_memory.read_u8(address))
     }
 
     fn read_u16(&self, address: Address, assert_aligned: bool) -> Result<u16, Exception> {
         self.instruction_memory
             .read_u16(address, assert_aligned)
-            .or(self.data_memory.read_u16(address, assert_aligned))
+            .or_else(|_| self.data_memory.read_u16(address, assert_aligned))
     }
 
     fn read_u32(&self, address: Address, assert_aligned: bool) -> Result<u32, Exception> {
         self.instruction_memory
             .read_u32(address, assert_aligned)
-            .or(self.data_memory.read_u32(address, assert_aligned))
+            .or_else(|_| self.data_memory.read_u32(address, assert_aligned))
     }
 
     fn read_u64(&self, address: Address, assert_aligned: bool) -> Result<u64, Exception> {
         self.instruction_memory
             .read_u64(address, assert_aligned)
-            .or(self.data_memory.read_u64(address, assert_aligned))
+            .or_else(|_| self.data_memory.read_u64(address, assert_aligned))
     }
 
     fn get_slice(&self, address: Address) -> Result<&[u8], Exception> {
         // I'm checking data memory first on purpose.
         self.data_memory
             .get_slice(address)
-            .or(self.instruction_memory.get_slice(address))
+            .or_else(|_| self.instruction_memory.get_slice(address))
     }
 
     fn get_slice_mut(&mut self, address: Address) -> Result<&mut [u8], Exception> {
         // I'm checking data memory first on purpose.
         self.data_memory
             .get_slice_mut(address)
-            .or(self.instruction_memory.get_slice_mut(address))
+            .or_else(|_| self.instruction_memory.get_slice_mut(address))
     }
 
     fn write_u8(&mut self, address: Address, value: u8) -> Result<(), Exception> {
         self.instruction_memory
             .write_u8(address, value)
-            .or(self.data_memory.write_u8(address, value))
+            .or_else(|_| self.data_memory.write_u8(address, value))
     }
 
     fn write_u16(
@@ -74,7 +75,7 @@ impl Region for Memory {
     ) -> Result<(), Exception> {
         self.instruction_memory
             .write_u16(address, value, assert_aligned)
-            .or(self.data_memory.write_u16(address, value, assert_aligned))
+            .or_else(|_| self.data_memory.write_u16(address, value, assert_aligned))
     }
 
     fn write_u32(
@@ -85,7 +86,7 @@ impl Region for Memory {
     ) -> Result<(), Exception> {
         self.instruction_memory
             .write_u32(address, value, assert_aligned)
-            .or(self.data_memory.write_u32(address, value, assert_aligned))
+            .or_else(|_| self.data_memory.write_u32(address, value, assert_aligned))
     }
 
     fn write_u64(
@@ -96,12 +97,12 @@ impl Region for Memory {
     ) -> Result<(), Exception> {
         self.instruction_memory
             .write_u64(address, value, assert_aligned)
-            .or(self.data_memory.write_u64(address, value, assert_aligned))
+            .or_else(|_| self.data_memory.write_u64(address, value, assert_aligned))
     }
 }
 
 impl Memory {
-    pub fn endian(&self) -> Endian {
+    pub const fn endian(&self) -> Endian {
         self.endian
     }
 
@@ -109,11 +110,11 @@ impl Memory {
         self.instruction_memory.read_u32(pc, true)
     }
 
-    pub fn get_exception_handler(&self) -> Option<Address> {
+    pub const fn get_exception_handler(&self) -> Option<Address> {
         self.instruction_memory.exception_handler
     }
 
-    pub fn initial_pc(&self) -> Address {
+    pub const fn initial_pc(&self) -> Address {
         self.instruction_memory.initial_pc()
     }
 
@@ -121,11 +122,11 @@ impl Memory {
         self.instruction_memory.pc_past_end(pc)
     }
 
-    pub fn free_heap_space(&self) -> &u32 {
-        &self.data_memory.free_heap_space
+    pub const fn free_heap_space(&self) -> u32 {
+        self.data_memory.free_heap_space
     }
 
-    pub fn free_heap_space_mut(&mut self) -> &mut u32 {
+    pub const fn free_heap_space_mut(&mut self) -> &mut u32 {
         &mut self.data_memory.free_heap_space
     }
 
@@ -133,8 +134,8 @@ impl Memory {
         self.data_memory.used_heap_space()
     }
 
-    pub fn next_heap_address(&self) -> &Address {
-        &self.data_memory.next_heap_address
+    pub const fn next_heap_address(&self) -> Address {
+        self.data_memory.next_heap_address
     }
 
     pub fn next_heap_address_mut(&mut self) -> &mut Address {

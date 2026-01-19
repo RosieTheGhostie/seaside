@@ -4,21 +4,24 @@ pub mod spim;
 
 pub use service::Service;
 
-use crate::Validate;
-use anyhow::{Error, Result};
-use core::fmt::{Formatter, Result as FmtResult};
+use core::fmt::{self, Formatter};
+use std::collections::{HashMap, hash_map::Iter as HashMapIter};
+
+use anyhow::{Context, Error, Result};
 use seaside_error::EngineError;
 use seaside_int_utils::AllZeroes;
 use serde::{
     Deserialize, Serialize,
     de::{MapAccess, Visitor},
 };
-use std::collections::{HashMap, hash_map::Iter as HashMapIter};
+
+use crate::Validate;
 
 #[derive(Clone, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct Services {
     #[serde(flatten)]
     data: HashMap<u32, Service>,
+
     #[serde(skip)]
     n_exits: usize,
 }
@@ -37,7 +40,7 @@ impl Validate for Services {
         if self.n_exits > 0 {
             Ok(())
         } else {
-            Err(Error::new(EngineError::InvalidConfig).context("missing a service to exit program"))
+            Err(Error::new(EngineError::InvalidConfig)).context("missing a service to exit program")
         }
     }
 }
@@ -66,17 +69,13 @@ impl Services {
     }
 
     pub fn insert(&mut self, code: u32, service: Service) -> Option<Service> {
-        if service.is_exit() {
-            self.n_exits += 1;
-        }
+        self.n_exits += service.is_exit() as usize;
         self.data.insert(code, service)
     }
 
     pub fn remove(&mut self, code: u32) -> Option<Service> {
         self.data.remove(&code).inspect(|service| {
-            if service.is_exit() {
-                self.n_exits -= 1;
-            }
+            self.n_exits -= service.is_exit() as usize;
         })
     }
 
@@ -90,11 +89,11 @@ struct ServicesVisitor;
 impl<'de> Visitor<'de> for ServicesVisitor {
     type Value = Services;
 
-    fn expecting(&self, formatter: &mut Formatter) -> FmtResult {
+    fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
         formatter.write_str("a mapping from service codes to services")
     }
 
-    fn visit_map<A>(self, mut access: A) -> core::result::Result<Self::Value, A::Error>
+    fn visit_map<A>(self, mut access: A) -> Result<Self::Value, A::Error>
     where
         A: MapAccess<'de>,
     {
@@ -103,6 +102,7 @@ impl<'de> Visitor<'de> for ServicesVisitor {
             let code = code.parse::<u32>().map_err(serde::de::Error::custom)?;
             services.insert(code, service);
         }
+
         Ok(services)
     }
 }

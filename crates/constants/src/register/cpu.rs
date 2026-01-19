@@ -1,11 +1,13 @@
-use super::{IndexedRegister, ParseError};
 use core::{
-    fmt::{Display, Formatter, Result as FmtResult, Write},
+    fmt::{self, Display, Formatter, Write},
     str::FromStr,
 };
+
 use num_traits::FromPrimitive;
 use strum_macros::EnumIter;
 use take_exact::TakeExact;
+
+use super::{IndexedRegister, ParseError};
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, EnumIter, Eq, Ord, PartialEq, PartialOrd)]
@@ -45,10 +47,11 @@ pub enum CpuRegister {
 }
 
 impl Display for CpuRegister {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         if f.alternate() {
             f.write_char('$')?;
         }
+
         f.write_str(self.name())
     }
 }

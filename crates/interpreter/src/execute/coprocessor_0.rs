@@ -1,4 +1,3 @@
-use crate::{Exception, Interpreter, InterpreterState, register_file::IndexByRegister};
 use num_traits::FromPrimitive;
 use seaside_constants::{
     fn_codes::Coprocessor0Fn,
@@ -6,6 +5,8 @@ use seaside_constants::{
 };
 use seaside_disassembler::fields;
 use seaside_type_aliases::Instruction;
+
+use crate::{Exception, Interpreter, InterpreterState, register_file::IndexByRegister};
 
 impl Interpreter {
     /// Executes `instruction`, which must follow the "coprocessor 0" instruction format:
@@ -38,6 +39,7 @@ impl InterpreterState {
             Coprocessor0Register::EPC => self.registers.epc,
             _ => return Err(Exception::MalformedInstruction),
         };
+
         self.registers.write(rt, rd_value);
         Ok(())
     }
@@ -52,6 +54,7 @@ impl InterpreterState {
             Coprocessor0Register::EPC => &mut self.registers.epc,
             _ => return Err(Exception::MalformedInstruction),
         };
+
         *destination = rt_value;
         Ok(())
     }

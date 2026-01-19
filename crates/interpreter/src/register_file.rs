@@ -1,9 +1,8 @@
-use crate::Exception;
 use core::{
-    fmt::{Display, Formatter, Result as FmtResult},
+    fmt::{self, Display, Formatter},
     iter::zip,
-    mem::transmute,
 };
+
 use seaside_config::RegisterDefaults;
 use seaside_constants::{
     ConditionCode,
@@ -11,6 +10,8 @@ use seaside_constants::{
 };
 use seaside_type_aliases::Address;
 use strum::IntoEnumIterator;
+
+use crate::Exception;
 
 #[derive(Default)]
 pub struct RegisterFile {
@@ -72,7 +73,7 @@ impl TryIndexByRegister<FpuRegister, f64> for RegisterFile {
     fn try_read(&self, register: FpuRegister) -> Result<f64, Exception> {
         if register.is_double_aligned() {
             let i = register as usize;
-            Ok(unsafe { transmute::<_, f64>([self.fpu[i], self.fpu[i + 1]]) })
+            Ok(unsafe { core::mem::transmute::<_, f64>([self.fpu[i], self.fpu[i + 1]]) })
         } else {
             Err(Exception::MalformedInstruction)
         }
@@ -81,7 +82,7 @@ impl TryIndexByRegister<FpuRegister, f64> for RegisterFile {
     fn try_write(&mut self, register: FpuRegister, value: f64) -> Result<(), Exception> {
         if register.is_double_aligned() {
             let i = register as usize;
-            let halves = unsafe { transmute::<f64, [f32; 2]>(value) };
+            let halves = unsafe { core::mem::transmute::<f64, [f32; 2]>(value) };
             self.fpu[i] = halves[0];
             self.fpu[i + 1] = halves[1];
             Ok(())
@@ -168,7 +169,7 @@ impl RegisterFile {
 }
 
 impl Display for RegisterFile {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         writeln!(f, "┏━━━━━━━━━━━━━━━━━━━━━ CPU ━━━━━━━━━━━━━━━━━━━━━┓")?;
         write_cpu_registers(self, f)?;
         writeln!(f, "┣━━━━━━━━━━━━━━━━━━━━━ FPU ━━━━━━━━━━━━━━━━━━━━━┫")?;
@@ -185,7 +186,7 @@ impl Display for RegisterFile {
     }
 }
 
-fn write_cpu_registers(register_file: &RegisterFile, f: &mut Formatter<'_>) -> FmtResult {
+fn write_cpu_registers(register_file: &RegisterFile, f: &mut Formatter<'_>) -> fmt::Result {
     writeln!(
         f,
         r"┃ $at: {:08x} ┊ $v0: {:08x} ┊ $v1: {:08x} ┃
@@ -235,12 +236,12 @@ fn write_cpu_registers(register_file: &RegisterFile, f: &mut Formatter<'_>) -> F
     )
 }
 
-fn write_fpu_registers(register_file: &RegisterFile, f: &mut Formatter<'_>) -> FmtResult {
-    for i in 0u8..7u8 {
+fn write_fpu_registers(register_file: &RegisterFile, f: &mut Formatter<'_>) -> fmt::Result {
+    for i in 0..7 {
         let i0 = i * 4;
         let i1 = i0 + 2;
-        let r0 = unsafe { transmute::<u8, FpuRegister>(i0) };
-        let r1 = unsafe { transmute::<u8, FpuRegister>(i1) };
+        let r0 = unsafe { core::mem::transmute::<u8, FpuRegister>(i0) };
+        let r1 = unsafe { core::mem::transmute::<u8, FpuRegister>(i1) };
         writeln!(
             f,
             "┃ {}{i0}: {:>+#15.7e} ┊ {}{i1}: {:>+#15.7e} ┃",
@@ -250,10 +251,11 @@ fn write_fpu_registers(register_file: &RegisterFile, f: &mut Formatter<'_>) -> F
             <_ as TryIndexByRegister<_, f64>>::try_read(register_file, r1).unwrap(),
         )?;
     }
+
     Ok(())
 }
 
-fn write_fpu_flags(mut flags: u8, f: &mut Formatter<'_>) -> FmtResult {
+fn write_fpu_flags(mut flags: u8, f: &mut Formatter<'_>) -> fmt::Result {
     write!(f, "0[{}]", if flags & 1 == 1 { '#' } else { ' ' })?;
     flags >>= 1;
     for i in 1..8 {

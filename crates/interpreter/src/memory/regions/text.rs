@@ -1,7 +1,10 @@
-use crate::{Exception, memory::Region};
 use core::{iter::zip, ops::Range};
+
 use seaside_int_utils::{ByteStream, Endian};
 use seaside_type_aliases::{Address, is_aligned};
+
+use super::{Region, allocate_zeroed_word_array};
+use crate::Exception;
 
 pub struct TextRegion {
     pub addresses: Range<Address>,
@@ -61,12 +64,12 @@ impl Region for TextRegion {
         value: u32,
         assert_aligned: bool,
     ) -> Result<(), Exception> {
-        if let Some(index) = self.calculate_index(address, assert_aligned) {
-            self.instructions[index] = value;
-            Ok(())
-        } else {
-            Err(Exception::InvalidStore(address))
-        }
+        let Some(index) = self.calculate_index(address, assert_aligned) else {
+            return Err(Exception::InvalidStore(address));
+        };
+        self.instructions[index] = value;
+
+        Ok(())
     }
 
     fn write_u64(
@@ -83,8 +86,8 @@ impl TextRegion {
     pub fn new(low_address: Address, bytes_to_allocate: usize) -> Self {
         let words_to_allocate = bytes_to_allocate >> 2;
         Self {
-            addresses: low_address..(low_address + bytes_to_allocate as u32),
-            instructions: vec![0u32; words_to_allocate].into_boxed_slice(),
+            addresses: low_address..(low_address + bytes_to_allocate as Address),
+            instructions: allocate_zeroed_word_array(words_to_allocate),
             end_pc: None,
             num_instructions: 0,
         }
@@ -100,11 +103,7 @@ impl TextRegion {
     }
 
     fn calculate_index(&self, address: Address, assert_aligned: bool) -> Option<usize> {
-        if (!assert_aligned || is_aligned(address, 4)) && self.contains(address) {
-            let index = (address - self.addresses.start) >> 2;
-            Some(index as usize)
-        } else {
-            None
-        }
+        ((!assert_aligned || is_aligned(address, 4)) && self.contains(address))
+            .then(|| ((address - self.addresses.start) >> 2) as _)
     }
 }

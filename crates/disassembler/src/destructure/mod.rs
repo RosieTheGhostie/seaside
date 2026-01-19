@@ -1,6 +1,10 @@
 pub mod component;
 pub mod destructured_instruction;
 
+pub use component::Component;
+pub use destructured_instruction::DestructuredInstruction;
+pub use operation::Operation;
+
 mod coprocessor_0;
 mod coprocessor_1;
 mod immediate;
@@ -9,13 +13,10 @@ mod operation;
 mod special;
 mod special_2;
 
-pub use component::Component;
-pub use destructured_instruction::DestructuredInstruction;
-pub use operation::Operation;
-
-use crate::fields;
 use seaside_constants::InstructionFormat;
 use seaside_type_aliases::{Address, Instruction};
+
+use crate::fields;
 
 pub fn destructure(instruction: Instruction, address: Address) -> Option<DestructuredInstruction> {
     use InstructionFormat::*;

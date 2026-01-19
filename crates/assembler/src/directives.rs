@@ -1,16 +1,21 @@
 use core::str::FromStr;
+
 use thiserror::Error; // these aren't errors, but i wanna convert them to strings
 
 #[derive(Clone, Copy, Debug, Eq, Error, Hash, Ord, PartialEq, PartialOrd)]
 pub enum SegmentDirective {
     #[error("data")]
     Data = 0,
+
     #[error("extern")]
     Extern = 1,
+
     #[error("kdata")]
     KData = 2,
+
     #[error("ktext")]
     KText = 3,
+
     #[error("text")]
     Text = 4,
 }
@@ -19,12 +24,16 @@ pub enum SegmentDirective {
 pub enum ValueDirective {
     #[error("byte")]
     Byte,
+
     #[error("half")]
     Half,
+
     #[error("word")]
     Word,
+
     #[error("float")]
     Float,
+
     #[error("double")]
     Double,
 }
@@ -33,6 +42,7 @@ pub enum ValueDirective {
 pub enum StringDirective {
     #[error("ascii")]
     Ascii,
+
     #[error("asciiz")]
     Asciiz,
 }

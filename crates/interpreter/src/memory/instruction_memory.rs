@@ -1,6 +1,7 @@
+use seaside_type_aliases::Address;
+
 use super::{Region, TextRegion};
 use crate::Exception;
-use seaside_type_aliases::Address;
 
 pub struct InstructionMemory {
     text: TextRegion,
@@ -114,6 +115,7 @@ impl InstructionMemory {
         if ktext.num_instructions == 0 {
             exception_handler = None;
         }
+
         Self {
             text,
             ktext,
@@ -122,7 +124,7 @@ impl InstructionMemory {
         }
     }
 
-    pub fn initial_pc(&self) -> Address {
+    pub const fn initial_pc(&self) -> Address {
         self.text.addresses.start
     }
 
@@ -132,11 +134,13 @@ impl InstructionMemory {
                 return false;
             }
         }
+
         if let Some(ktext_end_pc) = self.ktext.end_pc {
             if pc < ktext_end_pc {
                 return false;
             }
         }
+
         true
     }
 }

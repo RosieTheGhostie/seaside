@@ -29,6 +29,7 @@ pub fn service_group_derive(input: TokenStream) -> TokenStream {
             );
         }
     };
+
     unnested::generate_code(ident).into()
 }
 
@@ -51,5 +52,6 @@ pub fn nested_service_group_derive(input: TokenStream) -> TokenStream {
             );
         }
     };
+
     nested::generate_code(ident, variants).into()
 }

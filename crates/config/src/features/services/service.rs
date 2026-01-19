@@ -1,9 +1,10 @@
+use seaside_service_group::NestedServiceGroup;
+use serde::{Deserialize, Serialize};
+
 use super::{
     mars::Mars,
     spim::{self, Spim},
 };
-use seaside_service_group::NestedServiceGroup;
-use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, Eq, NestedServiceGroup, PartialEq, Serialize)]
 #[serde(into = "String")]

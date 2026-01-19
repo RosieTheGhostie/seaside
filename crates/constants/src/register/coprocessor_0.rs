@@ -1,10 +1,12 @@
-use super::ParseError;
 use core::{
-    fmt::{Display, Formatter, Result as FmtResult, Write},
+    fmt::{self, Display, Formatter, Write},
     str::FromStr,
 };
+
 use num_derive::FromPrimitive;
 use strum_macros::EnumIter;
+
+use super::ParseError;
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, EnumIter, Eq, FromPrimitive, Ord, PartialEq, PartialOrd)]
@@ -16,10 +18,11 @@ pub enum Coprocessor0Register {
 }
 
 impl Display for Coprocessor0Register {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         if f.alternate() {
             f.write_char('$')?;
         }
+
         f.write_str(self.name())
     }
 }

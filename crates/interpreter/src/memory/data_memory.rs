@@ -1,8 +1,9 @@
-use crate::{
-    memory::{DataRegion, Region},
-    Exception,
-};
 use seaside_type_aliases::Address;
+
+use crate::{
+    Exception,
+    memory::{DataRegion, Region},
+};
 
 pub struct DataMemory {
     r#extern: DataRegion,
@@ -116,7 +117,7 @@ impl DataMemory {
         mmio: DataRegion,
     ) -> Self {
         let next_heap_address: Address = heap.addresses.start;
-        let free_heap_space: u32 = heap.addresses.len() as u32;
+        let free_heap_space: u32 = heap.addresses.len() as _;
         Self {
             r#extern,
             data,

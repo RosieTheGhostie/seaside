@@ -1,8 +1,9 @@
-use super::{Component, DestructuredInstruction, Operation};
-use crate::fields;
 use num_traits::FromPrimitive;
 use seaside_constants::{Opcode, fn_codes::RegisterImmediateFn, register::CpuRegister};
 use seaside_type_aliases::Instruction;
+
+use super::{Component, DestructuredInstruction, Operation};
+use crate::fields;
 
 pub fn destructure(opcode: Opcode, instruction: Instruction) -> Option<DestructuredInstruction> {
     use Opcode::*;
@@ -55,6 +56,7 @@ pub fn destructure(opcode: Opcode, instruction: Instruction) -> Option<Destructu
         }
         _ => return None,
     }
+
     Some(DestructuredInstruction::new(
         Operation::Opcode(opcode),
         components,
@@ -87,6 +89,7 @@ fn destructure_regimm(
         | TrapEqualImmediate
         | TrapNotEqualImmediate => Component::Immediate(imm),
     };
+
     Some(DestructuredInstruction::new(
         Operation::RegisterImmediateFn(r#fn),
         components,

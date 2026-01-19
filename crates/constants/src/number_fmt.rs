@@ -5,10 +5,14 @@ use thiserror::Error; // these aren't errors, but i want to convert them to stri
 pub enum NumberFormat {
     #[error(".s")]
     Single = 0x10,
+
     #[error(".d")]
     Double = 0x11,
+
     #[error(".w")]
     Word = 0x14,
-    // #[error(".l")]
-    // Long = 0x15,
+
+    #[cfg(feature = "unimplemented")]
+    #[error(".l")]
+    Long = 0x15,
 }

@@ -19,3 +19,9 @@ thiserror = "2.0.12"
 [dependencies.take-exact]
 version = "0.1.0"
 git = "https://github.com/RosieTheGhostie/take-exact"
+
+[features]
+unimplemented = []
+
+default = []
+full = ["unimplemented"]

@@ -1,5 +1,6 @@
-use super::span::Span;
 use ariadne::ReportBuilder;
+
+use super::Span;
 
 #[derive(Clone, Copy, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub enum NoteKind {

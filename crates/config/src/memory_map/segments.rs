@@ -1,13 +1,14 @@
+use anyhow::{Context, Error, Result};
+use seaside_error::EngineError;
+use seaside_int_utils::AllZeroes;
+use serde::{Deserialize, Serialize};
+
 use super::{
     Overlapping, RuntimeData, Segment,
     address_range::address_range,
     segment::{allocate, segment},
 };
 use crate::Validate;
-use anyhow::{Error, Result};
-use seaside_error::EngineError;
-use seaside_int_utils::AllZeroes;
-use serde::{Deserialize, Serialize};
 
 /// Collection of segments in the [`MemoryMap`](super::MemoryMap).
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -76,8 +77,9 @@ impl Validate for Segments {
         } else {
             None
         };
+
         match error_msg {
-            Some(msg) => Err(Error::new(EngineError::InvalidConfig).context(msg)),
+            Some(msg) => Err(Error::new(EngineError::InvalidConfig)).context(msg),
             None => Ok(()),
         }
     }

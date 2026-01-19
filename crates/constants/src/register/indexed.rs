@@ -1,10 +1,12 @@
-use super::ParseError;
 use core::{
-    fmt::{Display, Formatter, Result as FmtResult, Write},
+    fmt::{self, Display, Formatter, Write},
     str::FromStr,
 };
+
 use num_traits::FromPrimitive;
 use strum_macros::EnumIter;
+
+use super::ParseError;
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, EnumIter, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -44,10 +46,11 @@ pub enum IndexedRegister {
 }
 
 impl Display for IndexedRegister {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         if f.alternate() {
             f.write_char('$')?;
         }
+
         write!(f, "{}", *self as u8)
     }
 }
@@ -60,6 +63,7 @@ impl FromStr for IndexedRegister {
         if s.is_empty() {
             return Err(ParseError::Empty);
         }
+
         if s.starts_with('0') {
             return if s.len() == 1 {
                 Ok(Self::_0)
@@ -67,6 +71,7 @@ impl FromStr for IndexedRegister {
                 Err(ParseError::BadValue)
             };
         }
+
         let index: u8 = s.parse().map_err(|_| ParseError::BadValue)?;
         if index < 32 {
             Ok(unsafe { core::mem::transmute::<_, Self>(index) })

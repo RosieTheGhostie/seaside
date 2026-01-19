@@ -1,7 +1,8 @@
-use clap::{Args, Parser, Subcommand, builder::ValueParser};
 use core::num::ParseIntError;
-use seaside_type_aliases::Instruction;
 use std::path::PathBuf;
+
+use clap::{Args, Parser, Subcommand, builder::ValueParser};
+use seaside_type_aliases::Instruction;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]

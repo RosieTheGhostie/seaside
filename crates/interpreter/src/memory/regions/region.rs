@@ -1,5 +1,6 @@
-use crate::Exception;
 use seaside_type_aliases::Address;
+
+use crate::Exception;
 
 pub trait Region {
     fn contains(&self, address: Address) -> bool;
@@ -13,18 +14,21 @@ pub trait Region {
     fn get_slice_mut(&mut self, address: Address) -> Result<&mut [u8], Exception>;
 
     fn write_u8(&mut self, address: Address, value: u8) -> Result<(), Exception>;
+
     fn write_u16(
         &mut self,
         address: Address,
         value: u16,
         assert_aligned: bool,
     ) -> Result<(), Exception>;
+
     fn write_u32(
         &mut self,
         address: Address,
         value: u32,
         assert_aligned: bool,
     ) -> Result<(), Exception>;
+
     fn write_u64(
         &mut self,
         address: Address,

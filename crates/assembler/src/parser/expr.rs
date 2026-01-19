@@ -1,7 +1,9 @@
+use core::fmt::{self, Display, Formatter};
+
+use seaside_error::rich::Span;
+
 use super::{Operand, Value};
 use crate::directives::{SegmentDirective, StringDirective, ValueDirective};
-use core::fmt::{Display, Formatter, Result as FmtResult};
-use seaside_error::rich::Span;
 
 /// A standalone "expression".
 ///
@@ -83,7 +85,7 @@ pub enum Expr<'src> {
 }
 
 impl Display for Expr<'_> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             Self::SegmentHeader {
                 directive: name,

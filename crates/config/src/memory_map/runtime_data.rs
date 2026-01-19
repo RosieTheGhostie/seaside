@@ -1,9 +1,10 @@
+use seaside_int_utils::AllZeroes;
+use serde::{Deserialize, Serialize};
+
 use super::{
     AddressRange, Segment,
     traits::{Contains, Overlapping},
 };
-use seaside_int_utils::AllZeroes;
-use serde::{Deserialize, Serialize};
 
 /// Specifies the memory addresses associated with the heap and stack.
 #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]

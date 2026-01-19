@@ -1,9 +1,10 @@
-use crate::{Exception, Interpreter, InterpreterState, register_file::IndexByRegister};
 use num_traits::FromPrimitive;
 use seaside_constants::{fn_codes::Special2Fn, register::CpuRegister};
 use seaside_disassembler::fields;
 use seaside_int_utils::SignExtend;
 use seaside_type_aliases::Instruction;
+
+use crate::{Exception, Interpreter, InterpreterState, register_file::IndexByRegister};
 
 impl Interpreter {
     /// Executes `instruction`, which must follow the "special 2" instruction format:
@@ -19,10 +20,8 @@ impl Interpreter {
         let rd = fields::rd(instruction);
         let rs_value: u32 = self.state.registers.read(rs);
         let rt_value: u32 = self.state.registers.read(rt);
-        let r#fn = match Special2Fn::from_u8(fields::r#fn(instruction)) {
-            Some(fn_code) => fn_code,
-            None => return Err(Exception::ReservedInstruction),
-        };
+        let r#fn =
+            Special2Fn::from_u8(fields::r#fn(instruction)).ok_or(Exception::ReservedInstruction)?;
         match r#fn {
             MultiplyAdd => self.state.madd(rt_value, rs_value),
             MultiplyAddUnsigned => self.state.maddu(rt_value, rs_value),
@@ -42,29 +41,27 @@ impl InterpreterState {
         let rs_value: i64 = rs_value.sign_extend();
         let rt_value: i64 = rt_value.sign_extend();
         let product = i64::wrapping_mul(rs_value, rt_value) as u64;
-        self.registers.hi = u32::wrapping_add(self.registers.hi, (product >> 32) as u32);
-        self.registers.lo = u32::wrapping_add(self.registers.lo, (product & 0xffffffff) as u32);
+        self.registers.hi = u32::wrapping_add(self.registers.hi, (product >> 32) as _);
+        self.registers.lo = u32::wrapping_add(self.registers.lo, (product & u32::MAX as u64) as _);
+
         Ok(())
     }
 
     /// Multiplies `rs_value` and `rt_value` as unsigned integers, adding the most significant word
     /// of the product to register `hi` and the least significant word to register `lo`.
     fn maddu(&mut self, rt_value: u32, rs_value: u32) -> Result<(), Exception> {
-        let rs_value = rs_value as u64;
-        let rt_value = rt_value as u64;
-        let product = u64::wrapping_mul(rs_value, rt_value);
-        self.registers.hi = u32::wrapping_add(self.registers.hi, (product >> 32) as u32);
-        self.registers.lo = u32::wrapping_add(self.registers.lo, (product & 0xffffffff) as u32);
+        let product = u64::wrapping_mul(rs_value as _, rt_value as _);
+        self.registers.hi = u32::wrapping_add(self.registers.hi, (product >> 32) as _);
+        self.registers.lo = u32::wrapping_add(self.registers.lo, (product & u32::MAX as u64) as _);
+
         Ok(())
     }
 
     /// Multiplies `rs_value` and `rt_value` as signed integers, storing the least significant word
     /// of the product in CPU register `rd` and discarding the most significant word.
     fn mul(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        let rs_value = rs_value as i32;
-        let rt_value = rt_value as i32;
         self.registers
-            .write(rd, i32::wrapping_mul(rs_value, rt_value));
+            .write(rd, i32::wrapping_mul(rs_value as _, rt_value as _));
         Ok(())
     }
 
@@ -74,19 +71,19 @@ impl InterpreterState {
         let rs_value: i64 = rs_value.sign_extend();
         let rt_value: i64 = rt_value.sign_extend();
         let product = i64::wrapping_mul(rs_value, rt_value) as u64;
-        self.registers.hi = u32::wrapping_sub(self.registers.hi, (product >> 32) as u32);
-        self.registers.lo = u32::wrapping_sub(self.registers.lo, (product & 0xffffffff) as u32);
+        self.registers.hi = u32::wrapping_sub(self.registers.hi, (product >> 32) as _);
+        self.registers.lo = u32::wrapping_sub(self.registers.lo, (product & u32::MAX as u64) as _);
+
         Ok(())
     }
 
     /// Multiplies `rs_value` and `rt_value` as unsigned integers, subtracting the most significant
     /// word of the product from register `hi` and the least significant word from register `lo`.
     fn msubu(&mut self, rt_value: u32, rs_value: u32) -> Result<(), Exception> {
-        let rs_value = rs_value as u64;
-        let rt_value = rt_value as u64;
-        let product = u64::wrapping_mul(rs_value, rt_value);
-        self.registers.hi = u32::wrapping_sub(self.registers.hi, (product >> 32) as u32);
-        self.registers.lo = u32::wrapping_sub(self.registers.lo, (product & 0xffffffff) as u32);
+        let product = u64::wrapping_mul(rs_value as _, rt_value as _);
+        self.registers.hi = u32::wrapping_sub(self.registers.hi, (product >> 32) as _);
+        self.registers.lo = u32::wrapping_sub(self.registers.lo, (product & u32::MAX as u64) as _);
+
         Ok(())
     }
 

@@ -1,4 +1,4 @@
-#[derive(Default)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct Rng {
     seed: u64,
 }

@@ -3,21 +3,24 @@ pub mod memory;
 pub mod register_file;
 pub mod syscall_failure;
 
-mod execute;
-mod file_handle;
-mod rng;
-
 pub use exception::Exception;
 pub use memory::Memory;
 pub use register_file::RegisterFile;
 pub use syscall_failure::SyscallFailureKind;
 
+mod execute;
+mod file_handle;
+mod rng;
+
+use std::{
+    collections::HashMap,
+    fs::File,
+    io::{self, prelude::*},
+    path::PathBuf,
+};
+
 use anyhow::Result;
-use file_handle::FileHandle;
-use memory::regions::Region;
 use minimal_logging::macros::debugln;
-use register_file::IndexByRegister;
-use rng::Rng;
 use seaside_config::{
     Config,
     features::{
@@ -30,12 +33,11 @@ use seaside_config::{
 };
 use seaside_constants::register::CpuRegister;
 use seaside_type_aliases::Address;
-use std::{
-    collections::HashMap,
-    fs::File,
-    io::{Write, stdout},
-    path::PathBuf,
-};
+
+use file_handle::FileHandle;
+use memory::regions::Region;
+use register_file::IndexByRegister;
+use rng::Rng;
 
 pub struct Interpreter {
     pub state: InterpreterState,
@@ -101,15 +103,16 @@ impl Interpreter {
         while !self.state.memory.pc_past_end(self.state.pc) && self.state.exit_code.is_none() {
             if let Err(exception) = self.step() {
                 let _ = self.state.flush_stdout_if_necessary();
-                match self.state.memory.get_exception_handler() {
-                    Some(exception_handler) => {
-                        self.state.trigger_exception(exception, exception_handler)
-                    }
-                    None => return Err(exception),
-                }
+                let Some(exception_handler) = self.state.memory.get_exception_handler() else {
+                    return Err(exception);
+                };
+
+                self.state.trigger_exception(exception, exception_handler)
             };
         }
+
         let _ = self.state.flush_stdout_if_necessary();
+
         Ok(())
     }
 
@@ -199,8 +202,10 @@ impl Interpreter {
                     InterpreterState::rand_double
                 }
             };
+
             service_fns.insert(code, r#fn);
         }
+
         Ok(service_fns)
     }
 }
@@ -217,7 +222,7 @@ impl InterpreterState {
 
     pub fn print_crash_handler(&self) {
         debugln!(
-            "Interpreter State (pc: {:#08x})\n{}",
+            "Interpreter State (pc: {:#010x})\n{}",
             self.pc,
             self.registers,
         );
@@ -237,28 +242,33 @@ impl InterpreterState {
                 self.memory.write_u8(current, byte)?;
                 current -= 1;
             }
+
             arg_addresses.push(current + 1);
         }
+
         let mut stack_frame_base: Address = self.registers.read(CpuRegister::StackPtr);
         if current < stack_frame_base {
             stack_frame_base = current - (current % 4) - 4;
         }
+
         stack_frame_base -= 4;
         for &arg_address in arg_addresses.iter().rev() {
             self.memory.write_u32(stack_frame_base, arg_address, true)?;
             stack_frame_base -= 4;
         }
+
         self.memory.write_u32(stack_frame_base, argc, true)?;
         self.registers
             .write(CpuRegister::StackPtr, stack_frame_base);
         self.registers.write(CpuRegister::Arg0, argc);
         self.registers
             .write(CpuRegister::Arg1, stack_frame_base + 4);
+
         Ok(())
     }
 
     pub fn make_file_handle(&mut self, file: File) -> &mut FileHandle {
-        let fd: u32 = self.next_fd;
+        let fd = self.next_fd;
         self.files.insert(fd, FileHandle::File(file));
         self.next_fd += 1;
         self.files.get_mut(&fd).unwrap()
@@ -274,8 +284,7 @@ impl InterpreterState {
     }
 
     pub fn make_rng(&mut self, id: u32) -> &mut Rng {
-        let seed: u64 = rand::random();
-        self.set_rng_seed(id, seed);
+        self.set_rng_seed(id, rand::random::<u64>());
         self.rngs.get_mut(&id).unwrap()
     }
 
@@ -283,11 +292,25 @@ impl InterpreterState {
         self.rngs.insert(id, Rng::new(seed));
     }
 
-    pub fn flush_stdout_if_necessary(&mut self) -> Result<()> {
+    pub fn read_line_from_stdin() -> Result<String, Exception> {
+        let mut buffer = String::new();
+        if io::stdin().read_line(&mut buffer).is_ok() {
+            Ok(buffer)
+        } else {
+            Err(Exception::SyscallFailure(
+                SyscallFailureKind::StdinReadFailed,
+            ))
+        }
+    }
+
+    pub fn flush_stdout_if_necessary(&mut self) -> Result<(), Exception> {
         if self.stdout_pending_flush {
             self.stdout_pending_flush = false;
-            stdout().flush()?;
+            io::stdout()
+                .flush()
+                .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::StdoutFlushFailed))
+        } else {
+            Ok(())
         }
-        Ok(())
     }
 }

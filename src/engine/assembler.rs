@@ -2,8 +2,14 @@
 //!
 //! Provides the wrapper function [`assemble`], which runs the assembler routine.
 
+use core::fmt::Debug;
+use std::{
+    collections::VecDeque,
+    path::{Path, PathBuf},
+    time::Instant,
+};
+
 use anyhow::{Error, Result};
-use core::str::FromStr;
 use minimal_logging::macros::grayln;
 use seaside_assembler::{
     Assembler,
@@ -11,23 +17,17 @@ use seaside_assembler::{
 };
 use seaside_config::Config;
 use seaside_error::{EngineError, rich::Span};
-use std::{
-    collections::VecDeque,
-    fs::read_to_string,
-    path::{Path, PathBuf},
-    time::Instant,
-};
 
 /// Assembles `source` into a format usable by the seaside interpreter.
 ///
 /// If `output_directory` is [`None`], it defaults to the current working directory.
 pub fn assemble<P>(config: Config, source_path: P, output_directory: Option<PathBuf>) -> Result<()>
 where
-    P: AsRef<Path> + core::fmt::Debug,
+    P: AsRef<Path> + Debug,
 {
     let start_time = Instant::now();
-    let output_directory = output_directory.unwrap_or_else(|| PathBuf::from_str(".").unwrap());
-    let source = read_to_string(&source_path)?;
+    let output_directory = output_directory.unwrap_or_else(|| PathBuf::from("."));
+    let source = std::fs::read_to_string(&source_path)?;
     let exprs = parse(&source_path, &source)?;
     match Assembler::new(&config, exprs).build() {
         Ok(build) => build.export(&output_directory)?,

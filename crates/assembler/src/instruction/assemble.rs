@@ -8,10 +8,10 @@ use seaside_type_aliases::Instruction;
 /// Inserts value(s) into field(s) with the corresponding number of bits.
 macro_rules! insert {
     [$({$n_bits:literal} $field:expr),* $(,)? => $machine_code:ident] => {
-        $($machine_code = ($machine_code << $n_bits) | $field as Instruction;)*
+        $($machine_code = ($machine_code << $n_bits) | $field as ::seaside_type_aliases::Instruction;)*
     };
     [$({$n_bits:literal} $field:expr),* $(,)? => &$machine_code:ident] => {
-        $(*$machine_code = (*$machine_code << $n_bits) | $field as Instruction;)*
+        $(*$machine_code = (*$machine_code << $n_bits) | $field as ::seaside_type_aliases::Instruction;)*
     };
 }
 pub(super) use insert;

@@ -1,8 +1,9 @@
-use super::{Component, DestructuredInstruction, Operation};
-use crate::fields;
 use num_traits::FromPrimitive;
 use seaside_constants::fn_codes::Special2Fn;
 use seaside_type_aliases::Instruction;
+
+use super::{Component, DestructuredInstruction, Operation};
+use crate::fields;
 
 pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> {
     use Special2Fn::*;
@@ -26,6 +27,7 @@ pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> 
             components[1] = Component::CpuRegister(rs);
         }
     }
+
     Some(DestructuredInstruction::new(
         Operation::Special2Fn(r#fn),
         components,

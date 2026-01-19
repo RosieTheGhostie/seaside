@@ -1,7 +1,9 @@
-use super::{Component, Operation};
-use core::fmt::{Display, Formatter, Result as FmtResult};
+use core::fmt::{self, Display, Formatter};
+
 use seaside_int_utils::SignExtend;
 use seaside_type_aliases::Address;
+
+use super::{Component, Operation};
 
 #[derive(Debug, Default)]
 pub struct DestructuredInstruction {
@@ -26,7 +28,7 @@ impl DestructuredInstruction {
 }
 
 impl Display for DestructuredInstruction {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         use Operation::*;
         match self.operation {
             Opcode(opcode) => write!(f, "{opcode}"),
@@ -37,11 +39,13 @@ impl Display for DestructuredInstruction {
             Coprocessor1RegisterImmediateFn(r#fn) => write!(f, "{fn}"),
             Special2Fn(r#fn) => write!(f, "{fn}"),
         }?;
+
         let mut needs_comma: bool = false;
         for component in self.components {
             if needs_comma && component.should_precede_with_comma() {
                 write!(f, ",")?;
             }
+
             needs_comma = !matches!(component, Component::Fmt(_) | Component::Condition(_));
             match component {
                 Component::Empty => break,
@@ -67,6 +71,7 @@ impl Display for DestructuredInstruction {
                 }
             }?;
         }
+
         Ok(())
     }
 }

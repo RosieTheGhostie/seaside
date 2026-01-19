@@ -1,8 +1,9 @@
-use crate::{Exception, Interpreter, InterpreterState, register_file::IndexByRegister};
 use seaside_constants::{Opcode, register::CpuRegister};
 use seaside_disassembler::fields;
 use seaside_int_utils::SignExtend;
-use seaside_type_aliases::Instruction;
+use seaside_type_aliases::{Address, Instruction};
+
+use crate::{Exception, Interpreter, InterpreterState, register_file::IndexByRegister};
 
 impl Interpreter {
     pub fn execute_jump_format(
@@ -15,6 +16,7 @@ impl Interpreter {
         if opcode == Opcode::JumpAndLink {
             self.state.link();
         }
+
         self.state.pc = address;
         Ok(())
     }
@@ -23,7 +25,7 @@ impl Interpreter {
 impl InterpreterState {
     pub fn branch(&mut self, offset: u16) {
         let offset = <u16 as SignExtend<i32>>::sign_extend(&offset) << 2;
-        self.pc = u32::wrapping_add_signed(self.pc, offset);
+        self.pc = Address::wrapping_add_signed(self.pc, offset);
     }
 
     pub fn link(&mut self) {
