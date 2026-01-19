@@ -8,6 +8,8 @@ use minimal_logging::macros::{fatalln, grayln};
 use seaside_config::Config;
 use std::env::current_exe;
 
+use crate::cmd_args::ConfigPathArgs;
+
 fn main() {
     let args: CmdArgs = CmdArgs::parse();
     let config: Config = match engine::get_config(&args) {
@@ -51,6 +53,7 @@ fn main() {
             address: start_address,
         }) => engine::disassemble_segment(config, segment, start_address),
         Commands::ExePath => print_exe_path(),
+        Commands::ConfigPath(ConfigPathArgs { ensure_exists }) => print_config_path(ensure_exists),
         #[cfg(debug_assertions)]
         Commands::Experiment => experimental_code(),
         _ => unreachable!("disassemble subcommand will always have exactly one argument"),
@@ -61,6 +64,11 @@ fn main() {
 
 fn print_exe_path() -> Result<(), Error> {
     println!("{}", current_exe()?.display());
+    Ok(())
+}
+
+fn print_config_path(ensure_exists: bool) -> Result<(), Error> {
+    println!("{}", engine::find_global_config(ensure_exists)?.display());
     Ok(())
 }
 

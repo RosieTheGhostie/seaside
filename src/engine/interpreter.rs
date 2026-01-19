@@ -3,7 +3,7 @@
 //! Provides the wrapper functions [`init_interpreter`] and [`run`], which initialize and run the
 //! interpreter, respectively.
 
-use super::resolve_if_exists;
+use super::resolve;
 use anyhow::{Context, Error, Result};
 use seaside_config::Config;
 use seaside_error::EngineError;
@@ -21,23 +21,23 @@ pub fn init_interpreter(
             .with_context(|| "expected project path to be a directory");
     }
     if config.project_directory_is_cwd {
-        directory = match set_current_dir(&directory) {
-            Ok(()) => ".".parse()?,
-            Err(_) => {
-                return Err(Error::new(EngineError::ExternalFailure)).with_context(|| {
-                    format!("failed to change the cwd to {}", directory.display())
-                });
-            }
-        };
+        set_current_dir(&directory).map_err(|_| {
+            Error::new(EngineError::ExternalFailure).context(format!(
+                "failed to change the cwd to {}",
+                directory.display()
+            ))
+        })?;
+
+        directory = ".".parse()?;
     }
-    let text = resolve_if_exists(&directory, "text").ok_or_else(|| {
+    let text = resolve(&directory, "text", true).ok_or_else(|| {
         Error::new(EngineError::InvalidProjectDirectory)
             .context("missing 'text' file in project directory")
     })?;
-    let r#extern = resolve_if_exists(&directory, "extern");
-    let data = resolve_if_exists(&directory, "data");
-    let ktext = resolve_if_exists(&directory, "ktext");
-    let kdata = resolve_if_exists(&directory, "kdata");
+    let r#extern = resolve(&directory, "extern", true);
+    let data = resolve(&directory, "data", true);
+    let ktext = resolve(&directory, "ktext", true);
+    let kdata = resolve(&directory, "kdata", true);
     Interpreter::init(&config, text, r#extern, data, ktext, kdata, argv)
 }
 

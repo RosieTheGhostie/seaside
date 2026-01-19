@@ -1,4 +1,4 @@
-use clap::{Args, Parser, Subcommand, arg, builder::ValueParser, command};
+use clap::{Args, Parser, Subcommand, builder::ValueParser};
 use core::num::ParseIntError;
 use seaside_type_aliases::Instruction;
 use std::path::PathBuf;
@@ -25,6 +25,8 @@ pub enum Commands {
     Disassemble(DisassemblyArgs),
     /// Prints the file path of the seaside executable.
     ExePath,
+    /// Prints the path to the global 'Seaside.toml' file.
+    ConfigPath(ConfigPathArgs),
     /// Runs experimental code.
     #[cfg(debug_assertions)]
     Experiment,
@@ -65,6 +67,13 @@ pub struct DisassemblyTarget {
     /// The path of a file containing machine code instructions.
     #[arg(long)]
     pub segment: Option<PathBuf>,
+}
+
+#[derive(Args, Debug)]
+pub struct ConfigPathArgs {
+    /// Ensure the configuration file actually exists before printing it.
+    #[arg(long, default_value_t = false)]
+    pub ensure_exists: bool,
 }
 
 fn parse_u32(input: &str) -> Result<Instruction, ParseIntError> {

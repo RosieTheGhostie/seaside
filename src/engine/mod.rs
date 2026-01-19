@@ -9,24 +9,26 @@ pub mod disassembler;
 pub mod interpreter;
 
 pub use assembler::assemble;
-pub use config::get_config;
+pub use config::{find_global_config, get_config};
 pub use disassembler::{disassemble_instruction, disassemble_segment};
 pub use interpreter::{init_interpreter, run};
+
+mod lazy_project_dirs;
 
 use std::path::{Path, PathBuf};
 
 /// Tries to resolve the relative path `name` from the given `directory`.
 ///
-/// This essentially amounts to appending `name` to `directory`, then checking if that file exists.
-/// If it does, the previously-computed file path is returned.
-fn resolve_if_exists<P>(directory: &Path, name: P) -> Option<PathBuf>
+/// If `ensure_exists` is set, this will check if the file in question actually exists before
+/// returning the computed path to it.
+fn resolve<P>(directory: &Path, name: P, ensure_exists: bool) -> Option<PathBuf>
 where
     P: AsRef<Path>,
 {
     let path = directory.join(name);
-    if path.exists() {
-        Some(path)
+    if ensure_exists {
+        path.exists().then_some(path)
     } else {
-        None
+        Some(path)
     }
 }
