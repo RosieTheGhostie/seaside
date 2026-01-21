@@ -47,7 +47,7 @@ pub fn process_instruction<'src>(
     let opcode = Opcode::from(operator);
     let fn_code = operator.op_or_fn_code();
 
-    let mut machine_code: Instruction = opcode as Instruction;
+    let mut machine_code: Instruction = opcode as _;
     match operator {
         // sll $rd, $rt, shamt
         special![ShiftLeftLogical, ShiftRightLogical, ShiftRightArithmetic] => {

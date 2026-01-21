@@ -8,7 +8,7 @@ use seaside_constants::{
 use seaside_type_aliases::Instruction;
 
 pub fn opcode(instruction: Instruction) -> Option<Opcode> {
-    Opcode::from_u8((instruction >> 26) as u8)
+    Opcode::from_u8((instruction >> 26) as _)
 }
 
 pub const fn rs(instruction: Instruction) -> CpuRegister {
@@ -16,7 +16,7 @@ pub const fn rs(instruction: Instruction) -> CpuRegister {
 }
 
 pub const fn rs_raw(instruction: Instruction) -> u8 {
-    ((instruction >> 21) & 0x1f) as u8
+    ((instruction >> 21) & 0x1f) as _
 }
 
 pub const fn rt(instruction: Instruction) -> CpuRegister {
@@ -24,7 +24,7 @@ pub const fn rt(instruction: Instruction) -> CpuRegister {
 }
 
 pub const fn rt_raw(instruction: Instruction) -> u8 {
-    ((instruction >> 16) & 0x1f) as u8
+    ((instruction >> 16) & 0x1f) as _
 }
 
 pub const fn rd(instruction: Instruction) -> CpuRegister {
@@ -32,15 +32,15 @@ pub const fn rd(instruction: Instruction) -> CpuRegister {
 }
 
 pub const fn rd_raw(instruction: Instruction) -> u8 {
-    ((instruction >> 11) & 0x1f) as u8
+    ((instruction >> 11) & 0x1f) as _
 }
 
 pub const fn shamt(instruction: Instruction) -> u8 {
-    ((instruction >> 6) & 0x1f) as u8
+    ((instruction >> 6) & 0x1f) as _
 }
 
 pub const fn r#fn(instruction: Instruction) -> u8 {
-    (instruction & 0x3f) as u8
+    (instruction & 0x3f) as _
 }
 
 pub const fn code(instruction: Instruction) -> u32 {
@@ -48,7 +48,7 @@ pub const fn code(instruction: Instruction) -> u32 {
 }
 
 pub const fn imm(instruction: Instruction) -> u16 {
-    (instruction & 0xffff) as u16
+    (instruction & 0xffff) as _
 }
 
 pub const fn jump_index(instruction: Instruction) -> u32 {

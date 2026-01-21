@@ -6,6 +6,7 @@ use num_traits::{FromPrimitive, ToPrimitive};
 pub trait RegisterSet: FromStr + FromPrimitive + ToPrimitive {
     /// The number of registers in this set.
     const NUM_REGISTERS: usize;
+
     /// The names of each register. Should be in the same order as the register array.
     const REGISTER_NAMES: &'static [&'static str];
 }
@@ -21,9 +22,9 @@ macro_rules! make_registers_format {
                 result::Result::{self, *},
                 str::FromStr,
             };
-            use std::string::String;
+            use ::std::string::String;
 
-            use serde::{
+            use ::serde::{
                 Serializer,
                 de::{Deserializer, MapAccess, Visitor},
                 ser::SerializeMap,
@@ -50,9 +51,11 @@ macro_rules! make_registers_format {
                         if let Ok(register) = <$register_t>::from_str(&key) {
                             register_set[register.into_index()] = value;
                         }
+
                         // NOTE: We can't raise an error if the key was invalid because M::Error
                         //       is too generic to provide any semblance of a constructor.
                     }
+
                     Ok(register_set)
                 }
             }
@@ -70,6 +73,7 @@ macro_rules! make_registers_format {
                 {
                     map.serialize_entry(name, &value)?;
                 }
+
                 map.end()
             }
 

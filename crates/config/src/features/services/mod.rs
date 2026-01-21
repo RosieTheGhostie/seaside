@@ -17,10 +17,12 @@ use serde::{
 
 use crate::Validate;
 
+pub type ServiceCode = u32;
+
 #[derive(Clone, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct Services {
     #[serde(flatten)]
-    data: HashMap<u32, Service>,
+    data: HashMap<ServiceCode, Service>,
 
     #[serde(skip)]
     n_exits: usize,
@@ -68,18 +70,18 @@ impl Services {
         }
     }
 
-    pub fn insert(&mut self, code: u32, service: Service) -> Option<Service> {
+    pub fn insert(&mut self, code: ServiceCode, service: Service) -> Option<Service> {
         self.n_exits += service.is_exit() as usize;
         self.data.insert(code, service)
     }
 
-    pub fn remove(&mut self, code: u32) -> Option<Service> {
+    pub fn remove(&mut self, code: ServiceCode) -> Option<Service> {
         self.data.remove(&code).inspect(|service| {
             self.n_exits -= service.is_exit() as usize;
         })
     }
 
-    pub fn iter(&self) -> HashMapIter<'_, u32, Service> {
+    pub fn iter(&self) -> HashMapIter<'_, ServiceCode, Service> {
         self.data.iter()
     }
 }
@@ -99,7 +101,9 @@ impl<'de> Visitor<'de> for ServicesVisitor {
     {
         let mut services = Services::with_capacity(access.size_hint().unwrap_or(0));
         while let Some((code, service)) = access.next_entry::<String, Service>()? {
-            let code = code.parse::<u32>().map_err(serde::de::Error::custom)?;
+            let code = code
+                .parse::<ServiceCode>()
+                .map_err(serde::de::Error::custom)?;
             services.insert(code, service);
         }
 

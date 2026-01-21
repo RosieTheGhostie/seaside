@@ -81,10 +81,10 @@ impl<'src> Assembler<'src> {
     const INSTRUCTION_IN_DATA_SEGMENT: &'static str = "instructions only allowed in text segments";
 
     fn build_next(&mut self) -> RichResult<bool> {
-        let (expr, span) = match self.exprs.pop_front() {
-            Some(spanned_expr) => spanned_expr,
-            None => return Ok(false),
+        let Some((expr, span)) = self.exprs.pop_front() else {
+            return Ok(false);
         };
+
         match expr {
             Expr::SegmentHeader { directive, address } => {
                 self.current_segment = directive;
@@ -125,6 +125,7 @@ impl<'src> Assembler<'src> {
                     return Err(RichError::new(AssembleError::WrongSegment, span)
                         .with_note("value arrays only supported in data segments"));
                 }
+
                 let endian = self.endian;
                 let this_segment = self.this_segment_mut();
                 match directive {
@@ -133,13 +134,14 @@ impl<'src> Assembler<'src> {
                     ValueDirective::Word => this_segment.append_i32(span, values, endian),
                     ValueDirective::Float => this_segment.append_f32(span, values, endian),
                     ValueDirective::Double => this_segment.append_f64(span, values, endian),
-                }?
+                }?;
             }
             Expr::String { directive, value } => {
                 if !self.current_segment.is_data_segment() {
                     return Err(RichError::new(AssembleError::WrongSegment, span)
                         .with_note("strings only supported in data segments"));
                 }
+
                 self.this_segment_mut()
                     .build_string(directive, value, span)?;
             }
@@ -149,6 +151,7 @@ impl<'src> Assembler<'src> {
                     return Err(RichError::new(AssembleError::WrongSegment, span)
                         .with_note(Self::INSTRUCTION_IN_DATA_SEGMENT));
                 }
+
                 let pc = self.next_address();
                 let mut bytes = match process_instruction(operator, operands, &span, pc)? {
                     ProcessedInstruction::MachineCode(machine_code) => match self.endian {
@@ -165,6 +168,7 @@ impl<'src> Assembler<'src> {
                 self.this_segment_mut().append(&mut bytes);
             }
         }
+
         Ok(true)
     }
 

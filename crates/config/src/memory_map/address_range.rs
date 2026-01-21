@@ -25,7 +25,7 @@ impl<'de> Deserialize<'de> for AddressRange {
     where
         D: serde::Deserializer<'de>,
     {
-        let [base, limit] = <[u32; 2]>::deserialize(deserializer)?;
+        let [base, limit] = <[Address; 2]>::deserialize(deserializer)?;
         Ok(Self { base, limit })
     }
 }

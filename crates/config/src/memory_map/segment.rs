@@ -1,4 +1,5 @@
 use seaside_int_utils::AllZeroes;
+use seaside_type_aliases::Size;
 use serde::{Deserialize, Serialize};
 
 use super::{
@@ -12,7 +13,7 @@ pub struct Segment {
     /// The inclusive range of addresses within this segment.
     pub range: AddressRange,
     /// The maximum number of bytes to allocate for this segment.
-    pub allocate: u32,
+    pub allocate: Size,
 }
 
 impl Contains<Segment> for AddressRange {

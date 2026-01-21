@@ -1,6 +1,6 @@
 use core::num::{ParseFloatError, ParseIntError};
 
-use seaside_error::rich::ToErrorCode;
+use seaside_error::rich::{ErrorCode, ToErrorCode};
 use thiserror::Error;
 
 #[derive(Clone, Copy, Debug, Eq, Error, Hash, PartialEq)]
@@ -45,7 +45,7 @@ impl From<ParseIntError> for LexError {
 }
 
 impl ToErrorCode for LexError {
-    fn code(&self) -> u16 {
+    fn code(&self) -> ErrorCode {
         use LexError::*;
         match self {
             Unspecified(_) => 0,

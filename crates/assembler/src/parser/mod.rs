@@ -1,5 +1,6 @@
 pub use expr::Expr;
 pub use operand::Operand;
+use seaside_type_aliases::Size;
 pub use value::Value;
 
 mod expected;
@@ -120,8 +121,8 @@ impl<'src> Parser<'src> {
     /// Constructs a new [`RichError`] for when the end of the file is reached too soon.
     ///
     /// This has very similar semantics to
-    /// [`new_unexpected_token_error`](Parser::new_unexpected_token_error), as it also reads from
-    /// the `expected` field.
+    /// [`new_unexpected_token_error`](Self::new_unexpected_token_error), as it also reads from the
+    /// `expected` field.
     fn new_premature_eof_error(&self) -> RichError {
         let span = self.expr_span.end..self.expr_span.end;
         self.new_error(ParseError::PrematureEof)
@@ -144,7 +145,7 @@ impl<'src> Parser<'src> {
     }
 
     /// Adds the spanned [token](Token) provided to the `peeked` queue, then generates a
-    /// [`RichError`] via the [`new_unexpected_token_error`](Parser::new_unexpected_token_error)
+    /// [`RichError`] via the [`new_unexpected_token_error`](Self::new_unexpected_token_error)
     /// method.
     ///
     /// This is useful when the [token](Token) in question is potentially meaningful as parsing
@@ -189,7 +190,7 @@ impl<'src> Parser<'src> {
         let alignment = match self.next_token() {
             Some((Token::Int(alignment @ 0..=3), span)) => {
                 self.consume_span(span);
-                alignment as u8
+                alignment as _
             }
             Some((Token::Int(_), span)) => {
                 return Err(self
@@ -211,7 +212,7 @@ impl<'src> Parser<'src> {
         let n_bytes = match self.next_token() {
             Some((Token::Int(n_bytes @ 0..=0xffff_ffff), span)) => {
                 self.consume_span(span);
-                n_bytes as u32
+                n_bytes as Size
             }
             Some((Token::Int(_), span)) => {
                 return Err(self
@@ -240,12 +241,14 @@ impl<'src> Parser<'src> {
             Some(spanned_token) => return Err(self.peek_and_throw_unexpected(spanned_token)),
             None => return Err(self.new_premature_eof_error()),
         };
+
         self.expected = expected::COMMA;
         match self.next_token() {
             Some((Token::Ctrl(','), span)) => consume_span(&mut self.expr_span, span),
             Some(spanned_token) => return Err(self.peek_and_throw_unexpected(spanned_token)),
             None => return Err(self.new_premature_eof_error()),
         }
+
         self.expected = expected::EXPR;
         let backup_expr_span = self.expr_span.clone();
         let expr = match self.next() {
@@ -256,6 +259,7 @@ impl<'src> Parser<'src> {
             Some(Err(err)) => return Err(err),
             None => return Err(self.new_premature_eof_error()),
         };
+
         self.expect_line_end(|| Expr::EqvMacro {
             name,
             expr: Box::new(expr),
@@ -275,6 +279,7 @@ impl<'src> Parser<'src> {
             Some(spanned_token) => return Err(self.peek_and_throw_unexpected(spanned_token)),
             None => return Err(self.new_premature_eof_error()),
         };
+
         self.expect_line_end(|| Expr::IncludeCommand { file_path })
     }
 
@@ -332,6 +337,7 @@ impl<'src> Parser<'src> {
             Some(spanned_token) => return Err(self.peek_and_throw_unexpected(spanned_token)),
             None => return Err(self.new_premature_eof_error()),
         };
+
         self.expect_line_end(|| Expr::SetCommand { command })
     }
 
@@ -349,6 +355,7 @@ impl<'src> Parser<'src> {
             Some(spanned_token) => return Err(self.peek_and_throw_unexpected(spanned_token)),
             None => return Err(self.new_premature_eof_error()),
         };
+
         self.expect_line_end(|| Expr::String {
             directive: directive.parse().unwrap(),
             value,
@@ -375,6 +382,7 @@ impl<'src> Parser<'src> {
             Some(spanned_token) => return Err(self.peek_and_throw_unexpected(spanned_token)),
             None => return Err(self.new_premature_eof_error()),
         }
+
         loop {
             self.expected = formatcp!("{} or {}", expected::COMMA, expected::NEWLINE);
             match self.next_token() {
@@ -382,6 +390,7 @@ impl<'src> Parser<'src> {
                 Some((Token::NewLine, _)) | None => break,
                 Some(spanned_token) => return Err(self.peek_and_throw_unexpected(spanned_token)),
             }
+
             self.expected = formatcp!(
                 "{}, {}, or {}",
                 expected::INT_LIT,
@@ -403,6 +412,7 @@ impl<'src> Parser<'src> {
                 None => break,
             }
         }
+
         self.consume_span(last_span);
         self.r#yield(Expr::ValueArray {
             directive: directive.parse().unwrap(),
@@ -423,6 +433,7 @@ impl<'src> Parser<'src> {
             Some(spanned_token) => return Err(self.peek_and_throw_unexpected(spanned_token)),
             None => return Err(self.new_premature_eof_error()),
         };
+
         self.expected = expected::R_PAREN;
         match self.next_token() {
             Some((Token::Ctrl(')'), span)) => {
@@ -615,6 +626,7 @@ impl<'src> From<Lexer<'src, Token<'src>>> for Parser<'src> {
             tokens: lexer.spanned(),
             peeked: Vec::new(),
             expr_span: Span::default(),
+
             // In most situations, you'd probably want to set this to a useful value. I don't bother
             // here, though, because its value will be overwritten by the time it's ever read.
             expected: "",

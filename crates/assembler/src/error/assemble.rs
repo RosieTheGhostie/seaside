@@ -1,4 +1,4 @@
-use seaside_error::rich::ToErrorCode;
+use seaside_error::rich::{ErrorCode, ToErrorCode};
 use thiserror::Error;
 
 use super::ParseError;
@@ -64,13 +64,13 @@ impl From<ParseError> for AssembleError {
 }
 
 impl ToErrorCode for AssembleError {
-    fn code(&self) -> u16 {
-        const IO_ERROR_OFFSET: u16 = 900;
+    fn code(&self) -> ErrorCode {
+        const IO_ERROR_OFFSET: ErrorCode = 900;
 
         use AssembleError::*;
         match self {
             Parse(err) => err.code(),
-            Io(err) => IO_ERROR_OFFSET + err.kind() as u16,
+            Io(err) => IO_ERROR_OFFSET + err.kind() as ErrorCode,
             MultipleDefinitions => 200,
             UndefinedSymbol => 201,
             JumpBehind => 202,

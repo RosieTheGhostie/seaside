@@ -63,12 +63,13 @@ impl<'src> StringBuilder<'src> {
                 None => break,
             }
         }
+
         n as char
     }
 
     fn parse_hex_escape(&mut self, start_index: usize, length: usize) -> RichResult<char> {
         let mut n: u32 = 0;
-        let mut end_index: usize = start_index + 2;
+        let mut end_index = start_index + 2;
         for _ in 0..length {
             if let Some((i, c)) = self.raw.next() {
                 end_index = i + 1;
@@ -85,6 +86,7 @@ impl<'src> StringBuilder<'src> {
                 .with_narrow_span(start_index..end_index));
             }
         }
+
         char::from_u32(n).ok_or_else(|| {
             RichError::new(AssembleError::InvalidUtf8, self.span.clone())
                 .with_narrow_span(start_index..end_index)
@@ -106,7 +108,7 @@ impl Iterator for StringBuilder<'_> {
 }
 
 const fn from_octal_digit(digit: char) -> u8 {
-    (digit as u32 - '0' as u32) as u8
+    (digit as u32 - '0' as u32) as _
 }
 
 const fn try_from_hex_digit(digit: char) -> Option<u32> {

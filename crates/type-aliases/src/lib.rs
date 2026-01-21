@@ -1,6 +1,43 @@
+/// A memory address.
 pub type Address = u32;
+
+/// An offset to a [memory address](Address).
+pub type Offset = i32;
+
+/// The unsigned counterpart to [`Offset`].
+///
+/// Mostly useless, but it can come up sometimes.
+pub type UnsignedOffset = u32;
+
+/// A non-negative number of bytes.
+///
+/// This is commonly used for communicating the size of an array or other object.
+pub type Size = u32;
+
+/// A raw MIPS machine code instruction.
 pub type Instruction = u32;
 
-pub const fn is_aligned(address: Address, n_bytes: u32) -> bool {
+/// Checks if `address` is aligned to `n_bytes`.
+///
+/// `n_bytes` should be a power of two.
+///
+/// # Panics
+///
+/// This function will panic if `n_bytes` is zero.
+///
+/// # Examples
+///
+/// ```
+/// # use seaside_type_aliases::is_aligned;
+/// // 0x12121212 == 00010010 00010010 00010010 00010010
+/// assert!(is_aligned(0x12121212, 2));
+/// assert!(!is_aligned(0x12121212, 4));
+///
+/// // 0x12345678 == 00010010 00110100 01010110 01111000
+/// assert!(is_aligned(0x12345678, 4));
+/// assert!(is_aligned(0x12345678, 8));
+/// assert!(!is_aligned(0x12345678, 16));
+/// ```
+pub const fn is_aligned(address: Address, n_bytes: Size) -> bool {
     address.trailing_zeros() >= n_bytes.ilog2()
 }

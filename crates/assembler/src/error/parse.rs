@@ -1,4 +1,4 @@
-use seaside_error::rich::ToErrorCode;
+use seaside_error::rich::{ErrorCode, ToErrorCode};
 use thiserror::Error;
 
 use super::LexError;
@@ -35,7 +35,7 @@ pub enum ParseError {
 }
 
 impl ToErrorCode for ParseError {
-    fn code(&self) -> u16 {
+    fn code(&self) -> ErrorCode {
         use ParseError::*;
         match self {
             Lex(err) => err.code(),

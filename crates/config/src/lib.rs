@@ -51,6 +51,7 @@ impl Validate for Config {
                 )
             }),
         }?;
+
         self.features.services.validate()?;
         self.memory_map.validate()
     }

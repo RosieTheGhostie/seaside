@@ -1,4 +1,5 @@
 use seaside_int_utils::AllZeroes;
+use seaside_type_aliases::Size;
 use serde::{Deserialize, Serialize};
 
 use super::{
@@ -12,9 +13,9 @@ pub struct RuntimeData {
     /// The inclusive range of addresses within this segment.
     pub range: AddressRange,
     /// The number of bytes to allocate for the heap.
-    pub heap_size: u32,
+    pub heap_size: Size,
     /// The number of bytes to allocate for the stack.
-    pub stack_size: u32,
+    pub stack_size: Size,
 }
 
 impl Contains<RuntimeData> for AddressRange {

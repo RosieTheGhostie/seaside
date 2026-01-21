@@ -1,6 +1,7 @@
 use core::fmt::{self, Display, Formatter};
 
 use seaside_error::rich::Span;
+use seaside_type_aliases::{Address, Size};
 
 use super::{Operand, Value};
 use crate::directives::{SegmentDirective, StringDirective, ValueDirective};
@@ -18,7 +19,7 @@ pub enum Expr<'src> {
         /// The memory address to start at.
         ///
         /// If omitted, the assembler will attempt to infer the address to use.
-        address: Option<u32>,
+        address: Option<Address>,
     },
     /// An alignment command using the `.align` directive.
     AlignCommand {
@@ -28,7 +29,7 @@ pub enum Expr<'src> {
     /// A spacing command using the `.space` directive.
     SpaceCommand {
         /// The number of padding bytes to insert.
-        n_bytes: u32,
+        n_bytes: Size,
     },
     /// A C-style include command using the `.include` directive.
     IncludeCommand {

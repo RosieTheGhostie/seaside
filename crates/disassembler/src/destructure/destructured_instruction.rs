@@ -1,7 +1,7 @@
 use core::fmt::{self, Display, Formatter};
 
 use seaside_int_utils::SignExtend;
-use seaside_type_aliases::Address;
+use seaside_type_aliases::{Address, Offset};
 
 use super::{Component, Operation};
 
@@ -60,7 +60,7 @@ impl Display for DestructuredInstruction {
                 Component::Immediate(imm) => write!(f, " {}", imm as i16),
                 Component::HexImmediate(imm) => write!(f, " {imm:#06x}"),
                 Component::Offset(offset) => {
-                    let offset: i32 = <u16 as SignExtend<i32>>::sign_extend(&offset) << 2;
+                    let offset: Offset = <u16 as SignExtend<Offset>>::sign_extend(&offset) << 2;
                     let address = (self.address + 4).wrapping_add_signed(offset);
                     write!(f, " {address:#010x}")
                 }
