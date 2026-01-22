@@ -1,7 +1,7 @@
 use core::{iter::zip, ops::Range};
 
 use seaside_int_utils::{ByteStream, Endian};
-use seaside_type_aliases::{Address, is_aligned};
+use seaside_type_aliases::{Address, Instruction, UnsignedOffset, is_aligned};
 
 use super::{Region, allocate_zeroed_word_array};
 use crate::Exception;
@@ -98,12 +98,21 @@ impl TextRegion {
         for (old, new) in zip(self.instructions.iter_mut(), byte_stream) {
             *old = new;
         }
+
         self.num_instructions = bytes.len() >> 2;
-        self.end_pc = Some((self.num_instructions << 2) as u32 + self.addresses.start);
+        self.end_pc = Some(self.addresses.start + (self.num_instructions << 2) as UnsignedOffset);
     }
 
     fn calculate_index(&self, address: Address, assert_aligned: bool) -> Option<usize> {
-        ((!assert_aligned || is_aligned(address, 4)) && self.contains(address))
+        if !assert_aligned || is_aligned(address, size_of::<Instruction>() as _) {
+            self.calculate_index_unaligned(address)
+        } else {
+            None
+        }
+    }
+
+    fn calculate_index_unaligned(&self, address: Address) -> Option<usize> {
+        self.contains(address)
             .then(|| ((address - self.addresses.start) >> 2) as _)
     }
 }

@@ -1,3 +1,4 @@
+use seaside_config::features::services::ServiceCode;
 use thiserror::Error;
 
 /// The kind of failure that occurred when executing a system service.
@@ -5,11 +6,11 @@ use thiserror::Error;
 pub enum SyscallFailureKind {
     /// A syscall was made with an unknown service code.
     #[error("requested unknown service (code: {0})")]
-    UnknownServiceCode(u32),
+    UnknownServiceCode(ServiceCode),
 
     /// The requested service exists and is enabled, but no implementation for it exists yet.
     #[error("requested unimplemented service (code: {0})")]
-    ServiceUnimplemented(u32),
+    ServiceUnimplemented(ServiceCode),
 
     /// No nul byte was found at the end of the provided string.
     #[error("couldn't find nul byte at end of string")]

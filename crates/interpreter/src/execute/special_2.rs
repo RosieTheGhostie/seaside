@@ -38,9 +38,7 @@ impl InterpreterState {
     /// Multiplies `rs_value` and `rt_value` as signed integers, adding the most significant word
     /// of the product to register `hi` and the least significant word to register `lo`.
     fn madd(&mut self, rt_value: u32, rs_value: u32) -> Result<(), Exception> {
-        let rs_value: i64 = rs_value.sign_extend();
-        let rt_value: i64 = rt_value.sign_extend();
-        let product = i64::wrapping_mul(rs_value, rt_value) as u64;
+        let product: u64 = i64::wrapping_mul(rs_value.sign_extend(), rt_value.sign_extend()) as _;
         self.registers.hi = u32::wrapping_add(self.registers.hi, (product >> 32) as _);
         self.registers.lo = u32::wrapping_add(self.registers.lo, (product & u32::MAX as u64) as _);
 
@@ -68,9 +66,7 @@ impl InterpreterState {
     /// Multiplies `rs_value` and `rt_value` as signed integers, subtracting the most significant
     /// word of the product from register `hi` and the least significant word from register `lo`.
     fn msub(&mut self, rt_value: u32, rs_value: u32) -> Result<(), Exception> {
-        let rs_value: i64 = rs_value.sign_extend();
-        let rt_value: i64 = rt_value.sign_extend();
-        let product = i64::wrapping_mul(rs_value, rt_value) as u64;
+        let product: u64 = i64::wrapping_mul(rs_value.sign_extend(), rt_value.sign_extend()) as _;
         self.registers.hi = u32::wrapping_sub(self.registers.hi, (product >> 32) as _);
         self.registers.lo = u32::wrapping_sub(self.registers.lo, (product & u32::MAX as u64) as _);
 

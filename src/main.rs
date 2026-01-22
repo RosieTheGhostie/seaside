@@ -34,10 +34,12 @@ fn main() {
                 Err(error) => Err(error),
             }
         }
+
         Commands::Assemble(AssemblyArgs {
             source,
             output_directory,
         }) => engine::assemble(config, source, output_directory),
+
         Commands::Disassemble(DisassemblyArgs {
             target:
                 DisassemblyTarget {
@@ -46,6 +48,7 @@ fn main() {
                 },
             address: start_address,
         }) => engine::disassemble_instruction(instruction, start_address),
+
         Commands::Disassemble(DisassemblyArgs {
             target:
                 DisassemblyTarget {
@@ -54,10 +57,14 @@ fn main() {
                 },
             address: start_address,
         }) => engine::disassemble_segment(config, segment, start_address),
+
         Commands::ExePath => print_exe_path(),
+
         Commands::ConfigPath(ConfigPathArgs { ensure_exists }) => print_config_path(ensure_exists),
+
         #[cfg(debug_assertions)]
         Commands::Experiment => experimental_code(),
+
         _ => unreachable!("disassemble subcommand will always have exactly one argument"),
     } {
         fatalln!("{err}");

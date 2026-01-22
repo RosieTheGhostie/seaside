@@ -3,7 +3,7 @@ use std::{fs, io::prelude::*, thread, time::SystemTime};
 
 use console::Term;
 use seaside_constants::register::{CpuRegister, FpuRegister};
-use seaside_type_aliases::Address;
+use seaside_type_aliases::{Address, SignedSize};
 
 use crate::{
     Exception, Interpreter, InterpreterState, SyscallFailureKind,
@@ -102,7 +102,7 @@ impl InterpreterState {
         let buffer_address: Address = self.registers.read(CpuRegister::Arg0);
         let buffer = self.memory.get_slice_mut(buffer_address)?;
         let max_bytes = usize::min(
-            <_ as IndexByRegister<_, u32>>::read(&self.registers, CpuRegister::Arg1) as usize,
+            <_ as IndexByRegister<_, u32>>::read(&self.registers, CpuRegister::Arg1) as _,
             buffer.len(),
         );
         if max_bytes == 0 {
@@ -132,7 +132,7 @@ impl InterpreterState {
     }
 
     pub fn sbrk(&mut self, freeable_heap_allocations: bool) -> Result<(), Exception> {
-        let n_bytes: i32 = self.registers.read(CpuRegister::Arg0);
+        let n_bytes: SignedSize = self.registers.read(CpuRegister::Arg0);
 
         // Adjust value of `n_bytes` to be a multiple of four.
         let should_allocate = n_bytes > 0;
@@ -141,27 +141,24 @@ impl InterpreterState {
             n_bytes = ((n_bytes >> 2) + 1) << 2;
         }
 
-        let address = if should_allocate {
+        let mut address: Address = 0;
+        if should_allocate {
             let free_heap_space = self.memory.free_heap_space_mut();
             if let Some(new_free_space) = free_heap_space.checked_sub(n_bytes) {
                 *free_heap_space = new_free_space;
                 let next_available = self.memory.next_heap_address_mut();
-                let address = *next_available;
+                address = *next_available;
                 *next_available += n_bytes;
-                address
-            } else {
-                0
             }
         } else if freeable_heap_allocations {
             n_bytes = n_bytes.min(self.memory.used_heap_space());
             *self.memory.free_heap_space_mut() += n_bytes;
             *self.memory.next_heap_address_mut() -= n_bytes;
-            0
         } else {
             return Err(Exception::SyscallFailure(
                 SyscallFailureKind::HeapFreeDisabled,
             ));
-        };
+        }
 
         self.registers.write(CpuRegister::Val0, address);
 
@@ -206,7 +203,7 @@ impl InterpreterState {
 
         // The `mode` parameter is currently ignored by both MARS and seaside.
         let _mode: u32 = self.registers.read(CpuRegister::Arg2);
-        let fd: u32 = match fs::OpenOptions::new()
+        let fd = match fs::OpenOptions::new()
             .read(flags == 0)
             .write(flags & 1 != 0)
             .create(flags & 1 != 0)
@@ -231,7 +228,7 @@ impl InterpreterState {
         let buffer_address = self.registers.read(CpuRegister::Arg1);
         let buffer = self.memory.get_slice_mut(buffer_address)?;
         let max_bytes = usize::min(
-            <_ as IndexByRegister<_, u32>>::read(&self.registers, CpuRegister::Arg2) as usize,
+            <_ as IndexByRegister<_, u32>>::read(&self.registers, CpuRegister::Arg2) as _,
             buffer.len(),
         );
         if max_bytes == 0 {
@@ -253,7 +250,7 @@ impl InterpreterState {
         let buffer_address = self.registers.read(CpuRegister::Arg1);
         let buffer = self.memory.get_slice(buffer_address)?;
         let max_bytes = usize::min(
-            <_ as IndexByRegister<_, u32>>::read(&self.registers, CpuRegister::Arg2) as usize,
+            <_ as IndexByRegister<_, u32>>::read(&self.registers, CpuRegister::Arg2) as _,
             buffer.len(),
         );
         let buffer = &buffer[..max_bytes];
@@ -285,13 +282,10 @@ impl InterpreterState {
     }
 
     pub fn time(&mut self) -> Result<(), Exception> {
-        let system_time: u64 = if let Ok(duration) = SystemTime::UNIX_EPOCH.elapsed() {
-            duration.as_millis() as _
-        } else {
-            return Err(Exception::SyscallFailure(
-                SyscallFailureKind::BeforeUnixEpoch,
-            ));
-        };
+        let system_time: u64 = SystemTime::UNIX_EPOCH
+            .elapsed()
+            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::BeforeUnixEpoch))?
+            .as_millis() as _;
 
         let upper_half: u32 = (system_time >> 32) as _;
         let lower_half: u32 = (system_time & u32::MAX as u64) as _;
@@ -328,7 +322,7 @@ impl InterpreterState {
 
     pub fn print_hex(&mut self) -> Result<(), Exception> {
         let x: u32 = self.registers.read(CpuRegister::Arg0);
-        print!("0x{x:08x}");
+        print!("{x:#010x}");
         self.stdout_pending_flush = true;
 
         Ok(())
@@ -336,7 +330,7 @@ impl InterpreterState {
 
     pub fn print_bin(&mut self) -> Result<(), Exception> {
         let x: u32 = self.registers.read(CpuRegister::Arg0);
-        print!("0b{x:032b}");
+        print!("{x:#034b}");
         self.stdout_pending_flush = true;
 
         Ok(())

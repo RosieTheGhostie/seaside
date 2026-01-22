@@ -26,6 +26,7 @@ where
     P: AsRef<Path> + Debug,
 {
     let start_time = Instant::now();
+
     let output_directory = output_directory.unwrap_or_else(|| PathBuf::from("."));
     let source = std::fs::read_to_string(&source_path)?;
     let exprs = parse(&source_path, &source)?;
@@ -36,8 +37,10 @@ where
             return Err(Error::new(EngineError::AssemblyFailure));
         }
     }
+
     let elapsed = start_time.elapsed();
     grayln!("assembled {source_path:?} in {elapsed:#?}");
+
     Ok(())
 }
 
@@ -57,6 +60,7 @@ where
             }
         }
     }
+
     if n_errors == 0 {
         Ok(exprs)
     } else {

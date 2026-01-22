@@ -8,7 +8,7 @@ pub use instruction_memory::InstructionMemory;
 pub use regions::{DataRegion, Region, TextRegion};
 
 use seaside_int_utils::Endian;
-use seaside_type_aliases::{Address, Instruction};
+use seaside_type_aliases::{Address, Instruction, Size};
 
 use crate::Exception;
 
@@ -122,15 +122,15 @@ impl Memory {
         self.instruction_memory.pc_past_end(pc)
     }
 
-    pub const fn free_heap_space(&self) -> u32 {
+    pub const fn free_heap_space(&self) -> Size {
         self.data_memory.free_heap_space
     }
 
-    pub const fn free_heap_space_mut(&mut self) -> &mut u32 {
+    pub const fn free_heap_space_mut(&mut self) -> &mut Size {
         &mut self.data_memory.free_heap_space
     }
 
-    pub fn used_heap_space(&self) -> u32 {
+    pub fn used_heap_space(&self) -> Size {
         self.data_memory.used_heap_space()
     }
 

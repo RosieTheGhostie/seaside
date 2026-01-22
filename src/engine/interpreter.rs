@@ -22,6 +22,7 @@ pub fn init_interpreter(
         return Err(Error::new(EngineError::InvalidProjectDirectory))
             .context("expected project path to be a directory");
     }
+
     if config.project_directory_is_cwd {
         set_current_dir(&directory)
             .map_err(|_| Error::new(EngineError::ExternalFailure))
@@ -29,6 +30,7 @@ pub fn init_interpreter(
 
         directory = PathBuf::from(".");
     }
+
     let text = resolve(&directory, "text", true)
         .ok_or_else(|| Error::new(EngineError::InvalidProjectDirectory))
         .context("missing 'text' file in project directory")?;

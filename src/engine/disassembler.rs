@@ -9,23 +9,22 @@ use anyhow::{Error, Result};
 use seaside_config::Config;
 use seaside_error::EngineError;
 use seaside_int_utils::ByteStream;
-use seaside_type_aliases::{Address, Instruction};
+use seaside_type_aliases::{Address, Instruction, UnsignedOffset};
 
 /// Prints the human-readable assembly form of `instruction`.
 ///
 /// If `address` is not [`None`], that value is interpreted as the instruction's address for the
 /// purposes of branches and jumps.
 pub fn disassemble_instruction(instruction: Instruction, address: Option<Address>) -> Result<()> {
-    match seaside_disassembler::disassemble_advanced(
+    if let Some(disassembly) = seaside_disassembler::disassemble_advanced(
         instruction,
         address.unwrap_or_default(),
         address.is_some(),
     ) {
-        Some(disassembly) => {
-            println!("{disassembly}");
-            Ok(())
-        }
-        None => Err(Error::new(EngineError::MalformedMachineCode)),
+        println!("{disassembly}");
+        Ok(())
+    } else {
+        Err(Error::new(EngineError::MalformedMachineCode))
     }
 }
 
@@ -52,9 +51,10 @@ where
         0
     };
     let bytes = std::fs::read(segment)?;
-    for instruction in ByteStream::<'_, u32>::new(&bytes, config.endian) {
+    for instruction in ByteStream::<'_, Instruction>::new(&bytes, config.endian) {
         disassemble_instruction(instruction, Some(address))?;
-        address += 4;
+        address += size_of::<Instruction>() as UnsignedOffset;
     }
+
     Ok(())
 }

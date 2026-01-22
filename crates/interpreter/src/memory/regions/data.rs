@@ -1,6 +1,6 @@
-use core::{iter::zip, ops::Range};
+use core::ops::Range;
 
-use seaside_type_aliases::{Address, is_aligned};
+use seaside_type_aliases::{Address, Size, UnsignedOffset, is_aligned};
 
 use super::{Region, allocate_zeroed_byte_array};
 use crate::Exception;
@@ -23,14 +23,14 @@ impl Region for DataRegion {
     }
 
     fn read_u16(&self, address: Address, assert_aligned: bool) -> Result<u16, Exception> {
-        match self.calculate_index(address, if assert_aligned { 2 } else { 0 }) {
+        match self.calculate_index::<u16>(address, assert_aligned) {
             Some(index) => Ok(u16::from_le_bytes([self.data[index], self.data[index + 1]])),
             None => Err(Exception::InvalidLoad(address)),
         }
     }
 
     fn read_u32(&self, address: Address, assert_aligned: bool) -> Result<u32, Exception> {
-        match self.calculate_index(address, if assert_aligned { 4 } else { 0 }) {
+        match self.calculate_index::<u32>(address, assert_aligned) {
             Some(index) => Ok(u32::from_le_bytes([
                 self.data[index],
                 self.data[index + 1],
@@ -42,7 +42,7 @@ impl Region for DataRegion {
     }
 
     fn read_u64(&self, address: Address, assert_aligned: bool) -> Result<u64, Exception> {
-        match self.calculate_index(address, if assert_aligned { 8 } else { 0 }) {
+        match self.calculate_index::<u64>(address, assert_aligned) {
             Some(index) => Ok(u64::from_le_bytes([
                 self.data[index],
                 self.data[index + 1],
@@ -86,7 +86,7 @@ impl Region for DataRegion {
         value: u16,
         assert_aligned: bool,
     ) -> Result<(), Exception> {
-        let Some(index) = self.calculate_index(address, if assert_aligned { 2 } else { 0 }) else {
+        let Some(index) = self.calculate_index::<u16>(address, assert_aligned) else {
             return Err(Exception::InvalidStore(address));
         };
         self.data[index..(index + 2)].copy_from_slice(&value.to_le_bytes());
@@ -100,7 +100,7 @@ impl Region for DataRegion {
         value: u32,
         assert_aligned: bool,
     ) -> Result<(), Exception> {
-        let Some(index) = self.calculate_index(address, if assert_aligned { 4 } else { 0 }) else {
+        let Some(index) = self.calculate_index::<u32>(address, assert_aligned) else {
             return Err(Exception::InvalidStore(address));
         };
         self.data[index..(index + 4)].copy_from_slice(&value.to_le_bytes());
@@ -114,7 +114,7 @@ impl Region for DataRegion {
         value: u64,
         assert_aligned: bool,
     ) -> Result<(), Exception> {
-        let Some(index) = self.calculate_index(address, if assert_aligned { 8 } else { 0 }) else {
+        let Some(index) = self.calculate_index::<u64>(address, assert_aligned) else {
             return Err(Exception::InvalidStore(address));
         };
         self.data[index..(index + 8)].copy_from_slice(&value.to_le_bytes());
@@ -124,22 +124,23 @@ impl Region for DataRegion {
 }
 
 impl DataRegion {
-    pub fn new(low_address: Address, bytes_to_allocate: usize) -> Self {
+    pub fn new(low_address: Address, bytes_to_allocate: Size) -> Self {
         Self {
-            addresses: low_address..(low_address + bytes_to_allocate as Address),
-            data: allocate_zeroed_byte_array(bytes_to_allocate),
+            addresses: low_address..(low_address + bytes_to_allocate as UnsignedOffset),
+            data: allocate_zeroed_byte_array(bytes_to_allocate as _),
         }
     }
 
     pub fn populate(&mut self, bytes: Vec<u8>) {
-        for (old, new) in zip(self.data.iter_mut(), bytes) {
-            *old = new;
-        }
+        self.data[..bytes.len()].copy_from_slice(&bytes);
     }
 
-    fn calculate_index(&self, address: Address, alignment: u32) -> Option<usize> {
-        (is_aligned(address, alignment) && self.contains(address))
-            .then(|| self.calculate_index_unchecked(address))
+    fn calculate_index<T>(&self, address: Address, assert_aligned: bool) -> Option<usize> {
+        if !assert_aligned || is_aligned(address, size_of::<T>() as _) {
+            self.calculate_index_unaligned(address)
+        } else {
+            None
+        }
     }
 
     fn calculate_index_unaligned(&self, address: Address) -> Option<usize> {
@@ -148,6 +149,6 @@ impl DataRegion {
     }
 
     const fn calculate_index_unchecked(&self, address: Address) -> usize {
-        (address - self.addresses.start) as usize
+        (address - self.addresses.start) as _
     }
 }

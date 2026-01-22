@@ -1,3 +1,4 @@
+use seaside_config::features::services::ServiceCode;
 use seaside_type_aliases::Address;
 use thiserror::Error;
 
@@ -46,7 +47,7 @@ pub enum Exception {
 impl Exception {
     pub const fn code(&self) -> u32 {
         // https://doc.rust-lang.org/reference/items/enumerations.html#r-items.enum.discriminant.access-memory
-        unsafe { *(self as *const Self as *const u32) }
+        unsafe { *(self as *const Self as *const _) }
     }
 
     pub const fn vaddr(&self) -> Option<Address> {
@@ -57,7 +58,7 @@ impl Exception {
         }
     }
 
-    pub const fn service_code(&self) -> Option<u32> {
+    pub const fn service_code(&self) -> Option<ServiceCode> {
         if let Self::SyscallFailure(SyscallFailureKind::UnknownServiceCode(code)) = *self {
             Some(code)
         } else {

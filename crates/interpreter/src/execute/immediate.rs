@@ -5,7 +5,7 @@ use seaside_constants::{
 };
 use seaside_disassembler::fields;
 use seaside_int_utils::{Endian, SignExtend};
-use seaside_type_aliases::{Address, Instruction};
+use seaside_type_aliases::{Address, Instruction, Offset};
 
 use crate::{
     Exception, Interpreter, InterpreterState,
@@ -209,7 +209,7 @@ impl InterpreterState {
     /// Raises an [invalid load][Exception::InvalidLoad] exception if the computed address points
     /// to currently inaccessible memory.
     fn lb(&mut self, rt: CpuRegister, rs_value: u32, offset: u16) -> Result<(), Exception> {
-        let offset: i32 = offset.sign_extend();
+        let offset: Offset = offset.sign_extend();
         let address = Address::wrapping_add_signed(rs_value, offset);
         let value: i32 = self.memory.read_u8(address)?.sign_extend();
         self.registers.write(rt, value);
@@ -225,7 +225,7 @@ impl InterpreterState {
     /// Raises an [invalid load][Exception::InvalidLoad] exception if the computed address points
     /// to currently inaccessible memory or if the address is not aligned to 2 bytes.
     fn lh(&mut self, rt: CpuRegister, rs_value: u32, offset: u16) -> Result<(), Exception> {
-        let offset: i32 = offset.sign_extend();
+        let offset: Offset = offset.sign_extend();
         let address = Address::wrapping_add_signed(rs_value, offset);
         let value: i32 = self.memory.read_u16(address, true)?.sign_extend();
         self.registers.write(rt, value);
@@ -240,7 +240,7 @@ impl InterpreterState {
         rt_value: u32,
         offset: u16,
     ) -> Result<(), Exception> {
-        let offset: i32 = offset.sign_extend();
+        let offset: Offset = offset.sign_extend();
         let address = Address::wrapping_add_signed(rs_value, offset);
         let word_address = address & 0xfffffffc;
         let shift = {
@@ -264,7 +264,7 @@ impl InterpreterState {
     /// Raises an [invalid load][Exception::InvalidLoad] exception if the computed address points
     /// to currently inaccessible memory or if the address is not aligned to 4 bytes.
     fn lw(&mut self, rt: CpuRegister, rs_value: u32, offset: u16) -> Result<(), Exception> {
-        let offset: i32 = offset.sign_extend();
+        let offset: Offset = offset.sign_extend();
         let address = Address::wrapping_add_signed(rs_value, offset);
         let value = self.memory.read_u32(address, true)?;
         self.registers.write(rt, value);
@@ -279,7 +279,7 @@ impl InterpreterState {
     /// Raises an [invalid load][Exception::InvalidLoad] exception if the computed address points
     /// to currently inaccessible memory.
     fn lbu(&mut self, rt: CpuRegister, rs_value: u32, offset: u16) -> Result<(), Exception> {
-        let offset: i32 = offset.sign_extend();
+        let offset: Offset = offset.sign_extend();
         let address = Address::wrapping_add_signed(rs_value, offset);
         let value: u32 = self.memory.read_u8(address)? as _;
         self.registers.write(rt, value);
@@ -295,7 +295,7 @@ impl InterpreterState {
     /// Raises an [invalid load][Exception::InvalidLoad] exception if the computed address points
     /// to currently inaccessible memory or if the address is not aligned to 2 bytes.
     fn lhu(&mut self, rt: CpuRegister, rs_value: u32, offset: u16) -> Result<(), Exception> {
-        let offset: i32 = offset.sign_extend();
+        let offset: Offset = offset.sign_extend();
         let address = Address::wrapping_add_signed(rs_value, offset);
         let value: u32 = self.memory.read_u16(address, true)? as _;
         self.registers.write(rt, value);
@@ -310,7 +310,7 @@ impl InterpreterState {
         rt_value: u32,
         offset: u16,
     ) -> Result<(), Exception> {
-        let offset: i32 = offset.sign_extend();
+        let offset: Offset = offset.sign_extend();
         let address = Address::wrapping_add_signed(rs_value, offset);
         let word_address = address & 0xfffffffc;
         let shift = {
@@ -335,7 +335,7 @@ impl InterpreterState {
     /// Raises an [invalid store][Exception::InvalidStore] exception if the computed address points
     /// to currently inaccessible memory.
     fn sb(&mut self, rs_value: u32, rt_value: u32, offset: u16) -> Result<(), Exception> {
-        let offset: i32 = offset.sign_extend();
+        let offset: Offset = offset.sign_extend();
         let address = Address::wrapping_add_signed(rs_value, offset);
         let byte: u8 = (rt_value & u8::MAX as u32) as _;
         self.memory.write_u8(address, byte)
@@ -349,14 +349,14 @@ impl InterpreterState {
     /// Raises an [invalid store][Exception::InvalidStore] exception if the computed address points
     /// to currently inaccessible memory or if the address is not aligned to 2 bytes.
     fn sh(&mut self, rs_value: u32, rt_value: u32, offset: u16) -> Result<(), Exception> {
-        let offset: i32 = offset.sign_extend();
+        let offset: Offset = offset.sign_extend();
         let address = Address::wrapping_add_signed(rs_value, offset);
         let half: u16 = (rt_value & u16::MAX as u32) as _;
         self.memory.write_u16(address, half, true)
     }
 
     fn swl(&mut self, rs_value: u32, rt_value: u32, offset: u16) -> Result<(), Exception> {
-        let offset: i32 = offset.sign_extend();
+        let offset: Offset = offset.sign_extend();
         let address = u32::wrapping_add_signed(rs_value, offset);
         let word_address = address & 0xfffffffc;
         let shift = {
@@ -380,7 +380,7 @@ impl InterpreterState {
     /// Raises an [invalid store][Exception::InvalidStore] exception if the computed address points
     /// to currently inaccessible memory or if the address is not aligned to 4 bytes.
     fn sw(&mut self, rs_value: u32, rt_value: u32, offset: u16) -> Result<(), Exception> {
-        let offset: i32 = offset.sign_extend();
+        let offset: Offset = offset.sign_extend();
         let address = Address::wrapping_add_signed(rs_value, offset);
         self.memory.write_u32(address, rt_value, true)
     }
@@ -414,7 +414,7 @@ impl InterpreterState {
     }
 
     fn swr(&mut self, rs_value: u32, rt_value: u32, offset: u16) -> Result<(), Exception> {
-        let offset: i32 = offset.sign_extend();
+        let offset: Offset = offset.sign_extend();
         let address = Address::wrapping_add_signed(rs_value, offset);
         let word_address = address & 0xfffffffc;
         let shift = {
@@ -452,7 +452,7 @@ impl InterpreterState {
     /// Raises an [invalid load][Exception::InvalidLoad] exception if the computed address points
     /// to currently inaccessible memory or if the address is not aligned to 4 bytes.
     fn lwc1(&mut self, ft: FpuRegister, rs_value: u32, offset: u16) -> Result<(), Exception> {
-        let offset: i32 = offset.sign_extend();
+        let offset: Offset = offset.sign_extend();
         let address = Address::wrapping_add_signed(rs_value, offset);
         let value = self.memory.read_u32(address, true)?;
         self.registers.write(ft, value);
@@ -468,7 +468,7 @@ impl InterpreterState {
     /// to currently inaccessible memory, the address is not aligned to 8 bytes, or `ft` is not
     /// divisible by two.
     fn ldc1(&mut self, ft: FpuRegister, rs_value: u32, offset: u16) -> Result<(), Exception> {
-        let offset: i32 = offset.sign_extend();
+        let offset: Offset = offset.sign_extend();
         let address = Address::wrapping_add_signed(rs_value, offset);
         let value = self.memory.read_u64(address, true)?;
         self.registers.try_write(ft, value)
@@ -481,7 +481,7 @@ impl InterpreterState {
     /// Raises an [invalid store][Exception::InvalidStore] exception if the computed address points
     /// to currently inaccessible memory or if the address is not aligned to 4 bytes.
     fn swc1(&mut self, ft: FpuRegister, rs_value: u32, offset: u16) -> Result<(), Exception> {
-        let offset: i32 = offset.sign_extend();
+        let offset: Offset = offset.sign_extend();
         let address = Address::wrapping_add_signed(rs_value, offset);
         let ft_value = self.registers.read(ft);
         self.memory.write_u32(address, ft_value, true)
@@ -495,7 +495,7 @@ impl InterpreterState {
     /// to currently inaccessible memory, the address is not aligned to 8 bytes, or `ft` is not
     /// divisible by two.
     fn sdc1(&mut self, ft: FpuRegister, rs_value: u32, offset: u16) -> Result<(), Exception> {
-        let offset: i32 = offset.sign_extend();
+        let offset: Offset = offset.sign_extend();
         let address = Address::wrapping_add_signed(rs_value, offset);
         let ft_value = self.registers.try_read(ft)?;
         self.memory.write_u64(address, ft_value, true)

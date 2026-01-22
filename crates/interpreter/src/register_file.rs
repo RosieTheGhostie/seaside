@@ -38,12 +38,14 @@ pub trait TryIndexByRegister<Register, T> {
 
 impl IndexByRegister<CpuRegister, u32> for RegisterFile {
     fn read(&self, register: CpuRegister) -> u32 {
-        *self.cpu.get(register as usize).unwrap()
+        // SAFETY: The discriminant of `CpuRegister` is always on the range 0..32.
+        unsafe { *self.cpu.get_unchecked(register as usize) }
     }
 
     fn write(&mut self, register: CpuRegister, value: u32) {
-        let index = register as usize;
+        let index: usize = register as _;
         if index != 0 {
+            // SAFETY: `index` must be on the range 1..32.
             unsafe { *self.cpu.get_unchecked_mut(index) = value };
         }
     }
@@ -51,7 +53,7 @@ impl IndexByRegister<CpuRegister, u32> for RegisterFile {
 
 impl IndexByRegister<CpuRegister, i32> for RegisterFile {
     fn read(&self, register: CpuRegister) -> i32 {
-        <_ as IndexByRegister<_, u32>>::read(self, register) as i32
+        <_ as IndexByRegister<_, u32>>::read(self, register) as _
     }
 
     fn write(&mut self, register: CpuRegister, value: i32) {
@@ -61,10 +63,12 @@ impl IndexByRegister<CpuRegister, i32> for RegisterFile {
 
 impl IndexByRegister<FpuRegister, f32> for RegisterFile {
     fn read(&self, register: FpuRegister) -> f32 {
-        *self.fpu.get(register as usize).unwrap()
+        // SAFETY: The discriminant of `FpuRegister` is always on the range 0..32.
+        unsafe { *self.fpu.get_unchecked(register as usize) }
     }
 
     fn write(&mut self, register: FpuRegister, value: f32) {
+        // SAFETY: The discriminant of `FpuRegister` is always on the range 0..32.
         unsafe { *self.fpu.get_unchecked_mut(register as usize) = value };
     }
 }
@@ -72,7 +76,10 @@ impl IndexByRegister<FpuRegister, f32> for RegisterFile {
 impl TryIndexByRegister<FpuRegister, f64> for RegisterFile {
     fn try_read(&self, register: FpuRegister) -> Result<f64, Exception> {
         if register.is_double_aligned() {
-            let i = register as usize;
+            let i: usize = register as _;
+
+            // FIXME: This is potentially incorrect, but I don't have a big-endian machine to test
+            // it on at the moment.
             Ok(unsafe { core::mem::transmute::<_, f64>([self.fpu[i], self.fpu[i + 1]]) })
         } else {
             Err(Exception::MalformedInstruction)
@@ -81,10 +88,12 @@ impl TryIndexByRegister<FpuRegister, f64> for RegisterFile {
 
     fn try_write(&mut self, register: FpuRegister, value: f64) -> Result<(), Exception> {
         if register.is_double_aligned() {
-            let i = register as usize;
-            let halves = unsafe { core::mem::transmute::<f64, [f32; 2]>(value) };
-            self.fpu[i] = halves[0];
-            self.fpu[i + 1] = halves[1];
+            let i: usize = register as _;
+
+            // FIXME: This is potentially incorrect, but I don't have a big-endian machine to test
+            // it on at the moment.
+            [self.fpu[i], self.fpu[i + 1]] =
+                unsafe { core::mem::transmute::<f64, [f32; 2]>(value) };
             Ok(())
         } else {
             Err(Exception::MalformedInstruction)
@@ -94,7 +103,7 @@ impl TryIndexByRegister<FpuRegister, f64> for RegisterFile {
 
 impl IndexByRegister<FpuRegister, u32> for RegisterFile {
     fn read(&self, register: FpuRegister) -> u32 {
-        <_ as IndexByRegister<_, f32>>::read(self, register).to_bits()
+        f32::to_bits(self.read(register))
     }
 
     fn write(&mut self, register: FpuRegister, value: u32) {
@@ -104,17 +113,17 @@ impl IndexByRegister<FpuRegister, u32> for RegisterFile {
 
 impl IndexByRegister<FpuRegister, i32> for RegisterFile {
     fn read(&self, register: FpuRegister) -> i32 {
-        <_ as IndexByRegister<_, u32>>::read(self, register) as i32
+        <_ as IndexByRegister<_, u32>>::read(self, register) as _
     }
 
     fn write(&mut self, register: FpuRegister, value: i32) {
-        self.write(register, f32::from_bits(value as u32))
+        self.write(register, f32::from_bits(value as _))
     }
 }
 
 impl TryIndexByRegister<FpuRegister, u64> for RegisterFile {
     fn try_read(&self, register: FpuRegister) -> Result<u64, Exception> {
-        <_ as TryIndexByRegister<_, f64>>::try_read(self, register).map(f64::to_bits)
+        self.try_read(register).map(f64::to_bits)
     }
 
     fn try_write(&mut self, register: FpuRegister, value: u64) -> Result<(), Exception> {
@@ -124,7 +133,7 @@ impl TryIndexByRegister<FpuRegister, u64> for RegisterFile {
 
 impl TryIndexByRegister<FpuRegister, i64> for RegisterFile {
     fn try_read(&self, register: FpuRegister) -> Result<i64, Exception> {
-        <_ as TryIndexByRegister<_, u64>>::try_read(self, register).map(|value| value as i64)
+        <_ as TryIndexByRegister<_, u64>>::try_read(self, register).map(|value| value as _)
     }
 
     fn try_write(&mut self, register: FpuRegister, value: i64) -> Result<(), Exception> {
@@ -138,8 +147,7 @@ impl RegisterFile {
     }
 
     pub fn write_fpu_flag(&mut self, cc: ConditionCode, value: bool) {
-        let index = cc as u8;
-        let mask = 1 << index;
+        let mask = 1 << cc as u8;
         let value = if value { mask } else { 0 };
         self.fpu_flags &= !mask;
         self.fpu_flags |= value;
@@ -153,6 +161,7 @@ impl RegisterFile {
         ) {
             register_file.write(register, default_value);
         }
+
         register_file.hi = register_defaults.hi;
         register_file.lo = register_defaults.lo;
         for (register, &default_value) in
@@ -160,10 +169,12 @@ impl RegisterFile {
         {
             register_file.write(register, default_value);
         }
+
         register_file.vaddr = register_defaults.coprocessor_0[0];
         register_file.status = register_defaults.coprocessor_0[1];
         register_file.cause = register_defaults.coprocessor_0[2];
         register_file.epc = register_defaults.coprocessor_0[3];
+
         register_file
     }
 }
@@ -257,9 +268,10 @@ fn write_fpu_registers(register_file: &RegisterFile, f: &mut Formatter<'_>) -> f
 
 fn write_fpu_flags(mut flags: u8, f: &mut Formatter<'_>) -> fmt::Result {
     write!(f, "0[{}]", if flags & 1 == 1 { '#' } else { ' ' })?;
-    flags >>= 1;
     for i in 1..8 {
+        flags >>= 1;
         write!(f, " {i}[{}]", if flags & 1 == 1 { '#' } else { ' ' })?;
     }
+
     Ok(())
 }

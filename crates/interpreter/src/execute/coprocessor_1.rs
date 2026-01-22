@@ -270,7 +270,7 @@ impl InterpreterState {
     fn bc1c(&mut self, ft: FpuRegister, instruction: Instruction) -> Result<(), Exception> {
         let cc = fields::cc_from_fpu_register(ft);
         let condition = fields::condition_from_fpu_register(ft);
-        let offset = (instruction & u16::MAX as Instruction) as u16;
+        let offset: u16 = (instruction & u16::MAX as Instruction) as _;
         if self.registers.read_fpu_flag(cc) == condition {
             self.branch(offset);
         }
@@ -340,6 +340,7 @@ impl InterpreterState {
         if self.registers.read_fpu_flag(cc) == condition {
             self.registers.write(fd, fs_value);
         }
+
         Ok(())
     }
 
@@ -361,6 +362,7 @@ impl InterpreterState {
         if rt_value.is_zero() {
             self.registers.write(fd, fs_value);
         }
+
         Ok(())
     }
 
@@ -380,6 +382,7 @@ impl InterpreterState {
         if !rt_value.is_zero() {
             self.registers.write(fd, fs_value);
         }
+
         Ok(())
     }
 
@@ -436,6 +439,7 @@ impl InterpreterState {
     fn c_eq_s(&mut self, fd: FpuRegister, fs_value: f32, ft_value: f32) -> Result<(), Exception> {
         let cc = fields::cc_from_fpu_register(fd);
         self.registers.write_fpu_flag(cc, fs_value == ft_value);
+
         Ok(())
     }
 
@@ -444,6 +448,7 @@ impl InterpreterState {
     fn c_eq_d(&mut self, fd: FpuRegister, fs_value: f64, ft_value: f64) -> Result<(), Exception> {
         let cc = fields::cc_from_fpu_register(fd);
         self.registers.write_fpu_flag(cc, fs_value == ft_value);
+
         Ok(())
     }
 
@@ -452,6 +457,7 @@ impl InterpreterState {
     fn c_lt_s(&mut self, fd: FpuRegister, fs_value: f32, ft_value: f32) -> Result<(), Exception> {
         let cc = fields::cc_from_fpu_register(fd);
         self.registers.write_fpu_flag(cc, fs_value < ft_value);
+
         Ok(())
     }
 
@@ -460,6 +466,7 @@ impl InterpreterState {
     fn c_lt_d(&mut self, fd: FpuRegister, fs_value: f64, ft_value: f64) -> Result<(), Exception> {
         let cc = fields::cc_from_fpu_register(fd);
         self.registers.write_fpu_flag(cc, fs_value < ft_value);
+
         Ok(())
     }
 
@@ -468,6 +475,7 @@ impl InterpreterState {
     fn c_le_s(&mut self, fd: FpuRegister, fs_value: f32, ft_value: f32) -> Result<(), Exception> {
         let cc = fields::cc_from_fpu_register(fd);
         self.registers.write_fpu_flag(cc, fs_value <= ft_value);
+
         Ok(())
     }
 
@@ -476,6 +484,7 @@ impl InterpreterState {
     fn c_le_d(&mut self, fd: FpuRegister, fs_value: f64, ft_value: f64) -> Result<(), Exception> {
         let cc = fields::cc_from_fpu_register(fd);
         self.registers.write_fpu_flag(cc, fs_value <= ft_value);
+
         Ok(())
     }
 

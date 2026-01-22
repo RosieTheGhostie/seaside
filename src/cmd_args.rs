@@ -2,7 +2,7 @@ use core::num::ParseIntError;
 use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand, builder::ValueParser};
-use seaside_type_aliases::Instruction;
+use seaside_type_aliases::{Address, Instruction};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -20,14 +20,19 @@ pub struct CmdArgs {
 pub enum Commands {
     /// Runs an assembled MIPS program in the specified project directory.
     Run(RunArgs),
+
     /// Assembles the specified assembly file.
     Assemble(AssemblyArgs),
+
     /// Disassembles the input machine code into human-readable assembly.
     Disassemble(DisassemblyArgs),
+
     /// Prints the file path of the seaside executable.
     ExePath,
+
     /// Prints the path to the global 'Seaside.toml' file.
     ConfigPath(ConfigPathArgs),
+
     /// Runs experimental code.
     #[cfg(debug_assertions)]
     Experiment,
@@ -37,6 +42,7 @@ pub enum Commands {
 pub struct RunArgs {
     /// The project directory containing the MIPS program to run.
     pub directory: PathBuf,
+
     /// A list of arguments to the program.
     pub argv: Vec<String>,
 }
@@ -45,6 +51,7 @@ pub struct RunArgs {
 pub struct AssemblyArgs {
     /// The path of a file containing MIPS assembly code.
     pub source: PathBuf,
+
     /// The directory to generate the assembled data and machine code in.
     #[arg(short, long, alias = "out")]
     pub output_directory: Option<PathBuf>,
@@ -54,9 +61,10 @@ pub struct AssemblyArgs {
 pub struct DisassemblyArgs {
     #[command(flatten)]
     pub target: DisassemblyTarget,
+
     /// The starting address of the instruction(s) to disassemble.
     #[arg(long, alias = "addr", value_parser = ValueParser::new(parse_u32))]
-    pub address: Option<u32>,
+    pub address: Option<Address>,
 }
 
 #[derive(Args, Debug)]
@@ -65,6 +73,7 @@ pub struct DisassemblyTarget {
     /// A machine code instruction.
     #[arg(long, value_parser = ValueParser::new(parse_u32))]
     pub instruction: Option<Instruction>,
+
     /// The path of a file containing machine code instructions.
     #[arg(long)]
     pub segment: Option<PathBuf>,
@@ -77,14 +86,14 @@ pub struct ConfigPathArgs {
     pub ensure_exists: bool,
 }
 
-fn parse_u32(input: &str) -> Result<Instruction, ParseIntError> {
+fn parse_u32(input: &str) -> Result<u32, ParseIntError> {
     if let Some(bits) = input.strip_prefix("0b") {
-        Instruction::from_str_radix(bits, 2)
+        u32::from_str_radix(bits, 2)
     } else if let Some(octits) = input.strip_prefix("0o") {
-        Instruction::from_str_radix(octits, 8)
+        u32::from_str_radix(octits, 8)
     } else if let Some(hex_digits) = input.strip_prefix("0x") {
-        Instruction::from_str_radix(hex_digits, 16)
+        u32::from_str_radix(hex_digits, 16)
     } else {
-        input.parse::<Instruction>()
+        input.parse::<u32>()
     }
 }

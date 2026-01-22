@@ -1,7 +1,7 @@
 /// A memory address.
 pub type Address = u32;
 
-/// An offset to a [memory address](Address).
+/// A signed offset, usually to a [memory address](Address).
 pub type Offset = i32;
 
 /// The unsigned counterpart to [`Offset`].
@@ -13,6 +13,11 @@ pub type UnsignedOffset = u32;
 ///
 /// This is commonly used for communicating the size of an array or other object.
 pub type Size = u32;
+
+/// The signed counterpart to [`Size`].
+///
+/// Mostly useless, but it can come up sometimes.
+pub type SignedSize = i32;
 
 /// A raw MIPS machine code instruction.
 pub type Instruction = u32;

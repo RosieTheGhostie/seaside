@@ -1,4 +1,4 @@
-use seaside_type_aliases::Address;
+use seaside_type_aliases::{Address, Size};
 
 use crate::{
     Exception,
@@ -13,7 +13,7 @@ pub struct DataMemory {
     kdata: DataRegion,
     mmio: DataRegion,
     pub next_heap_address: Address,
-    pub free_heap_space: u32,
+    pub free_heap_space: Size,
 }
 
 impl Region for DataMemory {
@@ -117,7 +117,7 @@ impl DataMemory {
         mmio: DataRegion,
     ) -> Self {
         let next_heap_address: Address = heap.addresses.start;
-        let free_heap_space: u32 = heap.addresses.len() as _;
+        let free_heap_space: Size = heap.addresses.len() as _;
         Self {
             r#extern,
             data,
@@ -130,8 +130,8 @@ impl DataMemory {
         }
     }
 
-    pub fn used_heap_space(&self) -> u32 {
-        self.heap.addresses.len() as u32 - self.free_heap_space
+    pub fn used_heap_space(&self) -> Size {
+        self.heap.addresses.len() as Size - self.free_heap_space
     }
 
     fn region_containing(&self, address: Address) -> Option<&DataRegion> {

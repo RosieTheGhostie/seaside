@@ -64,7 +64,7 @@ impl InterpreterState {
     fn eret(&mut self, instruction: Instruction) -> Result<(), Exception> {
         if instruction == 0x42000018 {
             self.pc = self.registers.epc;
-            self.registers.status &= !(0x2u32); // set bit 1 to 0
+            self.registers.status &= !(0x2_u32); // set bit 1 to 0
             Ok(())
         } else {
             Err(Exception::MalformedInstruction)
