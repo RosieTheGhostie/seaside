@@ -17,6 +17,7 @@ seaside-disassembler = { version = "*", features = [
 	"full",
 ], path = "crates/disassembler" }
 seaside-error = { version = "*", path = "crates/error" }
+seaside-executable = { version = "*", path = "crates/executable" }
 seaside-int-utils = { version = "*", path = "crates/int-utils" }
 seaside-interpreter = { version = "*", path = "crates/interpreter" }
 seaside-type-aliases = { version = "*", path = "crates/type-aliases" }
