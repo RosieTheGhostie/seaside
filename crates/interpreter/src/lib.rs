@@ -21,19 +21,16 @@ use std::{
 
 use anyhow::Result;
 use minimal_logging::macros::debugln;
-use seaside_config::{
-    Config,
-    features::{
-        Service, Services,
-        services::{
-            ServiceCode,
-            mars::{self, Mars},
-            spim::{self, Spim},
-        },
+use seaside_config::Config;
+use seaside_constants::{
+    Service, Services,
+    register::CpuRegister,
+    services::{
+        mars::{self, Mars},
+        spim::{self, Spim},
     },
 };
-use seaside_constants::register::CpuRegister;
-use seaside_type_aliases::{Address, Size};
+use seaside_type_aliases::{Address, ServiceCode, Size};
 
 use file_handle::FileHandle;
 use memory::regions::Region;
@@ -96,7 +93,7 @@ impl Interpreter {
         };
         interpreter
             .state
-            .init_argv(argv, config.memory_map.segments.runtime_data.range.limit)
+            .init_argv(argv, config.memory_map.segments.runtime_data.range.limit())
             .map(|_| interpreter)
     }
 

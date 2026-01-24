@@ -64,7 +64,7 @@ macro_rules! coprocessor_1 {
     (<$fmt:ident> $variant:ident) => {
         $crate::instruction::operator::Operator::Coprocessor1 {
             r#fn: seaside_constants::fn_codes::Coprocessor1Fn::$variant,
-            fmt: seaside_constants::number_fmt::NumberFormat::$fmt,
+            fmt: seaside_constants::number_format::NumberFormat::$fmt,
             condition: false,
         }
     };
@@ -82,7 +82,7 @@ macro_rules! coprocessor_1 {
     (<$fmt:ident> $variant:ident, $condition:literal) => {
         $crate::instruction::operator::Operator::Coprocessor1 {
             r#fn: seaside_constants::fn_codes::Coprocessor1Fn::$variant,
-            fmt: seaside_constants::number_fmt::NumberFormat::$fmt,
+            fmt: seaside_constants::number_format::NumberFormat::$fmt,
             condition: $condition,
         }
     };
@@ -96,7 +96,7 @@ macro_rules! coprocessor_1 {
     (<$fmt:ident> $variant:ident, condition: _) => {
         $crate::instruction::operator::Operator::Coprocessor1 {
             r#fn: seaside_constants::fn_codes::Coprocessor1Fn::$variant,
-            fmt: seaside_constants::number_fmt::NumberFormat::$fmt,
+            fmt: seaside_constants::number_format::NumberFormat::$fmt,
             condition: _,
         }
     };
@@ -110,7 +110,7 @@ macro_rules! coprocessor_1 {
     (<$fmt:ident> $variant:ident, condition: $condition:ident) => {
         $crate::instruction::operator::Operator::Coprocessor1 {
             r#fn: seaside_constants::fn_codes::Coprocessor1Fn::$variant,
-            fmt: seaside_constants::number_fmt::NumberFormat::$fmt,
+            fmt: seaside_constants::number_format::NumberFormat::$fmt,
             condition: $condition,
         }
     };

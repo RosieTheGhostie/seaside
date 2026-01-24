@@ -13,9 +13,6 @@ directories = "6.0"
 seaside-assembler = { version = "*", path = "crates/assembler" }
 seaside-config = { version = "*", path = "crates/config" }
 seaside-constants = { version = "*", path = "crates/constants" }
-seaside-disassembler = { version = "*", features = [
-	"full",
-], path = "crates/disassembler" }
 seaside-error = { version = "*", path = "crates/error" }
 seaside-executable = { version = "*", path = "crates/executable" }
 seaside-int-utils = { version = "*", path = "crates/int-utils" }
@@ -30,5 +27,10 @@ features = ["cargo", "derive"]
 
 [dependencies.minimal-logging]
 version = "0.5"
-features = ["full"]
 git = "https://github.com/RosieTheGhostie/minimal-logging.git"
+features = ["full"]
+
+[dependencies.seaside-disassembler]
+version = "*"
+path = "crates/disassembler"
+features = ["full"]

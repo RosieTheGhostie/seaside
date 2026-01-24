@@ -5,23 +5,26 @@ version = "1.3.0"                                          # must match the vers
 authors = ["RosieTheGhostie <rosetheghost.dev@gmail.com>"]
 edition = "2024"
 
-[lib]
-crate-type = ["lib"]
-path = "src/lib.rs"
-
 [dependencies]
 anyhow = "1.0.98"
-heck = "0.5.0"
 num-traits = "0.2.19"
-seaside-constants = { version = "*", path = "../constants" }
 seaside-error = { version = "*", path = "../error" }
-seaside-int-utils = { version = "*", features = [
-	"all_zeroes",
-	"endian",
-	"serde",
-], path = "../int-utils" }
-seaside-service-group = { version = "0.1.0", path = "../service-group" }
 seaside-type-aliases = { version = "*", path = "../type-aliases" }
 semver = "1.0.26"
 serde = { version = "1.0.219", features = ["derive"] }
 strum = { version = "0.27.1", features = ["derive"] }
+
+[dependencies.seaside-address-range]
+version = "*"
+path = "../address-range"
+features = ["seaside-int-utils", "serde"]
+
+[dependencies.seaside-constants]
+version = "*"
+path = "../constants"
+features = ["register", "seaside-int-utils", "serde", "services"]
+
+[dependencies.seaside-int-utils]
+version = "*"
+path = "../int-utils"
+features = ["all-zeroes", "endian", "serde"]

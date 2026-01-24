@@ -2,9 +2,9 @@ pub mod assembler;
 pub mod services;
 
 pub use assembler::AssemblerOptions;
-pub use services::{Service, Services};
 
 use anyhow::Result;
+use seaside_constants::Services;
 use seaside_int_utils::AllZeroes;
 use serde::{Deserialize, Serialize};
 

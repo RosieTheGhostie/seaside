@@ -1,17 +1,17 @@
-use seaside_int_utils::AllZeroes;
-use seaside_type_aliases::Size;
-use serde::{Deserialize, Serialize};
-
-use super::{
+use seaside_address_range::{
     AddressRange,
     traits::{Contains, Overlapping},
 };
+use seaside_int_utils::AllZeroes;
+use seaside_type_aliases::Size;
+use serde::{Deserialize, Serialize};
 
 /// Specifies the memory addresses associated with a given segment.
 #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Segment {
     /// The inclusive range of addresses within this segment.
     pub range: AddressRange,
+
     /// The maximum number of bytes to allocate for this segment.
     pub allocate: Size,
 }
@@ -45,13 +45,13 @@ macro_rules! allocate {
         $crate::memory_map::segment::allocate!(@internal $n)
     };
     ($n:literal KiB) => {
-        $crate::memory_map::segment::allocate!(@internal $n * 1024)
+        $crate::memory_map::segment::allocate!(@internal $n * ::seaside_type_aliases::size::unsigned::KiB)
     };
     ($n:literal MiB) => {
-        $crate::memory_map::segment::allocate!(@internal $n * 1_048_576)
+        $crate::memory_map::segment::allocate!(@internal $n * ::seaside_type_aliases::size::unsigned::MiB)
     };
     ($n:literal GiB) => {
-        $crate::memory_map::segment::allocate!(@internal $n * 1_073_741_824)
+        $crate::memory_map::segment::allocate!(@internal $n * ::seaside_type_aliases::size::unsigned::GiB)
     };
 }
 pub(crate) use allocate;
@@ -59,13 +59,13 @@ pub(crate) use allocate;
 macro_rules! segment {
     ($base:literal..$limit:literal, $allocate:literal $($units:ident)?) => {
         $crate::memory_map::Segment {
-            range: $crate::memory_map::address_range::address_range![$base..$limit],
+            range: ::seaside_address_range::address_range![$base..$limit],
             allocate: $crate::memory_map::segment::allocate!($allocate $($units)?),
         }
     };
     ($base:literal..=$limit:literal, $allocate:literal $($units:ident)?) => {
         $crate::memory_map::Segment {
-            range: $crate::memory_map::address_range::address_range![$base..=$limit],
+            range: ::seaside_address_range::address_range![$base..=$limit],
             allocate: $crate::memory_map::segment::allocate!($allocate $($units)?),
         }
     };

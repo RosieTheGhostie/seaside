@@ -1,51 +1,51 @@
 use num_derive::FromPrimitive;
-use thiserror::Error; // these aren't errors, but i want to convert them to strings, soooo
+use strum::Display;
 
-#[derive(Clone, Copy, Debug, Eq, Error, FromPrimitive, PartialEq)]
+#[derive(Clone, Copy, Debug, Display, Eq, FromPrimitive, PartialEq)]
 pub enum RegisterImmediateFn {
-    #[error("bltz")]
+    #[strum(to_string = "bltz")]
     BranchLessThanZero = 0x00,
 
-    #[error("bgez")]
+    #[strum(to_string = "bgez")]
     BranchGreaterEqualZero = 0x01,
 
     #[cfg(feature = "unimplemented")]
-    #[error("bltzl")]
+    #[strum(to_string = "bltzl")]
     BranchLessThanZeroLikely = 0x02,
 
     #[cfg(feature = "unimplemented")]
-    #[error("bgezl")]
+    #[strum(to_string = "bgezl")]
     BranchGreaterEqualZeroLikely = 0x03,
 
-    #[error("tgei")]
+    #[strum(to_string = "tgei")]
     TrapGreaterEqualImmediate = 0x08,
 
-    #[error("tgeiu")]
+    #[strum(to_string = "tgeiu")]
     TrapGreaterEqualImmediateUnsigned = 0x09,
 
-    #[error("tlti")]
+    #[strum(to_string = "tlti")]
     TrapLessThanImmediate = 0x0a,
 
-    #[error("tltiu")]
+    #[strum(to_string = "tltiu")]
     TrapLessThanImmediateUnsigned = 0x0b,
 
-    #[error("teqi")]
+    #[strum(to_string = "teqi")]
     TrapEqualImmediate = 0x0c,
 
-    #[error("tnei")]
+    #[strum(to_string = "tnei")]
     TrapNotEqualImmediate = 0x0e,
 
-    #[error("bltzal")]
+    #[strum(to_string = "bltzal")]
     BranchLessThanZeroAndLink = 0x10,
 
-    #[error("bgezal")]
+    #[strum(to_string = "bgezal")]
     BranchGreaterEqualZeroAndLink = 0x11,
 
     #[cfg(feature = "unimplemented")]
-    #[error("bltzall")]
+    #[strum(to_string = "bltzall")]
     BranchLessThanZeroAndLinkLikely = 0x12,
 
     #[cfg(feature = "unimplemented")]
-    #[error("bgezall")]
+    #[strum(to_string = "bgezall")]
     BranchGreaterEqualZeroAndLinkLikely = 0x13,
 }

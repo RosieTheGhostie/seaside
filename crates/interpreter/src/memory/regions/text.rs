@@ -1,7 +1,7 @@
 use core::{iter::zip, ops::Range};
 
 use seaside_int_utils::{ByteStream, Endian};
-use seaside_type_aliases::{Address, Instruction, UnsignedOffset, is_aligned};
+use seaside_type_aliases::{Address, Instruction, UnsignedOffset, address::is_aligned};
 
 use super::{Region, allocate_zeroed_word_array};
 use crate::Exception;

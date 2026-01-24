@@ -1,208 +1,208 @@
 use num_derive::FromPrimitive;
-use thiserror::Error; // these aren't errors, but i want to convert them to strings, soooo
+use strum::Display;
 
-#[derive(Clone, Copy, Debug, Eq, Error, FromPrimitive, PartialEq)]
+#[derive(Clone, Copy, Debug, Display, Eq, FromPrimitive, PartialEq)]
 pub enum Opcode {
-    #[error("<special fn>")]
+    #[strum(to_string = "<special fn>")]
     Special = 0x00,
 
-    #[error("<register immediate fn>")]
+    #[strum(to_string = "<register immediate fn>")]
     RegisterImmediate = 0x01,
 
-    #[error("j")]
+    #[strum(to_string = "j")]
     Jump = 0x02,
 
-    #[error("jal")]
+    #[strum(to_string = "jal")]
     JumpAndLink = 0x03,
 
-    #[error("beq")]
+    #[strum(to_string = "beq")]
     BranchEqual = 0x04,
 
-    #[error("bne")]
+    #[strum(to_string = "bne")]
     BranchNotEqual = 0x05,
 
-    #[error("blez")]
+    #[strum(to_string = "blez")]
     BranchLessEqualZero = 0x06,
 
-    #[error("bgtz")]
+    #[strum(to_string = "bgtz")]
     BranchGreaterThanZero = 0x07,
 
-    #[error("addi")]
+    #[strum(to_string = "addi")]
     AddImmediate = 0x08,
 
-    #[error("addiu")]
+    #[strum(to_string = "addiu")]
     AddImmediateUnsigned = 0x09,
 
-    #[error("slti")]
+    #[strum(to_string = "slti")]
     SetLessThanImmediate = 0x0a,
 
-    #[error("sltiu")]
+    #[strum(to_string = "sltiu")]
     SetLessThanImmediateUnsigned = 0x0b,
 
-    #[error("andi")]
+    #[strum(to_string = "andi")]
     AndImmediate = 0x0c,
 
-    #[error("ori")]
+    #[strum(to_string = "ori")]
     OrImmediate = 0x0d,
 
-    #[error("xori")]
+    #[strum(to_string = "xori")]
     XorImmediate = 0x0e,
 
-    #[error("lui")]
+    #[strum(to_string = "lui")]
     LoadUpperImmediate = 0x0f,
 
-    #[error("<coprocessor 0 fn>")]
+    #[strum(to_string = "<coprocessor 0 fn>")]
     Coprocessor0 = 0x10,
 
-    #[error("<coprocessor 1 fn>")]
+    #[strum(to_string = "<coprocessor 1 fn>")]
     Coprocessor1 = 0x11,
 
     #[cfg(feature = "unimplemented")]
-    #[error("<coprocessor 2 fn>")]
+    #[strum(to_string = "<coprocessor 2 fn>")]
     Coprocessor2 = 0x12,
 
     #[cfg(feature = "unimplemented")]
-    #[error("<coprocessor 1x fn>")]
+    #[strum(to_string = "<coprocessor 1x fn>")]
     Coprocessor1X = 0x13,
 
     #[cfg(feature = "unimplemented")]
-    #[error("beql")]
+    #[strum(to_string = "beql")]
     BranchEqualLikely = 0x14,
 
     #[cfg(feature = "unimplemented")]
-    #[error("bnel")]
+    #[strum(to_string = "bnel")]
     BranchNotEqualLikely = 0x15,
 
     #[cfg(feature = "unimplemented")]
-    #[error("blezl")]
+    #[strum(to_string = "blezl")]
     BranchLessEqualZeroLikely = 0x16,
 
     #[cfg(feature = "unimplemented")]
-    #[error("bgtzl")]
+    #[strum(to_string = "bgtzl")]
     BranchGreaterThanZeroLikely = 0x17,
 
     #[cfg(feature = "unimplemented")]
-    #[error("daddi")]
+    #[strum(to_string = "daddi")]
     DoubleAddImmediate = 0x18,
 
     #[cfg(feature = "unimplemented")]
-    #[error("daddiu")]
+    #[strum(to_string = "daddiu")]
     DoubleAddImmediateUnsigned = 0x19,
 
     #[cfg(feature = "unimplemented")]
-    #[error("ldl")]
+    #[strum(to_string = "ldl")]
     LoadDoubleLeft = 0x1a,
 
     #[cfg(feature = "unimplemented")]
-    #[error("ldr")]
+    #[strum(to_string = "ldr")]
     LoadDoubleRight = 0x1b,
 
-    #[error("<special 2 fn>")]
+    #[strum(to_string = "<special 2 fn>")]
     Special2 = 0x1c,
 
-    #[error("lb")]
+    #[strum(to_string = "lb")]
     LoadByte = 0x20,
 
-    #[error("lh")]
+    #[strum(to_string = "lh")]
     LoadHalf = 0x21,
 
-    #[error("lwl")]
+    #[strum(to_string = "lwl")]
     LoadWordLeft = 0x22,
 
-    #[error("lw")]
+    #[strum(to_string = "lw")]
     LoadWord = 0x23,
 
-    #[error("lbu")]
+    #[strum(to_string = "lbu")]
     LoadByteUnsigned = 0x24,
 
-    #[error("lhu")]
+    #[strum(to_string = "lhu")]
     LoadHalfUnsigned = 0x25,
 
-    #[error("lwr")]
+    #[strum(to_string = "lwr")]
     LoadWordRight = 0x26,
 
     #[cfg(feature = "unimplemented")]
-    #[error("lwu")]
+    #[strum(to_string = "lwu")]
     LoadWordUnsigned = 0x27,
 
-    #[error("sb")]
+    #[strum(to_string = "sb")]
     StoreByte = 0x28,
 
-    #[error("sh")]
+    #[strum(to_string = "sh")]
     StoreHalf = 0x29,
 
-    #[error("swl")]
+    #[strum(to_string = "swl")]
     StoreWordLeft = 0x2a,
 
-    #[error("sw")]
+    #[strum(to_string = "sw")]
     StoreWord = 0x2b,
 
     #[cfg(feature = "unimplemented")]
-    #[error("sdl")]
+    #[strum(to_string = "sdl")]
     StoreDoubleLeft = 0x2c,
 
     #[cfg(feature = "unimplemented")]
-    #[error("sdr")]
+    #[strum(to_string = "sdr")]
     StoreDoubleRight = 0x2d,
 
-    #[error("swr")]
+    #[strum(to_string = "swr")]
     StoreWordRight = 0x2e,
 
-    #[error("ll")]
+    #[strum(to_string = "ll")]
     LoadLinked = 0x30,
 
-    #[error("lwc1")]
+    #[strum(to_string = "lwc1")]
     LoadWordCoprocessor1 = 0x31,
 
     #[cfg(feature = "unimplemented")]
-    #[error("lwc2")]
+    #[strum(to_string = "lwc2")]
     LoadWordCoprocessor2 = 0x32,
 
     #[cfg(feature = "unimplemented")]
-    #[error("lwc3")]
+    #[strum(to_string = "lwc3")]
     LoadWordCoprocessor3 = 0x33, // <- also Prefetch ("pref")?
 
     #[cfg(feature = "unimplemented")]
-    #[error("lld")]
+    #[strum(to_string = "lld")]
     LoadLinkedDouble = 0x34,
 
-    #[error("ldc1")]
+    #[strum(to_string = "ldc1")]
     LoadDoubleCoprocessor1 = 0x35,
 
     #[cfg(feature = "unimplemented")]
-    #[error("ldc2")]
+    #[strum(to_string = "ldc2")]
     LoadDoubleCoprocessor2 = 0x36,
 
     #[cfg(feature = "unimplemented")]
-    #[error("ld")]
+    #[strum(to_string = "ld")]
     LoadDouble = 0x37,
 
-    #[error("sc")]
+    #[strum(to_string = "sc")]
     StoreConditional = 0x38,
 
-    #[error("swc1")]
+    #[strum(to_string = "swc1")]
     StoreWordCoprocessor1 = 0x39,
 
     #[cfg(feature = "unimplemented")]
-    #[error("swc2")]
+    #[strum(to_string = "swc2")]
     StoreWordCoprocessor2 = 0x3a,
 
     #[cfg(feature = "unimplemented")]
-    #[error("swc3")]
+    #[strum(to_string = "swc3")]
     StoreWordCoprocessor3 = 0x3b,
 
     #[cfg(feature = "unimplemented")]
-    #[error("scd")]
+    #[strum(to_string = "scd")]
     StoreConditionalDouble = 0x3c,
 
-    #[error("sdc1")]
+    #[strum(to_string = "sdc1")]
     StoreDoubleCoprocessor1 = 0x3d,
 
     #[cfg(feature = "unimplemented")]
-    #[error("sdc2")]
+    #[strum(to_string = "sdc2")]
     StoreDoubleCoprocessor2 = 0x3e,
 
     #[cfg(feature = "unimplemented")]
-    #[error("sd")]
+    #[strum(to_string = "sd")]
     StoreDouble = 0x3f,
 }

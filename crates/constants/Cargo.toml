@@ -5,23 +5,60 @@ version = "0.1.0"
 authors = ["RosieTheGhostie <rosetheghost.dev@gmail.com>"]
 edition = "2024"
 
-[lib]
-crate-type = ["lib"]
-path = "src/lib.rs"
-
 [dependencies]
-num-derive = "0.4"
-num-traits = "0.2"
-strum = "0.27.1"
-strum_macros = "0.27.1"
-thiserror = "2.0.12"
+num-derive = { version = "0.4", optional = true }
+num-traits = { version = "0.2", optional = true }
+serde = { version = "1.0.219", optional = true }
+thiserror = { version = "2.0.12", optional = true }
+
+[dependencies.seaside-int-utils]
+version = "*"
+path = "../int-utils"
+optional = true
+
+[dependencies.seaside-service-group]
+version = "*"
+path = "../service-group"
+optional = true
+
+[dependencies.seaside-type-aliases]
+version = "*"
+path = "../type-aliases"
+optional = true
+
+[dependencies.strum]
+version = "0.27.1"
+features = ["derive"]
+optional = true
 
 [dependencies.take-exact]
 version = "0.1.0"
 git = "https://github.com/RosieTheGhostie/take-exact"
+optional = true
 
 [features]
+instruction-format = []
+number-format = ["num-derive", "strum"]
+opcodes = ["num-derive", "strum"]
+register = ["num-derive", "num-traits", "strum", "take-exact", "thiserror"]
+services = [
+  "seaside-service-group",
+  "seaside-type-aliases",
+  "serde?/derive",
+  "strum",
+]
+static-segment = ["strum"]
 unimplemented = []
 
 default = []
-full = ["unimplemented"]
+full = [
+  "instruction-format",
+  "number-format",
+  "opcodes",
+  "register",
+  "seaside-int-utils",
+  "serde",
+  "services",
+  "static-segment",
+  "unimplemented",
+]

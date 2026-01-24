@@ -1,6 +1,6 @@
 use core::ops::Range;
 
-use seaside_type_aliases::{Address, Size, UnsignedOffset, is_aligned};
+use seaside_type_aliases::{Address, Size, UnsignedOffset, address::is_aligned};
 
 use super::{Region, allocate_zeroed_byte_array};
 use crate::Exception;

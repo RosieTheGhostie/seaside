@@ -1,0 +1,435 @@
+header:
+  magic: "\x7fseaside"
+  version: 1
+  n_coprocessors: 2
+  flags:
+    big_endian: false
+    kernel_space_accessible: false
+    self_modifying_code: false
+    delay_slot: false
+    freeable_heap_allocations: false
+    # ... (currently no more flags to add, but some might come up later)
+  toc:
+    memory_map:
+      offset: # TODO
+      size: 0x00000098
+    services:
+      offset: # TODO
+      size: 0x000001ac
+    string_table:
+      offset: # TODO
+      size: 0x00000188
+    debug_info: # TODO
+sections:
+  memory_map:
+    exception_handler: null
+    user_space: [0x00000000, 0x7fffffff]
+    kernel_space: [0x80000000, 0xffffffff]
+    static_segments:
+      .text:
+        range: [0x00400000, 0x0ffffffc]
+        offset: # TODO
+        size: # TODO
+        allocate: 0x00800000 # 8 MiB
+      .ktext:
+        range: [0x80000000, 0x8fffffff]
+        offset: null
+        size: 0x00000000 # 0 B (0 instructions)
+        allocate: 0x00000000 # 0 B
+      .extern:
+        range: [0x10000000, 0x1000ffff]
+        offset: null
+        size: 0x00000000 # 0 B
+        allocate: 0x00000000 # 0 B
+      .data:
+        range: [0x10010000, 0x1003ffff]
+        offset: # TODO
+        size: # TODO
+        allocate: 0x00030000 # 192 KiB
+      .kdata:
+        range: [0x90000000, 0xfffeffff]
+        offset: null
+        size: 0x00000000 # 0 B
+        allocate: 0x00000000 # 0 B
+    runtime_segments:
+      stack:
+        base: 0x7fffffff
+        size: 0x00400000 # 4 MiB
+      heap:
+        base: 0x10040000
+        size: 0x00020000 # 128 KiB
+      mmio:
+        range: [0xffff0000, 0xffffffff]
+        allocate: 0x00001000 # 4 KiB
+  services:
+    providers:
+      - offset: 0x000000f8 # mars
+        size: 0x00000004
+      - offset: 0x00000154 # spim
+        size: 0x00000004
+    groups:
+      - offset: 0x00000013 # dialog
+        size: 0x00000007
+      - offset: 0x0000009b # file
+        size: 0x00000004
+      - offset: 0x00000114 # print
+        size: 0x00000005
+      - offset: 0x0000013c # read
+        size: 0x00000004
+      - offset: 0x00000140 # rng
+        size: 0x00000003
+      - offset: 0x0000015e # system
+        size: 0x00000006
+    subgroups:
+      - offset: 0x000000b2 # input
+        size: 0x00000005
+      - offset: 0x000000fc # message
+        size: 0x00000007
+    variants: # FIXME: think of a better name
+      - offset: 0x00000000 # bin
+        size: 0x00000003
+      - offset: 0x00000003 # char
+        size: 0x00000004
+      - offset: 0x00000007 # close
+        size: 0x00000005
+      - offset: 0x0000000c # confirm
+        size: 0x00000007
+      - offset: 0x0000011e # double
+        size: 0x00000006
+      - offset: 0x00000019 # exit
+        size: 0x00000004
+      - offset: 0x00000019 # exit2
+        size: 0x00000005
+      - offset: 0x00000129 # float
+        size: 0x00000005
+      - offset: 0x0000009f # general
+        size: 0x00000007
+      - offset: 0x000000af # hex
+        size: 0x00000003
+      - offset: 0x00000116 # int
+        size: 0x00000003
+      - offset: 0x00000103 # midi_out
+        size: 0x00000008
+      - offset: 0x00000103 # midi_out_sync
+        size: 0x0000000d
+      - offset: 0x00000110 # open
+        size: 0x00000004
+      - offset: 0x00000119 # rand_double
+        size: 0x0000000b
+      - offset: 0x00000124 # rand_float
+        size: 0x0000000a
+      - offset: 0x0000012e # rand_int
+        size: 0x00000008
+      - offset: 0x0000012e # rand_int_range
+        size: 0x0000000e
+      - offset: 0x0000013c # read
+        size: 0x00000004
+      - offset: 0x00000143 # sbrk
+        size: 0x00000004
+      - offset: 0x00000147 # set_seed
+        size: 0x00000008
+      - offset: 0x0000014f # sleep
+        size: 0x00000005
+      - offset: 0x00000158 # string
+        size: 0x00000006
+      - offset: 0x00000164 # time
+        size: 0x00000004
+      - offset: 0x00000168 # uint
+        size: 0x00000004
+      - offset: 0x0000016c # write
+        size: 0x00000005
+    mapping:
+      4: [1, 2, null, 22]
+      5: [1, 3, null, 10]
+      11: [1, 2, null, 1]
+      17: [1, 5, null, 6]
+      36: [0, 2, null, 24]
+  string_table:
+    - "argc"
+    - "argv"
+    - "bin"
+    - "char"
+    - "close"
+    - "confirm"
+    - "exit2"
+    - "ExitCode"
+    - "Fibonacci.end"
+    - "Fibonacci.epilogue.end"
+    - "Fibonacci.for0.body"
+    - "Fibonacci.for0.check"
+    - "Fibonacci.for0.end"
+    - "Fibonacci.for0.increment"
+    - "Fibonacci.prologue.end"
+    - "file"
+    - "general"
+    - "hello.asm"
+    - "hex"
+    - "input"
+    - "kFibonacciHeader"
+    - "kPrompt"
+    - "main.end"
+    - "main.epilogue.end"
+    - "main.prologue.end"
+    - "mars"
+    - "message"
+    - "midi_out_sync"
+    - "open"
+    - "print"
+    - "rand_double"
+    - "rand_float"
+    - "rand_int_range"
+    - "read"
+    - "rng"
+    - "sbrk"
+    - "set_seed"
+    - "sleep"
+    - "spim"
+    - "string"
+    - "system"
+    - "time"
+    - "uint"
+    - "write"
+  debug_info:
+    sources:
+      - offset: 0x000000bd # hello.asm
+        size: 0x00000009
+    labels:
+      - name: # kPrompt
+          offset: 0x000000de
+          size: 0x00000007
+        source_index: 0
+        line: 5
+      - name: # kFibonacciHeader
+          offset: 0x000000ce
+          size: 0x00000010
+        source_index: 0
+        line: 10
+      - name: # main
+          offset: 0x000000e5
+          size: 0x00000004
+        source_index: 0
+        line: 44
+      - name: # main.prologue
+          offset: 0x000000fe
+          size: 0x0000000d
+        source_index: 0
+        line: 45
+      - name: # main.prologue.end
+          offset: 0x000000fe
+          size: 0x00000011
+        source_index: 0
+        line: 46
+      - name: # main.epilogue
+          offset: 0x000000ed
+          size: 0x0000000d
+        source_index: 0
+        line: 74
+      - name: # main.epilogue.end
+          offset: 0x000000ed
+          size: 0x00000011
+        source_index: 0
+        line: 78
+      - name: # main.end
+          offset: 0x000000e5
+          size: 0x00000008
+        source_index: 0
+        line: 79
+      - name: # Fibonacci
+          offset: 0x00000028
+          size: 0x00000009
+        source_index: 0
+        line: 112
+      - name: # Fibonacci.prologue
+          offset: 0x0000009c
+          size: 0x00000012
+        source_index: 0
+        line: 113
+      - name: # Fibonacci.prologue.end
+          offset: 0x0000009c
+          size: 0x00000016
+        source_index: 0
+        line: 119
+      - name: # Fibonacci.for0
+          offset: 0x0000004b
+          size: 0x0000000e
+      - name: # Fibonacci.for0.check
+          offset: 0x0000005e
+          size: 0x00000014
+      - name: # Fibonacci.for0.body
+          offset: 0x0000004b
+          size: 0x00000013
+      - name: # Fibonacci.for0.increment
+          offset: 0x00000084
+          size: 0x00000018
+      - name: # Fibonacci.for0.end
+          offset: 0x00000072
+          size: 0x00000012
+      - name: # Fibonacci.epilogue
+          offset: 0x00000035
+          size: 0x00000012
+      - name: # Fibonacci.epilogue.end
+          offset: 0x00000035
+          size: 0x00000016
+      - name: # Fibonacci.end
+          offset: 0x00000028
+          size: 0x0000000d
+    procedures:
+      - name: # main
+          offset: 0x000000e5
+          size: 0x00000004
+        address: 0x00400000
+        len: 23
+        stack_size: 0x00000000
+        parameters:
+          - name: # argc
+              offset: 0x00000000
+              argv: 0x00000004
+            display_as: UnsignedInteger
+            via: CpuRegister::Arg0
+            scope: [0x00400000, 0x00400000]
+          - name: # argv
+              offset: 0x00000004
+              size: 0x00000004
+            display_as: Pointer
+            via: CpuRegister::Arg1
+            scope: [0x00400000, 0x00400000]
+        returns:
+          type: # TODO: ExitCode
+          via: SystemExit
+        locals:
+          - name: # n
+              offset: 0x0000000a
+              size: 0x00000001
+            display_as: SignedInteger
+            via: CpuRegister::Saved0
+            scope: [0x0040001c, 0x0040005c]
+      - name: # Fibonacci
+          offset: 0x00000028
+          size: 0x00000009
+        address: 0x0040005c
+        len: 27
+        stack_size: 0x00000010
+        parameters:
+          - name: # n
+              offset: 0x0000000a
+              size: 0x00000001
+            display_as: SignedInteger
+            via: CpuRegister::Arg0
+            scope: # TODO: 114 to 125..=126
+        returns: null
+        locals:
+          - name: # a
+              offset: 0x00000000
+              size: 0x00000001
+            display_as: UnsignedInteger
+            via: CpuRegister::Saved0
+            scope: # TODO: 122 to 142..=145
+          - name: # b
+              offset: 0x00000008
+              size: 0x00000001
+            display_as: UnsignedInteger
+            via: CpuRegister::Saved1
+            scope: # TODO: 123 to 142..=145
+          - name: # i
+              offset: 0x00000009
+              size: 0x00000001
+            display_as: SignedInteger
+            via: CpuRegister::Saved2
+            scope: # TODO: 125..=126 to 142..=145
+    statics:
+      - name: # kPrompt
+          offset: 0x000000de
+          size: 0x00000007
+        display_as: CharArray(5)
+        address: 0x10010000
+        source_index: 0
+        lines: [5, 6] # 5..6, not 5..=6
+      - name: # kFibonacciHeader
+          offset: 0x000000ce
+          size: 0x00000010
+        display_as: CharArray(35)
+        address: 0x10010005
+        source_index: 0
+        lines: [10, 11]
+    source_location_table:
+      - 44: 0x00400000 # main:
+        45: 0x00400000 #   main.prologue:
+        46: 0x00400000 #   main.prologue.end:
+        47: 0x00400000 #
+        48: 0x00400000 #   addiu $v0, $0, 4
+        49: 0x00400004 #   lui $a0, 0x1001
+        50: 0x00400008 #   ori $a0, $a0, 0x0000
+        51: 0x0040000c #   syscall
+        52: 0x00400010 #
+        53: 0x00400010 #   addiu $v0, $0, 5
+        54: 0x00400014 #   syscall
+        55: 0x00400018 #   addu $s0, $0, $v0
+        56: 0x0040001c #
+        57: 0x0040001c #   addiu $v0, $0, 4
+        58: 0x00400020 #   lui $a0, 0x1001
+        59: 0x00400024 #   ori $a0, $a0, 0x0005
+        60: 0x00400028 #   syscall
+        61: 0x0040002c #
+        62: 0x0040002c #   addiu $v0, $0, 36
+        63: 0x00400030 #   addu $a0, $0, $s0
+        64: 0x00400034 #   syscall
+        65: 0x00400038 #
+        66: 0x00400038 #   addiu $v0, $0, 4
+        67: 0x0040003c #   lui $a0, 0x1001
+        68: 0x00400040 #   ori $a0, $a0, 0x000f
+        69: 0x00400044 #   syscall
+        70: 0x00400048 #
+        71: 0x00400048 #   addu $a0, $0, $s0
+        72: 0x0040004c #   jal Fibonacci
+        73: 0x00400050 #
+        74: 0x00400050 #   main.epilogue:
+        75: 0x00400050 #     addiu $v0, $0, 17
+        76: 0x00400054 #     addiu $a0, $0, 0
+        77: 0x00400058 #     syscall
+        78: 0x0040005c #   main.epilogue.end:
+        79: 0x0040005c # main.end:
+        # ...
+        112: 0x0040005c # Fibonacci:
+        113: 0x0040005c #   Fibonacci.prologue:
+        114: 0x0040005c #     addiu $sp, $sp, -16
+        115: 0x00400060 #     sw $ra, 0($sp)
+        116: 0x00400064 #     sw $s0, 4($sp)
+        117: 0x00400068 #     sw $s1, 8($sp)
+        118: 0x0040006c #     sw $s2, 12($sp)
+        119: 0x00400070 #   Fibonacci.prologue.end:
+        120: 0x00400070 #
+        121: 0x00400070 #   addiu $s0, $0, 0
+        122: 0x00400074 #   addiu $s1, $0, 1
+        123: 0x00400078 #   Fibonacci.for0:
+        124: 0x00400078 #     addu $s2, $0, $a0
+        125: 0x0040007c #   Fibonacci.for0.check:
+        126: 0x0040007c #     blez $s2, Fibonacci.for0.end
+        127: 0x00400080 #   Fibonacci.for0.body:
+        128: 0x00400080 #     addiu $v0, $0, 36
+        129: 0x00400084 #     addu $a0, $0, $s0
+        130: 0x00400088 #     syscall
+        131: 0x0040008c #
+        132: 0x0040008c #     addiu $v0, $0, 11
+        133: 0x00400090 #     addiu $a0, $0, 10
+        134: 0x00400094 #     syscall
+        135: 0x00400098 #
+        136: 0x00400098 #     addu $t0, $0, $s1
+        137: 0x0040009c #     add $s1, $s1, $s0
+        138: 0x004000a0 #     addu $s0, $0, $t0
+        139: 0x004000a4 #   Fibonacci.for0.increment:
+        140: 0x004000a4 #     addiu $s2, $s2, -1
+        141: 0x004000a8 #     j Fibonacci.for0.check
+        142: 0x004000ac #   Fibonacci.for0.end:
+        143: 0x004000ac #
+        144: 0x004000ac #   Fibonacci.epilogue:
+        145: 0x004000ac #     addiu $v0, $0, 0
+        146: 0x004000b0 #
+        147: 0x004000b0 #     lw $s2, 12($sp)
+        148: 0x004000b4 #     lw $s1, 8($sp)
+        149: 0x004000b8 #     lw $s0, 4($sp)
+        150: 0x004000bc #     lw $ra, 0($sp)
+        151: 0x004000c0 #
+        152: 0x004000c0 #     addiu $sp, $sp, 16
+        153: 0x004000c4 #     jr $ra
+        154: 0x004000c8 #   Fibonacci.epilogue.end:
+        155: 0x004000c8 # Fibonacci.end:

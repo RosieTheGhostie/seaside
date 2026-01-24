@@ -5,16 +5,12 @@ version = "0.2.0"
 authors = ["RosieTheGhostie <rosetheghost.dev@gmail.com>"]
 edition = "2024"
 
-[lib]
-crate-type = ["lib"]
-path = "src/lib.rs"
-
 [dependencies]
 ariadne = { version = "0.5.1", optional = true }
 thiserror = "2.0.12"
 
 [features]
+rich = ["ariadne"]
+
 default = []
 full = ["rich"]
-
-rich = ["ariadne"]

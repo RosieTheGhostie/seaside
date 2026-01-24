@@ -5,21 +5,19 @@ version = "0.1.0"
 authors = ["RosieTheGhostie <rosetheghost.dev@gmail.com>"]
 edition = "2024"
 
-[lib]
-crate-type = ["lib"]
-path = "src/lib.rs"
-
 [dependencies]
 num-traits = "0.2"
-seaside-constants = { version = "*", path = "../constants" }
-seaside-int-utils = { version = "*", features = [
-	"sign_extend",
-], path = "../int-utils" }
 seaside-type-aliases = { version = "*", path = "../type-aliases" }
 
-[dependencies.attribute-pseudoblock]
-version = "0.1"
-git = "https://github.com/RosieTheGhostie/attribute-pseudoblock.git"
+[dependencies.seaside-constants]
+version = "*"
+path = "../constants"
+features = ["instruction-format"]
+
+[dependencies.seaside-int-utils]
+version = "*"
+path = "../int-utils"
+features = ["sign-extend"]
 
 [features]
 default = ["fields", "disassembler"]

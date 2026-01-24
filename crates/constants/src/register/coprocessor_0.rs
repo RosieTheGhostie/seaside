@@ -4,7 +4,7 @@ use core::{
 };
 
 use num_derive::FromPrimitive;
-use strum_macros::EnumIter;
+use strum::EnumIter;
 
 use super::ParseError;
 

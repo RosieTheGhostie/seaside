@@ -1,15 +1,11 @@
 #[cfg(feature = "fields")]
 pub mod fields;
 
-use attribute_pseudoblock::pseudoblock;
-
-pseudoblock! {
-    #![cfg(feature = "disassembler")]
-    mod destructure;
-
+#[cfg(feature = "disassembler")]
+pub mod disassembler {
     use seaside_type_aliases::{Address, Instruction};
 
-    use destructure::destructure;
+    use super::destructure::destructure;
 
     pub fn disassemble_advanced(
         instruction: Instruction,
@@ -81,3 +77,9 @@ pseudoblock! {
         }
     }
 }
+
+#[cfg(feature = "disassembler")]
+pub use disassembler::*;
+
+#[cfg(feature = "disassembler")]
+mod destructure;

@@ -4,7 +4,3 @@ description = "A handful of type aliases for seaside"
 version = "0.1.0"
 authors = ["RosieTheGhostie <rosetheghost.dev@gmail.com>"]
 edition = "2024"
-
-[lib]
-crate-type = ["lib"]
-path = "src/lib.rs"

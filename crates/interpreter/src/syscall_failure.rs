@@ -1,4 +1,4 @@
-use seaside_config::features::services::ServiceCode;
+use seaside_type_aliases::ServiceCode;
 use thiserror::Error;
 
 /// The kind of failure that occurred when executing a system service.

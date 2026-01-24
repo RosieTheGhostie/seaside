@@ -69,11 +69,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "attribute-pseudoblock"
-version = "0.1.0"
-source = "git+https://github.com/RosieTheGhostie/attribute-pseudoblock.git#2d2a4d5d5afc62fe709a05d056276f8b7495f5e7"
-
-[[package]]
 name = "autocfg"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -568,6 +563,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "seaside-address-range"
+version = "0.1.0"
+dependencies = [
+ "seaside-int-utils",
+ "seaside-type-aliases",
+ "serde",
+]
+
+[[package]]
 name = "seaside-assembler"
 version = "0.2.0"
 dependencies = [
@@ -587,12 +591,11 @@ name = "seaside-config"
 version = "1.3.0"
 dependencies = [
  "anyhow",
- "heck",
  "num-traits",
+ "seaside-address-range",
  "seaside-constants",
  "seaside-error",
  "seaside-int-utils",
- "seaside-service-group",
  "seaside-type-aliases",
  "semver",
  "serde",
@@ -605,8 +608,11 @@ version = "0.1.0"
 dependencies = [
  "num-derive",
  "num-traits",
+ "seaside-int-utils",
+ "seaside-service-group",
+ "seaside-type-aliases",
+ "serde",
  "strum",
- "strum_macros",
  "take-exact",
  "thiserror",
 ]
@@ -615,7 +621,6 @@ dependencies = [
 name = "seaside-disassembler"
 version = "0.1.0"
 dependencies = [
- "attribute-pseudoblock",
  "num-traits",
  "seaside-constants",
  "seaside-int-utils",
@@ -634,7 +639,10 @@ dependencies = [
 name = "seaside-executable"
 version = "0.1.0"
 dependencies = [
- "serde",
+ "seaside-address-range",
+ "seaside-constants",
+ "seaside-type-aliases",
+ "thiserror",
 ]
 
 [[package]]
@@ -769,18 +777,18 @@ source = "git+https://github.com/RosieTheGhostie/take-exact#1189afe4dd0b3c164345
 
 [[package]]
 name = "thiserror"
-version = "2.0.12"
+version = "2.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "567b8a2dae586314f7be2a752ec7474332959c6460e02bde30d702a66d488708"
+checksum = "4288b5bcbc7920c07a1149a35cf9590a2aa808e0bc1eafaade0b80947865fbc4"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "2.0.12"
+version = "2.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f7cf42b4507d8ea322120659672cf1b9dbb93f8f2d4ecfd6e51350ff5b17a1d"
+checksum = "ebc4ee7f67670e9b64d05fa4253e753e016c6c95ff35b89b7941d6b856dec1d5"
 dependencies = [
  "proc-macro2",
  "quote",

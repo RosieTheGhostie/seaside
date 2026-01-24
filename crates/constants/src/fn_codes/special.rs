@@ -1,188 +1,188 @@
 use num_derive::FromPrimitive;
-use thiserror::Error; // these aren't errors, but i want to convert them to strings, soooo
+use strum::Display;
 
-#[derive(Clone, Copy, Debug, Eq, Error, FromPrimitive, PartialEq)]
+#[derive(Clone, Copy, Debug, Display, Eq, FromPrimitive, PartialEq)]
 pub enum SpecialFn {
-    #[error("sll")]
+    #[strum(to_string = "sll")]
     ShiftLeftLogical = 0x00,
 
-    #[error("mov")] // will be properly suffixed later
+    #[strum(to_string = "mov")] // will be properly suffixed later
     MoveConditional = 0x01,
 
-    #[error("srl")]
+    #[strum(to_string = "srl")]
     ShiftRightLogical = 0x02,
 
-    #[error("sra")]
+    #[strum(to_string = "sra")]
     ShiftRightArithmetic = 0x03,
 
-    #[error("sllv")]
+    #[strum(to_string = "sllv")]
     ShiftLeftLogicalVariable = 0x04,
 
-    #[error("srlv")]
+    #[strum(to_string = "srlv")]
     ShiftRightLogicalVariable = 0x06,
 
-    #[error("srav")]
+    #[strum(to_string = "srav")]
     ShiftRightArithmeticVariable = 0x07,
 
-    #[error("jr")]
+    #[strum(to_string = "jr")]
     JumpRegister = 0x08,
 
-    #[error("jalr")]
+    #[strum(to_string = "jalr")]
     JumpAndLinkRegister = 0x09,
 
-    #[error("movz")]
+    #[strum(to_string = "movz")]
     MoveZero = 0x0a,
 
-    #[error("movn")]
+    #[strum(to_string = "movn")]
     MoveNotZero = 0x0b,
 
-    #[error("syscall")]
+    #[strum(to_string = "syscall")]
     SystemCall = 0x0c,
 
-    #[error("break")]
+    #[strum(to_string = "break")]
     Break = 0x0d,
 
     #[cfg(feature = "unimplemented")]
-    #[error("sync")]
+    #[strum(to_string = "sync")]
     Synchronize = 0x0f,
 
-    #[error("mfhi")]
+    #[strum(to_string = "mfhi")]
     MoveFromHigh = 0x10,
 
-    #[error("mthi")]
+    #[strum(to_string = "mthi")]
     MoveToHigh = 0x11,
 
-    #[error("mflo")]
+    #[strum(to_string = "mflo")]
     MoveFromLow = 0x12,
 
-    #[error("mtlo")]
+    #[strum(to_string = "mtlo")]
     MoveToLow = 0x13,
 
     #[cfg(feature = "unimplemented")]
-    #[error("dsllv")]
+    #[strum(to_string = "dsllv")]
     DoubleShiftLeftLogicalValue = 0x14,
 
     #[cfg(feature = "unimplemented")]
-    #[error("dsrlv")]
+    #[strum(to_string = "dsrlv")]
     DoubleShiftRightLogicalValue = 0x16,
 
     #[cfg(feature = "unimplemented")]
-    #[error("dsrav")]
+    #[strum(to_string = "dsrav")]
     DoubleShiftRightArithmeticValue = 0x17,
 
-    #[error("mult")]
+    #[strum(to_string = "mult")]
     Multiply = 0x18,
 
-    #[error("multu")]
+    #[strum(to_string = "multu")]
     MultiplyUnsigned = 0x19,
 
-    #[error("div")]
+    #[strum(to_string = "div")]
     Divide = 0x1a,
 
-    #[error("divu")]
+    #[strum(to_string = "divu")]
     DivideUnsigned = 0x1b,
 
     #[cfg(feature = "unimplemented")]
-    #[error("dmult")]
+    #[strum(to_string = "dmult")]
     DoubleMultiply = 0x1c,
 
     #[cfg(feature = "unimplemented")]
-    #[error("dmultu")]
+    #[strum(to_string = "dmultu")]
     DoubleMultiplyUnsigned = 0x1d,
 
     #[cfg(feature = "unimplemented")]
-    #[error("ddiv")]
+    #[strum(to_string = "ddiv")]
     DoubleDivide = 0x1e,
 
     #[cfg(feature = "unimplemented")]
-    #[error("ddivu")]
+    #[strum(to_string = "ddivu")]
     DoubleDivideUnsigned = 0x1f,
 
-    #[error("add")]
+    #[strum(to_string = "add")]
     Add = 0x20,
 
-    #[error("addu")]
+    #[strum(to_string = "addu")]
     AddUnsigned = 0x21,
 
-    #[error("sub")]
+    #[strum(to_string = "sub")]
     Subtract = 0x22,
 
-    #[error("subu")]
+    #[strum(to_string = "subu")]
     SubtractUnsigned = 0x23,
 
-    #[error("and")]
+    #[strum(to_string = "and")]
     And = 0x24,
 
-    #[error("or")]
+    #[strum(to_string = "or")]
     Or = 0x25,
 
-    #[error("xor")]
+    #[strum(to_string = "xor")]
     Xor = 0x26,
 
-    #[error("nor")]
+    #[strum(to_string = "nor")]
     Nor = 0x27,
 
-    #[error("slt")]
+    #[strum(to_string = "slt")]
     SetLessThan = 0x2a,
 
-    #[error("sltu")]
+    #[strum(to_string = "sltu")]
     SetLessThanUnsigned = 0x2b,
 
     #[cfg(feature = "unimplemented")]
-    #[error("dadd")]
+    #[strum(to_string = "dadd")]
     DoubleAdd = 0x2c,
 
     #[cfg(feature = "unimplemented")]
-    #[error("daddu")]
+    #[strum(to_string = "daddu")]
     DoubleAddUnsigned = 0x2d,
 
     #[cfg(feature = "unimplemented")]
-    #[error("dsub")]
+    #[strum(to_string = "dsub")]
     DoubleSubtract = 0x2e,
 
     #[cfg(feature = "unimplemented")]
-    #[error("dsubu")]
+    #[strum(to_string = "dsubu")]
     DoubleSubtractUnsigned = 0x2f,
 
-    #[error("tge")]
+    #[strum(to_string = "tge")]
     TrapGreaterEqual = 0x30,
 
-    #[error("tgeu")]
+    #[strum(to_string = "tgeu")]
     TrapGreaterEqualUnsigned = 0x31,
 
-    #[error("tlt")]
+    #[strum(to_string = "tlt")]
     TrapLessThan = 0x32,
 
-    #[error("tltu")]
+    #[strum(to_string = "tltu")]
     TrapLessThanUnsigned = 0x33,
 
-    #[error("teq")]
+    #[strum(to_string = "teq")]
     TrapEqual = 0x34,
 
-    #[error("tne")]
+    #[strum(to_string = "tne")]
     TrapNotEqual = 0x36,
 
     #[cfg(feature = "unimplemented")]
-    #[error("dsll")]
+    #[strum(to_string = "dsll")]
     DoubleShiftLeftLogical = 0x38,
 
     #[cfg(feature = "unimplemented")]
-    #[error("dsrl")]
+    #[strum(to_string = "dsrl")]
     DoubleShiftRightLogical = 0x3a,
 
     #[cfg(feature = "unimplemented")]
-    #[error("dsra")]
+    #[strum(to_string = "dsra")]
     DoubleShiftRightArithmetic = 0x3b,
 
     #[cfg(feature = "unimplemented")]
-    #[error("dsll32")]
+    #[strum(to_string = "dsll32")]
     DoubleShiftLeftLogical32 = 0x3c,
 
     #[cfg(feature = "unimplemented")]
-    #[error("dsrl32")]
+    #[strum(to_string = "dsrl32")]
     DoubleShiftRightLogical32 = 0x3e,
 
     #[cfg(feature = "unimplemented")]
-    #[error("dsra32")]
+    #[strum(to_string = "dsra32")]
     DoubleShiftRightAritmetic32 = 0x3f,
 }

@@ -7,7 +7,6 @@ edition = "2024"
 
 [lib]
 proc-macro = true
-path = "src/lib.rs"
 
 [dependencies]
 heck = "0.5.0"

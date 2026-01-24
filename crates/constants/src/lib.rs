@@ -1,11 +1,29 @@
+#[cfg(feature = "register")]
 pub mod cc;
+#[cfg(feature = "opcodes")]
 pub mod fn_codes;
+#[cfg(feature = "instruction-format")]
 pub mod instruction_format;
-pub mod number_fmt;
+#[cfg(feature = "number-format")]
+pub mod number_format;
+#[cfg(feature = "opcodes")]
 pub mod opcodes;
+#[cfg(feature = "register")]
 pub mod register;
+#[cfg(feature = "services")]
+pub mod services;
+#[cfg(feature = "static-segment")]
+pub mod static_segment;
 
+#[cfg(feature = "register")]
 pub use cc::ConditionCode;
+#[cfg(feature = "instruction-format")]
 pub use instruction_format::InstructionFormat;
-pub use number_fmt::NumberFormat;
+#[cfg(feature = "number-format")]
+pub use number_format::NumberFormat;
+#[cfg(feature = "opcodes")]
 pub use opcodes::Opcode;
+#[cfg(feature = "services")]
+pub use services::{Service, Services};
+#[cfg(feature = "static-segment")]
+pub use static_segment::StaticSegment;

@@ -1,26 +1,26 @@
 use num_derive::FromPrimitive;
-use thiserror::Error; // these aren't errors, but i want to convert them to strings, soooo
+use strum::Display;
 
-#[derive(Clone, Copy, Debug, Eq, Error, FromPrimitive, PartialEq)]
+#[derive(Clone, Copy, Debug, Display, Eq, FromPrimitive, PartialEq)]
 pub enum Special2Fn {
-    #[error("madd")]
+    #[strum(to_string = "madd")]
     MultiplyAdd = 0x00,
 
-    #[error("maddu")]
+    #[strum(to_string = "maddu")]
     MultiplyAddUnsigned = 0x01,
 
-    #[error("mul")]
+    #[strum(to_string = "mul")]
     Multiply = 0x02,
 
-    #[error("msub")]
+    #[strum(to_string = "msub")]
     MultiplySubtract = 0x04,
 
-    #[error("msubu")]
+    #[strum(to_string = "msubu")]
     MultiplySubtractUnsigned = 0x05,
 
-    #[error("clz")]
+    #[strum(to_string = "clz")]
     CountLeadingZeroes = 0x20,
 
-    #[error("clo")]
+    #[strum(to_string = "clo")]
     CountLeadingOnes = 0x21,
 }

@@ -1,22 +1,22 @@
-pub mod address_range;
 pub mod runtime_data;
 pub mod segment;
 pub mod segments;
-pub mod traits;
 
-pub use address_range::AddressRange;
 pub use runtime_data::RuntimeData;
 pub use segment::Segment;
 pub use segments::Segments;
 
 use anyhow::{Context, Error, Result};
+use seaside_address_range::{
+    AddressRange,
+    traits::{Contains, Overlapping},
+};
 use seaside_error::EngineError;
 use seaside_int_utils::AllZeroes;
 use seaside_type_aliases::Address;
 use serde::{Deserialize, Serialize};
 
 use crate::Validate;
-use traits::{Contains, Overlapping};
 
 /// Maps various memory regions to [`AddressRange`]s.
 ///
@@ -42,16 +42,11 @@ impl AllZeroes for MemoryMap {
 
 impl Default for MemoryMap {
     fn default() -> Self {
+        let (user_space, kernel_space) = AddressRange::FULL.split(0x8000_0000);
         Self {
-            user_space: AddressRange {
-                base: 0x00000000,
-                limit: 0x7fffffff,
-            },
-            kernel_space: AddressRange {
-                base: 0x80000000,
-                limit: 0xffffffff,
-            },
-            exception_handler: Some(0x80000180),
+            user_space,
+            kernel_space,
+            exception_handler: Some(0x8000_0180),
             segments: Segments::default(),
         }
     }

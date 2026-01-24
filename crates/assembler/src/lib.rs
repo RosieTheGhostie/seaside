@@ -47,11 +47,11 @@ impl<'src> Assembler<'src> {
         Self {
             exprs,
             segments: [
-                SegmentBuildInfo::new(segments.data.range.base),
-                SegmentBuildInfo::new(segments.r#extern.range.base),
-                SegmentBuildInfo::new(segments.kdata.range.base),
-                SegmentBuildInfo::new(segments.ktext.range.base),
-                SegmentBuildInfo::new(segments.text.range.base),
+                SegmentBuildInfo::new(segments.data.range.base()),
+                SegmentBuildInfo::new(segments.r#extern.range.base()),
+                SegmentBuildInfo::new(segments.kdata.range.base()),
+                SegmentBuildInfo::new(segments.ktext.range.base()),
+                SegmentBuildInfo::new(segments.text.range.base()),
             ],
             current_segment: SegmentDirective::Text,
             unresolved: VecDeque::new(),
@@ -238,6 +238,7 @@ impl Build {
         {
             segment.export(directory.join(name))?;
         }
+
         Ok(())
     }
 }

@@ -48,7 +48,7 @@ fn init_text_region(
     path: Option<PathBuf>,
     endian: Endian,
 ) -> Result<TextRegion> {
-    let mut region = TextRegion::new(segment.range.base, segment.allocate as _);
+    let mut region = TextRegion::new(segment.range.base(), segment.allocate as _);
     if let Some(path) = path {
         region.populate(std::fs::read(path)?, endian);
     }
@@ -57,7 +57,7 @@ fn init_text_region(
 }
 
 fn init_data_region(segment: &Segment, path: Option<PathBuf>) -> Result<DataRegion> {
-    let mut region = DataRegion::new(segment.range.base, segment.allocate as _);
+    let mut region = DataRegion::new(segment.range.base(), segment.allocate as _);
     if let Some(path) = path {
         region.populate(std::fs::read(path)?);
     }
@@ -66,8 +66,8 @@ fn init_data_region(segment: &Segment, path: Option<PathBuf>) -> Result<DataRegi
 }
 
 fn init_heap_and_stack(runtime_data: &RuntimeData) -> [DataRegion; 2] {
-    let heap_low_address = runtime_data.range.base;
-    let stack_low_address = runtime_data.range.limit - runtime_data.stack_size + 1;
+    let heap_low_address = runtime_data.range.base();
+    let stack_low_address = runtime_data.range.limit() - runtime_data.stack_size + 1;
     [
         DataRegion::new(heap_low_address, runtime_data.heap_size as _),
         DataRegion::new(stack_low_address, runtime_data.stack_size as _),

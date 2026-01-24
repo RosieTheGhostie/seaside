@@ -5,30 +5,34 @@ version = "0.1.0"
 authors = ["RosieTheGhostie <rosetheghost.dev@gmail.com>"]
 edition = "2024"
 
-[lib]
-crate-type = ["lib"]
-path = "src/lib.rs"
-
 [dependencies]
 anyhow = "1.0.98"
 console = "0.16.0"
 num-traits = "0.2"
 rand = "0.9.1"
 seaside-config = { version = "*", path = "../config" }
-seaside-constants = { version = "*", path = "../constants" }
-seaside-disassembler = { version = "*", default-features = false, features = [
-	"fields",
-], path = "../disassembler" }
 seaside-error = { version = "*", path = "../error" }
-seaside-int-utils = { version = "*", features = [
-	"byte_stream",
-	"endian",
-], path = "../int-utils" }
 seaside-type-aliases = { version = "*", path = "../type-aliases" }
 strum = "0.27.1"
 thiserror = "2.0.12"
 
 [dependencies.minimal-logging]
 version = "0.5"
-features = ["full"]
 git = "https://github.com/RosieTheGhostie/minimal-logging.git"
+features = ["full"]
+
+[dependencies.seaside-constants]
+version = "*"
+path = "../constants"
+features = ["register", "services"]
+
+[dependencies.seaside-int-utils]
+version = "*"
+path = "../int-utils"
+features = ["byte-stream", "endian"]
+
+[dependencies.seaside-disassembler]
+version = "*"
+path = "../disassembler"
+default-features = false
+features = ["fields"]

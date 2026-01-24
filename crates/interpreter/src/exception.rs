@@ -1,5 +1,4 @@
-use seaside_config::features::services::ServiceCode;
-use seaside_type_aliases::Address;
+use seaside_type_aliases::{Address, ServiceCode};
 use thiserror::Error;
 
 use crate::SyscallFailureKind;

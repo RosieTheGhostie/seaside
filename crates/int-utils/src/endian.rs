@@ -5,17 +5,11 @@
 
 use core::fmt::{self, Display, Formatter};
 
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
-
-#[cfg(feature = "all_zeroes")]
-use crate::AllZeroes;
-
 /// Indicates the intended byte order/endianness.
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
 #[cfg_attr(
     feature = "serde",
-    derive(Deserialize, Serialize),
+    derive(serde::Deserialize, serde::Serialize),
     serde(into = "String")
 )]
 pub enum Endian {
@@ -46,8 +40,8 @@ impl From<Endian> for String {
     }
 }
 
-#[cfg(feature = "all_zeroes")]
-impl AllZeroes for Endian {
+#[cfg(feature = "all-zeroes")]
+impl crate::AllZeroes for Endian {
     fn all_zeroes() -> Self {
         Self::Little
     }

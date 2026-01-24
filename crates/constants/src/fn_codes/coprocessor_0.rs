@@ -1,14 +1,14 @@
 use num_derive::FromPrimitive;
-use thiserror::Error; // these aren't errors, but i want to convert them to strings, soooo
+use strum::Display;
 
-#[derive(Clone, Copy, Debug, Eq, Error, FromPrimitive, PartialEq)]
+#[derive(Clone, Copy, Debug, Display, Eq, FromPrimitive, PartialEq)]
 pub enum Coprocessor0Fn {
-    #[error("mfc0")]
+    #[strum(to_string = "mfc0")]
     MoveFromCoprocessor0 = 0x00,
 
-    #[error("mtc0")]
+    #[strum(to_string = "mtc0")]
     MoveToCoprocessor0 = 0x04,
 
-    #[error("eret")]
+    #[strum(to_string = "eret")]
     ErrorReturn = 0x10,
 }

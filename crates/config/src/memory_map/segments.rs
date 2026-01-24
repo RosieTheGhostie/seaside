@@ -1,11 +1,11 @@
 use anyhow::{Context, Error, Result};
+use seaside_address_range::{address_range, traits::Overlapping};
 use seaside_error::EngineError;
 use seaside_int_utils::AllZeroes;
 use serde::{Deserialize, Serialize};
 
 use super::{
-    Overlapping, RuntimeData, Segment,
-    address_range::address_range,
+    RuntimeData, Segment,
     segment::{allocate, segment},
 };
 use crate::Validate;

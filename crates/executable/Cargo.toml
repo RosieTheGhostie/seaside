@@ -4,4 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-serde = { version = "1.0.228", features = ["derive"] }
+seaside-address-range = { version = "*", path = "../address-range" }
+seaside-constants = { version = "*", path = "../constants" }
+seaside-type-aliases = { version = "*", path = "../type-aliases" }
+thiserror = "2.0.18"

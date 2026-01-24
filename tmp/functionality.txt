@@ -1,0 +1,23 @@
+# Planned Functionality
+
+## Execution Flow
+
+- [ ] Launch
+- [ ] Continue
+- [ ] Pause
+- [ ] Terminate
+
+## Stepping
+
+- [ ] Next/Step In
+- [ ] Step Over
+- [ ] Step Out
+
+## Breakpoints
+
+- [ ] Set Breakpoints
+
+## Inspecting Data
+
+- [ ] Read Memory
+- [ ] Variables
