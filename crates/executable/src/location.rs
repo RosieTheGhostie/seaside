@@ -1,7 +1,5 @@
 use seaside_type_aliases::{Size, UnsignedOffset};
 
-use crate::ser::FixedSerializationSize;
-
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
 pub struct Location {
     pub offset: UnsignedOffset,
@@ -23,5 +21,3 @@ impl Location {
         Self { offset: 0, size }
     }
 }
-
-impl FixedSerializationSize for Location {}

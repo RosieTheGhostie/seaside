@@ -1,9 +1,9 @@
 use seaside_address_range::sized::SizedAddressRange;
+use serde::{Deserialize, Serialize};
 
 use super::SegmentInfo;
-use crate::Location;
 
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct Segments {
     pub text: SegmentInfo,
     pub ktext: SegmentInfo,
@@ -14,16 +14,3 @@ pub struct Segments {
     pub heap: SizedAddressRange<false>,
     pub mmio: SegmentInfo,
 }
-
-crate::ser::fixed_size::r#impl!(
-    for Segments;
-
-    // `text`, `ktext`, `extern`, `data`, `kdata`, and `mmio`
-    6 * SegmentInfo,
-
-    // location data for each of the static segments
-    5 * Location,
-
-    // `stack` and `heap`
-    2 * SizedAddressRange,
-);

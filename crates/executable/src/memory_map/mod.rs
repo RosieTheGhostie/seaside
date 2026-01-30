@@ -4,12 +4,13 @@ pub mod segments;
 pub use segment_info::SegmentInfo;
 pub use segments::Segments;
 
-use seaside_address_range::AddressRange;
+use seaside_address_range::{AddressRange, traits::Overlapping};
 use seaside_type_aliases::Address;
+use serde::{Deserialize, Serialize};
+use validator::{Validate, ValidationError};
 
-use crate::{Tag, Tagged};
-
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize, Validate)]
+#[validate(schema(function = "Self::validate_with_schema"))]
 pub struct MemoryMap {
     pub exception_handler: Option<Address>,
     pub user_space: AddressRange,
@@ -17,8 +18,20 @@ pub struct MemoryMap {
     pub segments: Segments,
 }
 
-crate::ser::fixed_size::r#impl!(for MemoryMap; Option<Address>, 2 * AddressRange, Segments);
+impl MemoryMap {
+    fn validate_with_schema(&self) -> Result<(), ValidationError> {
+        if let Some(exception_handler) = self.exception_handler
+            && !self.kernel_space.contains_address(exception_handler)
+        {
+            return Err(ValidationError::new("contains")
+                .with_message("exception handler is not within kernel-space".into()));
+        }
 
-impl Tagged for MemoryMap {
-    const TAG: Tag = *b"mmap";
+        if self.user_space.overlapping(&self.kernel_space) {
+            return Err(ValidationError::new("no_overlap")
+                .with_message("user-space overlaps with kernel-space".into()));
+        }
+
+        Ok(())
+    }
 }

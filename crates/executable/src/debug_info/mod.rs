@@ -1,4 +1,6 @@
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct DebugInfo;
 
 impl DebugInfo {

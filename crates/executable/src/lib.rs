@@ -1,4 +1,3 @@
-pub mod de;
 pub mod debug_info;
 pub mod error;
 pub mod header;
@@ -6,47 +5,76 @@ pub mod location;
 pub mod memory_map;
 pub mod prelude;
 pub mod segments;
-pub mod ser;
-pub mod services;
-pub mod tag;
 
-pub(crate) use location::Location;
+use seaside_constants::{Service, Services};
+use seaside_type_aliases::ServiceCode;
+use serde::{Deserialize, Serialize};
+use validator::Validate;
+
 use prelude::*;
 use segments::Segments;
-use ser::builder::ExecutableBuilder;
-pub(crate) use tag::{Tag, Tagged};
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, Validate)]
 pub struct Executable {
+    #[validate(nested)]
     pub header: Header,
+
     pub memory_map: MemoryMap,
     pub services: Services,
-    pub string_table: String,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub debug_info: Option<DebugInfo>,
+
     pub segments: Segments,
 }
 
 impl Executable {
-    pub fn new_builder(basic_metadata: BasicMetadata, memory_map: MemoryMap) -> ExecutableBuilder {
-        ExecutableBuilder::new(basic_metadata, memory_map)
+    pub fn new(header: Header, memory_map: MemoryMap) -> Self {
+        Self {
+            header,
+            memory_map,
+            services: Services::default(),
+            debug_info: None,
+            segments: Segments::default(),
+        }
+    }
+
+    pub fn add_services(&mut self, mapping: &[(ServiceCode, Service)]) -> Result<(), Error> {
+        for &(code, service) in mapping {
+            self.add_service(code, service)?;
+        }
+
+        Ok(())
+    }
+
+    pub fn add_service(&mut self, code: ServiceCode, service: Service) -> Result<(), Error> {
+        if self.services.insert(code, service).is_none() {
+            Ok(())
+        } else {
+            Err(Error::ServiceCodeInUse(code))
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use seaside_address_range::{address_range, sized::SizedAddressRange};
-    use seaside_constants::StaticSegment;
+    use seaside_constants::{
+        Service,
+        services::{
+            mars::{self, Mars},
+            spim::{self, Spim},
+        },
+    };
     use seaside_type_aliases::size;
+    use validator::Validate;
 
     use crate::{memory_map, prelude::*};
 
     #[test]
     fn concept() -> Result<(), Error> {
-        let mut builder = Executable::new_builder(
-            BasicMetadata {
-                n_coprocessors: 2,
-                flags: Flags::default(),
-            },
+        let mut executable = Executable::new(
+            Header::default(),
             MemoryMap {
                 exception_handler: Some(0x8000_0180),
                 user_space: address_range![0x0000_0000..=0x7fff_ffff],
@@ -81,53 +109,92 @@ mod tests {
                 },
             },
         );
-        builder.add_services(&[
-            (1, "spim.print.int"),
-            (2, "spim.print.float"),
-            (3, "spim.print.double"),
-            (4, "spim.print.string"),
-            (5, "spim.read.int"),
-            (6, "spim.read.float"),
-            (7, "spim.read.double"),
-            (8, "spim.read.string"),
-            (9, "spim.system.sbrk"),
-            (10, "spim.system.exit"),
-            (11, "spim.print.char"),
-            (12, "spim.read.char"),
-            (13, "spim.file.open"),
-            (14, "spim.file.read"),
-            (15, "spim.file.write"),
-            (16, "spim.file.close"),
-            (17, "spim.system.exit2"),
-            (30, "mars.system.time"),
-            (31, "mars.system.midi_out"),
-            (32, "mars.system.sleep"),
-            (33, "mars.system.midi_out_sync"),
-            (34, "mars.print.hex"),
-            (35, "mars.print.bin"),
-            (36, "mars.print.uint"),
-            (40, "mars.random.set_seed"),
-            (41, "mars.random.rand_int"),
-            (42, "mars.random.rand_int_range"),
-            (43, "mars.random.rand_float"),
-            (44, "mars.random.rand_double"),
-            (50, "mars.dialog.input.confirm"),
-            (51, "mars.dialog.input.int"),
-            (52, "mars.dialog.input.float"),
-            (53, "mars.dialog.input.double"),
-            (54, "mars.dialog.input.string"),
-            (55, "mars.dialog.message.general"),
-            (56, "mars.dialog.message.int"),
-            (57, "mars.dialog.message.float"),
-            (58, "mars.dialog.message.double"),
-            (59, "mars.dialog.message.string"),
+        executable.add_services(&[
+            (1, Service::Spim(Spim::Print(spim::Print::Int))),
+            (2, Service::Spim(Spim::Print(spim::Print::Float))),
+            (3, Service::Spim(Spim::Print(spim::Print::Double))),
+            (4, Service::Spim(Spim::Print(spim::Print::String))),
+            (5, Service::Spim(Spim::Read(spim::Read::Int))),
+            (6, Service::Spim(Spim::Read(spim::Read::Float))),
+            (7, Service::Spim(Spim::Read(spim::Read::Double))),
+            (8, Service::Spim(Spim::Read(spim::Read::String))),
+            (9, Service::Spim(Spim::System(spim::System::Sbrk))),
+            (10, Service::Spim(Spim::System(spim::System::Exit))),
+            (11, Service::Spim(Spim::Print(spim::Print::Char))),
+            (12, Service::Spim(Spim::Read(spim::Read::Char))),
+            (13, Service::Spim(Spim::File(spim::File::Open))),
+            (14, Service::Spim(Spim::File(spim::File::Read))),
+            (15, Service::Spim(Spim::File(spim::File::Write))),
+            (16, Service::Spim(Spim::File(spim::File::Close))),
+            (17, Service::Spim(Spim::System(spim::System::Exit2))),
+            (30, Service::Mars(Mars::System(mars::System::Time))),
+            (31, Service::Mars(Mars::System(mars::System::MidiOut))),
+            (32, Service::Mars(Mars::System(mars::System::Sleep))),
+            (33, Service::Mars(Mars::System(mars::System::MidiOutSync))),
+            (34, Service::Mars(Mars::Print(mars::Print::Hex))),
+            (35, Service::Mars(Mars::Print(mars::Print::Bin))),
+            (36, Service::Mars(Mars::Print(mars::Print::Uint))),
+            (40, Service::Mars(Mars::Random(mars::Random::SetSeed))),
+            (41, Service::Mars(Mars::Random(mars::Random::RandInt))),
+            (42, Service::Mars(Mars::Random(mars::Random::RandIntRange))),
+            (43, Service::Mars(Mars::Random(mars::Random::RandFloat))),
+            (44, Service::Mars(Mars::Random(mars::Random::RandDouble))),
+            (
+                50,
+                Service::Mars(Mars::Dialog(mars::Dialog::Input(
+                    mars::InputDialog::Confirm,
+                ))),
+            ),
+            (
+                51,
+                Service::Mars(Mars::Dialog(mars::Dialog::Input(mars::InputDialog::Int))),
+            ),
+            (
+                52,
+                Service::Mars(Mars::Dialog(mars::Dialog::Input(mars::InputDialog::Float))),
+            ),
+            (
+                53,
+                Service::Mars(Mars::Dialog(mars::Dialog::Input(mars::InputDialog::Double))),
+            ),
+            (
+                54,
+                Service::Mars(Mars::Dialog(mars::Dialog::Input(mars::InputDialog::String))),
+            ),
+            (
+                55,
+                Service::Mars(Mars::Dialog(mars::Dialog::Message(
+                    mars::MessageDialog::General,
+                ))),
+            ),
+            (
+                56,
+                Service::Mars(Mars::Dialog(mars::Dialog::Message(
+                    mars::MessageDialog::Int,
+                ))),
+            ),
+            (
+                57,
+                Service::Mars(Mars::Dialog(mars::Dialog::Message(
+                    mars::MessageDialog::Float,
+                ))),
+            ),
+            (
+                58,
+                Service::Mars(Mars::Dialog(mars::Dialog::Message(
+                    mars::MessageDialog::Double,
+                ))),
+            ),
+            (
+                59,
+                Service::Mars(Mars::Dialog(mars::Dialog::Message(
+                    mars::MessageDialog::String,
+                ))),
+            ),
         ])?;
-        builder.add_text_segment(StaticSegment::Text, vec![])?;
-        builder.add_data_segment(StaticSegment::Data, vec![])?;
-        let executable = builder.build()?;
+        executable.segments.text = TextSegment(vec![]);
+        executable.segments.data = Some(DataSegment(vec![]));
 
-        // TODO: Look at `executable`.
-
-        Ok(())
+        executable.validate().map_err(Error::from)
     }
 }
