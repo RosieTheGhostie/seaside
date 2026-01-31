@@ -7,7 +7,8 @@ use crate::traits::{Contains, Overlapping};
 pub struct SizedAddressRange<const INVERTED: bool = false> {
     /// The address considered to be the base of this range.
     ///
-    /// This will usually be the inclusive minimum.
+    /// If `INVERTED` is `true`, this will be the inclusive maximum. Otherwise, it will be the
+    /// inclusive minimum.
     pub base: Address,
 
     /// The number of bytes within the range.
