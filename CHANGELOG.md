@@ -39,6 +39,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Small inconsistency in `derive` macro sorting.
 - Inconsistent usage of type aliases.
 - Unidiomatic type aliases.
+- Incorrect type for service code in `ServiceUnimplemented` variant of
+  `seaside_interpreter::SyscallFailureKind`.
 
 ## [1.3.0] - 2025-07-13
 
