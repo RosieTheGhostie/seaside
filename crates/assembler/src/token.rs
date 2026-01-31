@@ -6,7 +6,7 @@ use crate::error::LexError;
 
 /// A single "atom" in a MIPS Assembly program.
 #[derive(Clone, Debug, Logos, PartialEq)]
-#[logos(skip r"[ \t\f]+|#.*")]
+#[logos(skip(r"[ \t\f]+|#.*", allow_greedy = true))]
 #[logos(error = LexError)]
 pub enum Token<'src> {
     /// An error in the lexing stage of assembly.

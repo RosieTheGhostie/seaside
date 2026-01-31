@@ -6,15 +6,15 @@ authors = ["RosieTheGhostie <rosetheghost.dev@gmail.com>"]
 edition = "2024"
 
 [dependencies]
-anyhow = "1.0.98"
-console = "0.16.0"
+anyhow = "1.0.100"
+console = "0.16.2"
 num-traits = "0.2"
-rand = "0.9.1"
+rand = "0.9.2"
 seaside-config = { version = "*", path = "../config" }
 seaside-error = { version = "*", path = "../error" }
 seaside-type-aliases = { version = "*", path = "../type-aliases" }
-strum = "0.27.1"
-thiserror = "2.0.12"
+strum = "0.27.2"
+thiserror = "2.0.18"
 
 [dependencies.minimal-logging]
 version = "0.5"

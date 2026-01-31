@@ -6,9 +6,9 @@ authors = ["RosieTheGhostie <rosetheghost.dev@gmail.com>"]
 edition = "2024"
 
 [dependencies]
-ariadne = "0.5.1"
+ariadne = "0.6.0"
 const_format = { version = "0.2.34", features = ["fmt"] }
-logos = "0.15.0"
+logos = "0.16.1"
 seaside-config = { version = "*", path = "../config" }
 seaside-type-aliases = { version = "*", path = "../type-aliases" }
 thiserror = "2.0.12"
