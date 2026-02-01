@@ -4,5 +4,5 @@ pub use crate::{
     error::Error,
     header::{Flags, Header},
     memory_map::{MemoryMap, SegmentInfo, StackAndHeap},
-    segments::{DataSegment, TextSegment},
+    segments::{Segment, Segments},
 };

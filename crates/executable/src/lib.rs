@@ -58,7 +58,7 @@ impl Executable {
 
 #[cfg(test)]
 mod tests {
-    use seaside_address_range::{address_range, sized::SizedAddressRange};
+    use seaside_address_range::address_range;
     use seaside_constants::{
         Service,
         services::{
@@ -195,8 +195,8 @@ mod tests {
                 ))),
             ),
         ])?;
-        executable.segments.text = TextSegment(vec![]);
-        executable.segments.data = Some(DataSegment(vec![]));
+        executable.segments.text.overwrite([ /* .. */ ]);
+        executable.segments.data = Some(Segment::new([ /* .. */ ]));
 
         executable.validate().map_err(Error::from)
     }
