@@ -1,7 +1,7 @@
 pub mod segment_info;
 pub mod segments;
 
-pub use segment_info::SegmentInfo;
+pub use segment_info::{SegmentInfo, StackAndHeap};
 pub use segments::Segments;
 
 use seaside_address_range::{AddressRange, traits::Overlapping};

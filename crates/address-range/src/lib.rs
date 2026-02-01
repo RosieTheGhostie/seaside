@@ -1,13 +1,10 @@
-//! Specialized range types relating to memory addresses for use in [seaside].
+//! Specialized range type relating to memory addresses for use in [seaside].
 //!
-//! Provides two different kinds of memory address ranges:
-//! - [`AddressRange`] (analogous to [`RangeInclusive<Address>`](core::ops::RangeInclusive))
-//! - [`SizedAddressRange`](sized::SizedAddressRange) (see docs for more details)
+//! Provides the [`AddressRange`] type, which can be thought of as a specialized version of
+//! [`RangeInclusive<Address>`](core::ops::RangeInclusive).
 //!
 //! [seaside]: https://github.com/RosieTheGhostie/seaside
 
-#[cfg(feature = "sized")]
-pub mod sized;
 pub mod traits;
 
 pub use seaside_type_aliases::Address;
@@ -40,6 +37,7 @@ impl AddressRange {
     /// ```
     /// # use seaside_address_range::AddressRange;
     /// let data_segment = AddressRange::new(0x1001_0000, 0x1003_ffff);
+    ///
     /// assert!(!data_segment.contains_address(0x1000_ffff));
     /// assert!(data_segment.contains_address(0x1001_0000));
     /// assert!(data_segment.contains_address(0x1002_6942));
@@ -281,12 +279,6 @@ impl AddressRange {
     }
 }
 
-impl Overlapping<AddressRange> for AddressRange {
-    fn overlapping(&self, other: &Self) -> bool {
-        self.limit >= other.base
-    }
-}
-
 impl Contains<Address> for AddressRange {
     fn contains(&self, address: &Address) -> bool {
         self.contains_address(*address)
@@ -296,6 +288,12 @@ impl Contains<Address> for AddressRange {
 impl Contains<AddressRange> for AddressRange {
     fn contains(&self, other: &AddressRange) -> bool {
         self.base <= other.base && other.limit <= self.limit
+    }
+}
+
+impl Overlapping<AddressRange> for AddressRange {
+    fn overlapping(&self, other: &Self) -> bool {
+        self.limit >= other.base
     }
 }
 

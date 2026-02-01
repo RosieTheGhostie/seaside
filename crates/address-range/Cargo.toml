@@ -15,5 +15,5 @@ optional = true
 [features]
 sized = ["serde?/derive"]
 
-default = ["sized"]
-full = ["seaside-int-utils", "serde", "sized"]
+default = []
+full = ["seaside-int-utils", "serde"]

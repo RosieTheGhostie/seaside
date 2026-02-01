@@ -1,7 +1,6 @@
-use seaside_address_range::sized::SizedAddressRange;
 use serde::{Deserialize, Serialize};
 
-use super::SegmentInfo;
+use super::{SegmentInfo, StackAndHeap};
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct Segments {
@@ -10,7 +9,6 @@ pub struct Segments {
     pub r#extern: SegmentInfo,
     pub data: SegmentInfo,
     pub kdata: SegmentInfo,
-    pub stack: SizedAddressRange<true>,
-    pub heap: SizedAddressRange<false>,
+    pub stack_and_heap: StackAndHeap,
     pub mmio: SegmentInfo,
 }
