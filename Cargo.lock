@@ -801,6 +801,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "seaside-binary-format"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "seaside-config"
 version = "1.3.0"
 dependencies = [
@@ -856,6 +863,7 @@ version = "0.1.0"
 dependencies = [
  "bitflags",
  "seaside-address-range",
+ "seaside-binary-format",
  "seaside-constants",
  "seaside-type-aliases",
  "serde",

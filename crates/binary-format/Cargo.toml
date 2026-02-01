@@ -1,0 +1,9 @@
+[package]
+name = "seaside-binary-format"
+description = "A binary data serialization format designed for seaside"
+version = "0.1.0"
+authors = ["RosieTheGhostie <rosetheghost.dev@gmail.com>"]
+edition = "2024"
+
+[dependencies]
+serde = "1.0.228"
