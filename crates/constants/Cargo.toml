@@ -39,16 +39,23 @@ optional = true
 
 [features]
 instruction-format = []
-number-format = ["num-derive", "strum"]
-opcodes = ["num-derive", "strum"]
-register = ["num-derive", "num-traits", "strum", "take-exact", "thiserror"]
-services = [
-  "seaside-service-group",
-  "seaside-type-aliases",
-  "serde?/derive",
-  "strum",
+number-format = ["dep:num-derive", "dep:strum"]
+opcodes = ["dep:num-derive", "dep:strum"]
+register = [
+  "dep:num-derive",
+  "dep:num-traits",
+  "dep:strum",
+  "dep:take-exact",
+  "dep:thiserror",
 ]
-static-segment = ["strum"]
+serde = ["dep:serde", "dep:serde_repr"]
+services = [
+  "dep:seaside-service-group",
+  "dep:seaside-type-aliases",
+  "serde?/derive",
+  "dep:strum",
+]
+static-segment = ["dep:strum"]
 unimplemented = []
 
 default = []
@@ -59,7 +66,6 @@ full = [
   "register",
   "seaside-int-utils",
   "serde",
-  "serde_repr",
   "services",
   "static-segment",
   "unimplemented",

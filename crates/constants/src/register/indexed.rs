@@ -10,7 +10,7 @@ use super::ParseError;
 
 #[derive(Clone, Copy, Debug, EnumIter, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(
-    feature = "serde_repr",
+    feature = "serde",
     derive(serde_repr::Deserialize_repr, serde_repr::Serialize_repr)
 )]
 #[repr(u8)]

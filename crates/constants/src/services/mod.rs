@@ -6,7 +6,6 @@ pub use service::Service;
 
 use std::collections::{HashMap, hash_map};
 
-use seaside_int_utils::AllZeroes;
 use seaside_type_aliases::ServiceCode;
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
@@ -93,7 +92,7 @@ impl<'de> serde::Deserialize<'de> for Services {
 }
 
 #[cfg(feature = "seaside-int-utils")]
-impl AllZeroes for Services {
+impl seaside_int_utils::AllZeroes for Services {
     fn all_zeroes() -> Self {
         Self {
             ..Default::default()

@@ -53,6 +53,10 @@ impl Executable {
             Err(Error::ServiceCodeInUse(code))
         }
     }
+
+    pub fn validate(&self) -> Result<(), Error> {
+        <_ as Validate>::validate(self).map_err(Error::from)
+    }
 }
 
 #[cfg(test)]
