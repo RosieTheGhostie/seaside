@@ -77,8 +77,8 @@ mod tests {
             Header::default(),
             MemoryMap {
                 exception_handler: Some(0x8000_0180),
-                user_space: address_range![0x0000_0000..=0x7fff_ffff],
-                kernel_space: address_range![0x8000_0000..=0xffff_ffff],
+                user_space: address_range![..0x8000_0000],
+                kernel_space: address_range![0x8000_0000..],
                 segments: memory_map::Segments {
                     text: SegmentInfo {
                         range: address_range![0x0040_0000..=0x0fff_fffc],
@@ -100,8 +100,11 @@ mod tests {
                         range: address_range![0x9000_0000..=0xfffe_ffff],
                         allocate: 1 * size::unsigned::MiB,
                     },
-                    stack: SizedAddressRange::new(0x7fff_ffff, 4 * size::unsigned::MiB),
-                    heap: SizedAddressRange::new(0x1004_0000, 128 * size::unsigned::KiB),
+                    stack_and_heap: StackAndHeap {
+                        range: address_range![0x1004_0000..=0x7fff_ffff],
+                        allocate_stack: 4 * size::unsigned::MiB,
+                        allocate_heap: 128 * size::unsigned::KiB,
+                    },
                     mmio: SegmentInfo {
                         range: address_range![0xffff_0000..=0xffff_ffff],
                         allocate: 4 * size::unsigned::KiB,

@@ -9,6 +9,7 @@ pub struct Variable {
     pub name: String,
     pub display_mode: DisplayMode,
     pub location: Location,
+    pub size: Size,
     pub scope: Range<Address>,
 }
 
@@ -29,20 +30,8 @@ pub enum DisplayMode {
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum Location {
-    Cpu {
-        // TODO: register: CpuRegister,
-        size: u8,
-    },
-    Coprocessor0 {
-        // TODO: register: Coprocessor0Register,
-        size: u8,
-    },
-    Fpu {
-        // TODO: register: FpuRegister,
-        size: u8,
-    },
-    Stack {
-        offset: Offset,
-        size: Size,
-    },
+    Cpu(/* TODO: CpuRegister */),
+    Coprocessor0(/* TODO: Coprocessor0Register */),
+    Fpu(/* TODO: FpuRegister */),
+    Stack(Offset),
 }
