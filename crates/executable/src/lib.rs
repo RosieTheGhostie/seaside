@@ -12,7 +12,6 @@ use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 use prelude::*;
-use segments::Segments;
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, Validate)]
 pub struct Executable {
