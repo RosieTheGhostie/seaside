@@ -15,7 +15,5 @@ path = "../int-utils"
 optional = true
 
 [features]
-sized = ["serde?/derive"]
-
 default = []
 full = ["seaside-int-utils", "serde"]
