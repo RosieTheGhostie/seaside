@@ -8,8 +8,12 @@ use strum::EnumIter;
 
 use super::ParseError;
 
-#[repr(u8)]
 #[derive(Clone, Copy, Debug, EnumIter, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[cfg_attr(
+    feature = "serde_repr",
+    derive(serde_repr::Deserialize_repr, serde_repr::Serialize_repr)
+)]
+#[repr(u8)]
 pub enum IndexedRegister {
     _0,
     _1,

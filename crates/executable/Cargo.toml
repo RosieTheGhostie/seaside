@@ -6,8 +6,12 @@ edition = "2024"
 [dependencies]
 bitflags = { version = "2.10.0", features = ["serde"] }
 seaside-address-range = { version = "*", path = "../address-range" }
-seaside-constants = { version = "*", path = "../constants" }
 seaside-type-aliases = { version = "*", path = "../type-aliases" }
 serde = { version = "1.0.228", features = ["derive"] }
 thiserror = "2.0.18"
 validator = { version = "0.20.0", features = ["derive"] }
+
+[dependencies.seaside-constants]
+version = "*"
+path = "../constants"
+features = ["register", "serde_repr"]

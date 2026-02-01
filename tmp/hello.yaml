@@ -173,18 +173,18 @@ debug_info:
       parameters:
         - name: "argc"
           display_mode: UnsignedInteger
-          location: Cpu(Arg0)
+          location: Cpu(4)
           size: 4
           scope: [0x00400000, 0x00400000]
         - name: "argv"
           display_mode: Pointer
-          location: Cpu(Arg1)
+          location: Cpu(5)
           size: 4
           scope: [0x00400000, 0x00400000]
       locals:
         - name: "n"
           display_mode: SignedInteger
-          location: Cpu(Saved0)
+          location: Cpu(16)
           size: 4
           scope: [0x0040001c, 0x0040005c]
     - name: "Fibonacci"
@@ -194,23 +194,23 @@ debug_info:
       parameters:
         - name: "n"
           display_mode: SignedInteger
-          location: Cpu(Arg0)
+          location: Cpu(4)
           size: 4
           scope: # TODO: 114 to 125..=126
       locals:
         - name: "a"
           display_mode: UnsignedInteger
-          location: Cpu(Saved0)
+          location: Cpu(16)
           size: 4
           scope: # TODO: 122 to 142..=145
         - name: "b"
           display_mode: UnsignedInteger
-          location: Cpu(Saved1)
+          location: Cpu(17)
           size: 4
           scope: # TODO: 123 to 142..=145
         - name: "i"
           display_mode: SignedInteger
-          location: Cpu(Saved2)
+          location: Cpu(18)
           size: 4
           scope: # TODO: 125..=126 to 142..=145
   statics:

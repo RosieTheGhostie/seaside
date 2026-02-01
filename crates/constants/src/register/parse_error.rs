@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-#[derive(Clone, Copy, Debug, Eq, Error, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Eq, Error, Hash, Ord, PartialEq, PartialOrd)]
 pub enum ParseError {
     #[error("no name was provided")]
     Empty,

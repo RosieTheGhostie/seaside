@@ -1,6 +1,6 @@
 use core::ops::Range;
 
-// TODO: use seaside_constants::register::{Coprocessor0Register, CpuRegister, FpuRegister};
+use seaside_constants::register::IndexedRegister;
 use seaside_type_aliases::{Address, Offset, Size};
 use serde::{Deserialize, Serialize};
 
@@ -30,8 +30,8 @@ pub enum DisplayMode {
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum Location {
-    Cpu(/* TODO: CpuRegister */),
-    Coprocessor0(/* TODO: Coprocessor0Register */),
-    Fpu(/* TODO: FpuRegister */),
+    Cpu(IndexedRegister),
+    Coprocessor0(IndexedRegister),
+    Fpu(IndexedRegister),
     Stack(Offset),
 }

@@ -8,8 +8,8 @@ use strum::EnumIter;
 
 use super::ParseError;
 
+#[derive(Clone, Copy, Debug, EnumIter, Eq, FromPrimitive, Hash, Ord, PartialEq, PartialOrd)]
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, EnumIter, Eq, FromPrimitive, Ord, PartialEq, PartialOrd)]
 pub enum Coprocessor0Register {
     VirtualAddr = 8,
     Status = 12,

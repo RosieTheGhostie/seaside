@@ -9,8 +9,8 @@ use take_exact::TakeExact;
 
 use super::{IndexedRegister, ParseError};
 
+#[derive(Clone, Copy, Debug, EnumIter, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, EnumIter, Eq, Ord, PartialEq, PartialOrd)]
 pub enum CpuRegister {
     Zero,
     AsmTemp,
