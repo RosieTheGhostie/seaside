@@ -1,9 +1,9 @@
 use seaside_constants::{Service, Services};
-use seaside_type_aliases::ServiceCode;
+use seaside_type_aliases::{Instruction, ServiceCode};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
-use crate::{DebugInfo, Error, Flags, MemoryMap, Segments};
+use crate::{DebugInfo, Error, Flags, MemoryMap, Segment, Segments};
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, Validate)]
 pub struct Body {
@@ -43,5 +43,31 @@ impl Body {
         }
 
         Ok(())
+    }
+
+    pub fn set_text_segment(&mut self, instructions: &[Instruction]) {
+        self.segments.text = self.make_text_segment(instructions);
+    }
+
+    pub fn add_ktext_segment(&mut self, instructions: &[Instruction]) -> Option<Segment> {
+        self.segments
+            .ktext
+            .replace(self.make_text_segment(instructions))
+    }
+
+    pub fn add_extern_segment(&mut self, bytes: &[u8]) -> Option<Segment> {
+        self.segments.r#extern.replace(Segment::new(bytes))
+    }
+
+    pub fn add_data_segment(&mut self, bytes: &[u8]) -> Option<Segment> {
+        self.segments.data.replace(Segment::new(bytes))
+    }
+
+    pub fn add_kdata_segment(&mut self, bytes: &[u8]) -> Option<Segment> {
+        self.segments.kdata.replace(Segment::new(bytes))
+    }
+
+    fn make_text_segment(&self, instructions: &[Instruction]) -> Segment {
+        Segment::new_text(instructions, self.flags.endian())
     }
 }

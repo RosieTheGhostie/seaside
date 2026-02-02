@@ -21,3 +21,8 @@ features = ["serde"]
 version = "*"
 path = "../constants"
 features = ["register", "serde", "services"]
+
+[dependencies.seaside-int-utils]
+version = "0.4.0"
+path = "../int-utils"
+features = ["byte-stream", "endian"]
