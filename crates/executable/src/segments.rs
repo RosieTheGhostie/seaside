@@ -7,16 +7,16 @@ use serde_bytes::ByteBuf;
 pub struct Segments {
     pub text: Segment,
 
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub ktext: Option<Segment>,
 
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub r#extern: Option<Segment>,
 
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub data: Option<Segment>,
 
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub kdata: Option<Segment>,
 }
 

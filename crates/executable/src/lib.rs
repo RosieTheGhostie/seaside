@@ -21,7 +21,7 @@ pub struct Executable {
     pub memory_map: MemoryMap,
     pub services: Services,
 
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub debug_info: Option<DebugInfo>,
 
     pub segments: Segments,
