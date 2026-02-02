@@ -158,6 +158,55 @@ impl AddressRange {
         self.base <= address && address <= self.limit
     }
 
+    /// Computes the midpoint of the range, rounding downwards.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use] extern crate seaside_address_range;
+    /// assert_eq!(address_range![..].midpoint(), 0x7fff_ffff);
+    /// assert_eq!(address_range![0x1001_0000..0x1001_0000].midpoint(), 0x1000_7fff);
+    /// assert_eq!(address_range![0xf00d_face..=0xf00d_face].midpoint(), 0xf00d_face);
+    /// ```
+    ///
+    /// # See Also
+    ///
+    /// - [`upper_midpoint`](Self::upper_midpoint)
+    pub const fn midpoint(&self) -> Address {
+        self.base.midpoint(self.limit)
+    }
+
+    /// Computes the midpoint of the range, rounding upwards.
+    ///
+    /// This is essentially the normal midpoint, but using the exclusive limit instead of the
+    /// inclusive one.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use] extern crate seaside_address_range;
+    /// assert_eq!(address_range![..].upper_midpoint(), 0x8000_0000);
+    /// assert_eq!(address_range![0x1000_0000..0x1001_0000].upper_midpoint(), 0x1000_8000);
+    /// assert_eq!(address_range![0xf00d_face..=0xf00d_face].upper_midpoint(), 0xf00d_face);
+    /// ```
+    ///
+    /// # See Also
+    ///
+    /// - [`midpoint`](Self::midpoint)
+    pub const fn upper_midpoint(&self) -> Address {
+        const UPPER_MIDPOINT_OF_FULL_RANGE: Address = 1 << (8 * size_of::<Address>() - 1);
+
+        let (size, overflowed) = (self.limit - self.base).overflowing_add(1);
+        if !overflowed {
+            self.base + size / 2
+        } else {
+            // The only case in which `overflowed` can be `true` is when `base == Address::MIN` and
+            // `limit == Address::MAX`. In other words, `self` would have to be
+            // `AddressRange::FULL`.
+            UPPER_MIDPOINT_OF_FULL_RANGE
+        }
+    }
+
     /// Returns `true` if this range can be [split](Self::split) at the given address.
     ///
     /// # Examples
