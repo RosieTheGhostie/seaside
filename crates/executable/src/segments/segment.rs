@@ -4,23 +4,6 @@ use serde::{Deserialize, Serialize};
 use serde_bytes::ByteBuf;
 
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
-pub struct Segments {
-    pub text: Segment,
-
-    #[serde(default)]
-    pub ktext: Option<Segment>,
-
-    #[serde(default)]
-    pub r#extern: Option<Segment>,
-
-    #[serde(default)]
-    pub data: Option<Segment>,
-
-    #[serde(default)]
-    pub kdata: Option<Segment>,
-}
-
-#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(transparent)]
 #[repr(transparent)]
 pub struct Segment(pub ByteBuf);
