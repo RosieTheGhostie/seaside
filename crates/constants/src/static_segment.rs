@@ -1,10 +1,11 @@
-use strum::{Display, EnumString, IntoStaticStr, VariantNames};
+use strum::{Display, EnumCount, EnumString, IntoStaticStr, VariantNames};
 
 #[derive(
     Clone,
     Copy,
     Debug,
     Display,
+    EnumCount,
     EnumString,
     Eq,
     Hash,
@@ -17,11 +18,11 @@ use strum::{Display, EnumString, IntoStaticStr, VariantNames};
 #[strum(serialize_all = "lowercase")]
 #[repr(u8)]
 pub enum StaticSegment {
-    Data,
-    Extern,
-    KData,
-    KText,
     Text,
+    KText,
+    Extern,
+    Data,
+    KData,
 }
 
 impl StaticSegment {

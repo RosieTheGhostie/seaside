@@ -2,79 +2,73 @@ pub mod directives;
 pub mod error;
 pub mod instruction;
 pub mod parser;
-pub mod segment;
 pub mod token;
 
+mod segments;
 mod string_builder;
 
-use crate::{
-    directives::{SegmentDirective, ValueDirective},
-    error::AssembleError,
-    instruction::{ProcessedInstruction, UnresolvedInstruction, process_instruction},
-    parser::Expr,
-    segment::SegmentBuildInfo,
-};
-use core::iter::zip;
+use std::collections::{HashMap, VecDeque};
+
 use seaside_config::Config;
+use seaside_constants::StaticSegment;
 use seaside_error::rich::{RichError, RichResult, Span};
+use seaside_executable::Executable;
 use seaside_int_utils::Endian;
 use seaside_type_aliases::Address;
-use std::{
-    collections::{HashMap, VecDeque},
-    path::Path,
-};
 
-pub struct Assembler<'src> {
+use directives::ValueDirective;
+use error::AssembleError;
+use instruction::{ProcessedInstruction, UnresolvedInstruction, process_instruction};
+use parser::Expr;
+use segments::{SegmentBuildInfo, Segments};
+
+pub struct Assembler<'src, 'config> {
     /// A deque of [spanned](Span) [expressions](Expr).
     exprs: VecDeque<(Expr<'src>, Span)>,
+
     /// The current state of each segment in the build.
-    segments: [SegmentBuildInfo; 5],
+    segments: Segments,
+
     /// Which segment is currently being built.
-    current_segment: SegmentDirective,
+    current_segment: StaticSegment,
+
     /// A record of all the labels defined so far.
     symbol_table: HashMap<&'src str, Address>,
+
     /// Instructions that have yet to be resolved due to having a [label](parser::Operand::Label) as
     /// an [operand](parser::Operand).
     unresolved: VecDeque<(Address, (UnresolvedInstruction<'src>, Span))>,
-    /// The target build endianness.
-    endian: Endian,
+
+    config: &'config Config,
 }
 
-impl<'src> Assembler<'src> {
-    pub fn new(config: &Config, exprs: VecDeque<(Expr<'src>, Span)>) -> Self {
-        let segments = &config.memory_map.segments;
-
+impl<'src, 'config> Assembler<'src, 'config> {
+    pub fn new(config: &'config Config, exprs: VecDeque<(Expr<'src>, Span)>) -> Self {
         Self {
             exprs,
-            segments: [
-                SegmentBuildInfo::new(segments.data.range.base()),
-                SegmentBuildInfo::new(segments.r#extern.range.base()),
-                SegmentBuildInfo::new(segments.kdata.range.base()),
-                SegmentBuildInfo::new(segments.ktext.range.base()),
-                SegmentBuildInfo::new(segments.text.range.base()),
-            ],
-            current_segment: SegmentDirective::Text,
+            segments: Segments::from_memory_map_segments(&config.memory_map.segments),
+            current_segment: StaticSegment::Text,
             unresolved: VecDeque::new(),
             symbol_table: HashMap::new(),
-            endian: config.endian,
+            config,
         }
     }
 
-    pub fn build(mut self) -> RichResult<Build> {
+    pub fn build(mut self) -> RichResult<Build<'config>> {
         while self.build_next()? {}
         self.resolve_all()?;
-        Ok(Build::new(self.segments))
+        Ok(Build::new(self.segments, self.config))
     }
 
-    fn this_segment(&self) -> &SegmentBuildInfo {
-        &self.segments[self.current_segment as usize]
+    const fn this_segment(&self) -> &SegmentBuildInfo {
+        self.segments.get(self.current_segment)
     }
 
-    fn this_segment_mut(&mut self) -> &mut SegmentBuildInfo {
-        &mut self.segments[self.current_segment as usize]
+    const fn this_segment_mut(&mut self) -> &mut SegmentBuildInfo {
+        self.segments.get_mut(self.current_segment)
     }
 
-    fn next_address(&self) -> Address {
+    const fn next_address(&self) -> Address {
         self.this_segment().next
     }
 
@@ -126,7 +120,7 @@ impl<'src> Assembler<'src> {
                         .with_note("value arrays only supported in data segments"));
                 }
 
-                let endian = self.endian;
+                let endian = self.config.endian;
                 let this_segment = self.this_segment_mut();
                 match directive {
                     ValueDirective::Byte => this_segment.append_i8(span, values),
@@ -154,7 +148,7 @@ impl<'src> Assembler<'src> {
 
                 let pc = self.next_address();
                 let mut bytes = match process_instruction(operator, operands, &span, pc)? {
-                    ProcessedInstruction::MachineCode(machine_code) => match self.endian {
+                    ProcessedInstruction::MachineCode(machine_code) => match self.config.endian {
                         Endian::Little => machine_code.to_le_bytes(),
                         Endian::Big => machine_code.to_be_bytes(),
                     },
@@ -182,26 +176,26 @@ impl<'src> Assembler<'src> {
                         .with_narrow_span(label_span.clone()));
                 }
             };
-            let text_diff =
-                address.checked_sub(self.segments[SegmentDirective::Text as usize].base);
-            let ktext_diff =
-                address.checked_sub(self.segments[SegmentDirective::KText as usize].base);
+            let text_diff = address.checked_sub(self.segments.text.base);
+            let ktext_diff = address.checked_sub(self.segments.ktext.base);
             let segment = match (text_diff, ktext_diff) {
                 (Some(text_diff), Some(ktext_diff)) => {
                     if text_diff < ktext_diff {
-                        SegmentDirective::Text
+                        StaticSegment::Text
                     } else {
-                        SegmentDirective::KText
+                        StaticSegment::KText
                     }
                 }
-                (Some(_), None) => SegmentDirective::Text,
-                (None, Some(_)) => SegmentDirective::KText,
+                (Some(_), None) => StaticSegment::Text,
+                (None, Some(_)) => StaticSegment::KText,
                 (None, None) => {
                     return Err(RichError::new(AssembleError::WrongSegment, span)
                         .with_note(Self::INSTRUCTION_IN_DATA_SEGMENT));
                 }
             };
-            self.segments[segment as usize].overwrite_u32(pc, machine_code, self.endian);
+            self.segments
+                .get_mut(segment)
+                .overwrite_u32(pc, machine_code, self.config.endian);
         }
         Ok(())
     }
@@ -222,23 +216,49 @@ impl<'src> Assembler<'src> {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct Build {
-    segments: [SegmentBuildInfo; 5],
+#[derive(Clone, Debug)]
+pub struct Build<'config> {
+    segments: Segments,
+    config: &'config Config,
 }
 
-impl Build {
-    pub const fn new(segments: [SegmentBuildInfo; 5]) -> Self {
-        Self { segments }
+impl<'config> Build<'config> {
+    pub(crate) const fn new(segments: Segments, config: &'config Config) -> Self {
+        Self { segments, config }
     }
 
-    pub fn export(self, directory: &Path) -> std::io::Result<()> {
-        for (segment, name) in
-            zip(self.segments, SegmentDirective::names()).filter(|(segment, _)| !segment.is_empty())
-        {
-            segment.export(directory.join(name))?;
+    pub fn export(self) -> Executable {
+        use seaside_executable::{Body, Header};
+
+        let mut body = Body::new(self.executable_flags(), self.config.memory_map.clone());
+
+        body.services = self.config.features.services.clone();
+        self.segments
+            .export_into_executable_segments(&mut body.segments);
+
+        Executable::new(Header::default(), body)
+    }
+
+    fn executable_flags(&self) -> seaside_executable::Flags {
+        use seaside_executable::Flags;
+
+        let mut flags = Flags::empty();
+        if self.config.endian == Endian::Big {
+            flags |= Flags::BIG_ENDIAN;
         }
 
-        Ok(())
+        if self.config.features.self_modifying_code {
+            flags |= Flags::SELF_MODIFYING_CODE;
+        }
+
+        if self.config.features.delay_slot {
+            flags |= Flags::DELAY_SLOT;
+        }
+
+        if self.config.features.freeable_heap_allocations {
+            flags |= Flags::FREEABLE_HEAP_ALLOCATIONS;
+        }
+
+        flags
     }
 }

@@ -21,17 +21,21 @@ use seaside_error::{EngineError, rich::Span};
 /// Assembles `source` into a format usable by the seaside interpreter.
 ///
 /// If `output_directory` is [`None`], it defaults to the current working directory.
-pub fn assemble<P>(config: Config, source_path: P, output_directory: Option<PathBuf>) -> Result<()>
+pub fn assemble<P>(config: Config, source_path: P, output_path: Option<PathBuf>) -> Result<()>
 where
     P: AsRef<Path> + Debug,
 {
     let start_time = Instant::now();
 
-    let output_directory = output_directory.unwrap_or_else(|| PathBuf::from("."));
+    let output_path = output_path.unwrap_or_else(|| source_path.as_ref().with_extension("seax"));
     let source = std::fs::read_to_string(&source_path)?;
     let exprs = parse(&source_path, &source)?;
     match Assembler::new(&config, exprs).build() {
-        Ok(build) => build.export(&output_directory)?,
+        Ok(build) => {
+            let executable = build.export();
+            let output_file = std::fs::File::create(output_path)?;
+            executable.to_writer(output_file)?;
+        }
         Err(err) => {
             let _ = err.report(&source, source_path);
             return Err(Error::new(EngineError::AssemblyFailure));

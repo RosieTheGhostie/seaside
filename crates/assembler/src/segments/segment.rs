@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use seaside_error::rich::{Label, RichError, RichResult, Span};
 use seaside_int_utils::Endian;
 use seaside_type_aliases::{Address, Size, UnsignedOffset};
@@ -16,16 +14,20 @@ pub struct SegmentBuildInfo {
 }
 
 impl SegmentBuildInfo {
-    pub fn new(base: Address) -> Self {
+    pub const fn new(base: Address) -> Self {
         Self {
             base,
             next: base,
-            bytes: vec![],
+            bytes: Vec::new(),
         }
     }
 
-    pub fn export(self, path: PathBuf) -> std::io::Result<()> {
-        std::fs::write(path, &self.bytes)
+    pub fn export(self) -> seaside_executable::Segment {
+        self.bytes.into()
+    }
+
+    pub fn take_bytes(self) -> Vec<u8> {
+        self.bytes
     }
 
     pub fn jump_ahead_to(&mut self, expr_span: Span, address: Address) -> RichResult<()> {
