@@ -37,6 +37,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Configuration file versioning via the `version` property.
 - `OutdatedVersion` variant of `seaside_error::EngineError` `enum`.
 - Unused `seaside_int_utils::AllZeroes` `trait`.
+- Unused `seaside-bitflags-serde` crate.
 
 ### Fixed
 
