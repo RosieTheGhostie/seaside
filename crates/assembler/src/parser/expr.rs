@@ -16,31 +16,37 @@ pub enum Expr<'src> {
     SegmentHeader {
         /// The directive used to define this segment.
         directive: SegmentDirective,
+
         /// The memory address to start at.
         ///
         /// If omitted, the assembler will attempt to infer the address to use.
         address: Option<Address>,
     },
+
     /// An alignment command using the `.align` directive.
     AlignCommand {
         /// The power of two to align the bytes to.
         alignment: u8,
     },
+
     /// A spacing command using the `.space` directive.
     SpaceCommand {
         /// The number of padding bytes to insert.
         n_bytes: Size,
     },
+
     /// A C-style include command using the `.include` directive.
     IncludeCommand {
         /// The path of the file to include.
         file_path: &'src str,
     },
+
     /// A command to make labels visible from other files.
     GlobalCommand {
         /// The labels to make global.
         labels: Vec<(&'src str, Span)>,
     },
+
     /// A C-style macro using the `.eqv` directive.
     EqvMacro {
         /// The name of the macro to define.
@@ -48,38 +54,46 @@ pub enum Expr<'src> {
         /// The expression to insert wherever this macro is invoked.
         expr: Box<Expr<'src>>,
     },
+
     /// A command to dynamically set assembler settings.
     SetCommand {
         /// The command to run.
         command: &'src str,
     },
+
     /// A series of scalar values, all of which must be the same type.
     ValueArray {
         /// The directive defining the data type to store.
         directive: ValueDirective,
+
         /// The array of values.
         ///
         /// Their types are only checked during the assembly phase.
         values: Vec<(Value, Span)>,
     },
+
     /// A string literal preceded by an appropriate directive.
     String {
         /// The directive defining the type of string literal to store.
         directive: StringDirective,
+
         /// The string literal to store.
         ///
         /// Escape sequences aren't processed until the assembly phase.
         value: &'src str,
     },
+
     /// A human-readable name for a memory address.
     LabelDef {
         /// The name of this label.
         ident: &'src str,
     },
+
     /// An assembly instruction that will eventually become machine code.
     Instruction {
         /// The name of the operation to perform.
         operator: &'src str,
+
         /// A series of [operand](Operand)s to use in the operation.
         operands: Vec<(Operand<'src>, Span)>,
     },
@@ -108,6 +122,7 @@ impl Display for Expr<'_> {
                         write!(f, ", {label}")?;
                     }
                 }
+
                 Ok(())
             }
             Self::EqvMacro { name, expr } => write!(f, ".eqv {name}, {expr}"),
@@ -121,6 +136,7 @@ impl Display for Expr<'_> {
                         write!(f, ", {value}")?;
                     }
                 }
+
                 Ok(())
             }
             Self::String { directive, value } => write!(f, ".{directive} \"{value}\""),
@@ -138,6 +154,7 @@ impl Display for Expr<'_> {
                         }?;
                     }
                 }
+
                 Ok(())
             }
         }

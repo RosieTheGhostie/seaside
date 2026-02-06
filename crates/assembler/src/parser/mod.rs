@@ -1,6 +1,5 @@
 pub use expr::Expr;
 pub use operand::Operand;
-use seaside_type_aliases::Size;
 pub use value::Value;
 
 mod expected;
@@ -14,6 +13,7 @@ use seaside_error::rich::{
     Label, RichError, RichResult, Span, ToErrorCode,
     span::{combine_spans, consume_span},
 };
+use seaside_type_aliases::Size;
 
 use crate::{error::ParseError, token::Token};
 
@@ -59,10 +59,13 @@ pub type ParserItem<'src> = Result<(Expr<'src>, Span), RichError>;
 pub struct Parser<'src> {
     /// The underlying stream of [token](Token)s derived from the [lexer](Lexer).
     tokens: SpannedIter<'src, Token<'src>>,
+
     /// A queue of [token](Token)s that we've peeked at, but have yet to actually use.
     peeked: Vec<(Token<'src>, Span)>,
+
     /// The [span](Span) of the current [expression](Expr) being parsed.
     expr_span: Span,
+
     /// A representation of what [token](Token)(s) the parser expected to find.
     ///
     /// This is used to generate better error messages.
@@ -487,16 +490,17 @@ impl<'src> Parser<'src> {
             Some(spanned_token) => self.peeked.push(spanned_token),
             None => {}
         }
+
         let mut comma_status = CommaStatus::CannotHave {
             just_saw_comma: false,
         };
         loop {
             match self.next_token() {
                 Some((Token::Error(err), span)) => {
-                    return Err(self.new_error(err).with_narrow_span(span));
+                    break Err(self.new_error(err).with_narrow_span(span));
                 }
                 Some((Token::NewLine, _)) | None => {
-                    return if !matches!(
+                    break if !matches!(
                         comma_status,
                         CommaStatus::CannotHave {
                             just_saw_comma: true
@@ -517,7 +521,7 @@ impl<'src> Parser<'src> {
                 Some((Token::Ctrl(','), span)) => match comma_status {
                     CommaStatus::CannotHave { just_saw_comma: _ } => {
                         self.expected = formatcp!("{} or {}", expected::OPERAND, expected::NEWLINE);
-                        return Err(self.peek_and_throw_unexpected((Token::Ctrl(','), span)));
+                        break Err(self.peek_and_throw_unexpected((Token::Ctrl(','), span)));
                     }
                     CommaStatus::CanHave | CommaStatus::Need => {
                         self.consume_span(span);
@@ -528,7 +532,7 @@ impl<'src> Parser<'src> {
                 },
                 Some(spanned_token) if matches!(comma_status, CommaStatus::Need) => {
                     self.expected = expected::COMMA;
-                    return Err(self.peek_and_throw_unexpected(spanned_token));
+                    break Err(self.peek_and_throw_unexpected(spanned_token));
                 }
                 Some((Token::Int(n), span)) if !comma_status.can_have() => {
                     operands.push((Operand::Int(n), span.clone()));
@@ -554,7 +558,7 @@ impl<'src> Parser<'src> {
                 }
                 Some((token, span)) => {
                     self.expected = match comma_status {
-                        CommaStatus::CannotHave { just_saw_comma: _ } => {
+                        CommaStatus::CannotHave { .. } => {
                             formatcp!("{} or {}", expected::OPERAND, expected::NEWLINE)
                         }
                         CommaStatus::CanHave => formatcp!(
@@ -567,7 +571,7 @@ impl<'src> Parser<'src> {
                             formatcp!("{} or {}", expected::COMMA, expected::NEWLINE)
                         }
                     };
-                    return Err(self.peek_and_throw_unexpected((token, span)));
+                    break Err(self.peek_and_throw_unexpected((token, span)));
                 }
             }
         }

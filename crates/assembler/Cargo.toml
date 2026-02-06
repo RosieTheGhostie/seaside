@@ -11,6 +11,7 @@ const_format = { version = "0.2.34", features = ["fmt"] }
 logos = "0.16.1"
 seaside-config = { version = "*", path = "../config" }
 seaside-type-aliases = { version = "*", path = "../type-aliases" }
+strum = { version = "0.27.2", features = ["derive"] }
 thiserror = "2.0.12"
 
 [dependencies.seaside-constants]

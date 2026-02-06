@@ -64,7 +64,7 @@ impl<'src> StringBuilder<'src> {
             }
         }
 
-        n as char
+        n as _
     }
 
     fn parse_hex_escape(&mut self, start_index: usize, length: usize) -> RichResult<char> {
