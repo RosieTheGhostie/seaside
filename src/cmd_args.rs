@@ -19,52 +19,41 @@ pub struct CmdArgs {
 #[derive(Subcommand)]
 pub enum Commands {
     /// Runs an assembled MIPS program.
-    Run(RunArgs),
+    Run {
+        /// The path to a seaside executable file.
+        executable_path: PathBuf,
 
-    /// Assembles the specified assembly file.
-    Assemble(AssemblyArgs),
+        /// A list of arguments to the program.
+        argv: Vec<String>,
+    },
 
-    /// Disassembles the input machine code into human-readable assembly.
-    Disassemble(DisassemblyArgs),
+    /// Assembles a MIPS assembly file into a seaside executable.
+    Assemble {
+        /// The path of a file containing MIPS assembly code.
+        source: PathBuf,
 
-    /// Prints the file path of the seaside executable.
-    ExePath,
+        /// The file in which to place the assembled executable.
+        #[arg(short, long, alias = "out")]
+        output_path: Option<PathBuf>,
+    },
 
-    /// Prints the path to the global 'Seaside.toml' file.
-    ConfigPath(ConfigPathArgs),
+    /// Disassembles machine code into human-readable assembly.
+    Disassemble {
+        #[command(flatten)]
+        target: DisassemblyTarget,
+
+        /// The starting address of the instruction(s) to disassemble.
+        #[arg(long, alias = "addr", value_parser = ValueParser::new(parse_u32))]
+        address: Option<Address>,
+    },
+
+    /// Prints the path to an important seaside file.
+    #[command(subcommand)]
+    Path(PathCommand),
 
     /// Runs experimental code.
     #[cfg(debug_assertions)]
     Experiment,
-}
-
-#[derive(Args, Debug)]
-pub struct RunArgs {
-    /// The path of a seaside executable file.
-    pub executable_path: PathBuf,
-
-    /// A list of arguments to the program.
-    pub argv: Vec<String>,
-}
-
-#[derive(Args, Debug)]
-pub struct AssemblyArgs {
-    /// The path of a file containing MIPS assembly code.
-    pub source: PathBuf,
-
-    /// The file in which to place the assembled binary.
-    #[arg(short, long, alias = "out")]
-    pub output_path: Option<PathBuf>,
-}
-
-#[derive(Args, Debug)]
-pub struct DisassemblyArgs {
-    #[command(flatten)]
-    pub target: DisassemblyTarget,
-
-    /// The starting address of the instruction(s) to disassemble.
-    #[arg(long, alias = "addr", value_parser = ValueParser::new(parse_u32))]
-    pub address: Option<Address>,
 }
 
 #[derive(Args, Debug)]
@@ -79,11 +68,17 @@ pub struct DisassemblyTarget {
     pub segment: Option<PathBuf>,
 }
 
-#[derive(Args, Debug)]
-pub struct ConfigPathArgs {
-    /// Ensure the configuration file actually exists before printing it.
-    #[arg(long, default_value_t = false)]
-    pub ensure_exists: bool,
+#[derive(Subcommand, Debug)]
+pub enum PathCommand {
+    /// Prints the path to the seaside binary.
+    Binary,
+
+    /// Prints the path to the global 'Seaside.toml' file.
+    Config {
+        /// Ensure the configuration file actually exists before printing it.
+        #[arg(long, default_value_t = false)]
+        ensure_exists: bool,
+    },
 }
 
 fn parse_u32(input: &str) -> Result<u32, ParseIntError> {

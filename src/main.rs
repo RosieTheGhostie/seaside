@@ -1,20 +1,15 @@
 mod cmd_args;
 mod engine;
 
-use std::env::current_exe;
-
 use anyhow::Result;
 use clap::Parser;
 use minimal_logging::macros::{fatalln, grayln};
-use seaside_config::Config;
 
-use cmd_args::{
-    AssemblyArgs, CmdArgs, Commands, ConfigPathArgs, DisassemblyArgs, DisassemblyTarget, RunArgs,
-};
+use cmd_args::{CmdArgs, Commands, DisassemblyTarget, PathCommand};
 
 fn main() {
-    let args: CmdArgs = CmdArgs::parse();
-    let config: Config = match engine::get_config(&args) {
+    let args = CmdArgs::parse();
+    let config = match engine::get_config(&args) {
         Ok(config) => config,
         Err(error) => {
             fatalln!("{error}");
@@ -22,10 +17,10 @@ fn main() {
         }
     };
     if let Err(err) = match args.command {
-        Commands::Run(RunArgs {
-            executable_path: directory,
+        Commands::Run {
+            executable_path,
             argv,
-        }) => match engine::init_interpreter(config, directory, argv) {
+        } => match engine::init_interpreter(config, executable_path, argv) {
             Ok(mut interpreter) => engine::run(&mut interpreter).map(|exit_code| {
                 if let Some(exit_code) = exit_code {
                     grayln!("program terminated with exit code {exit_code}")
@@ -36,32 +31,31 @@ fn main() {
             Err(error) => Err(error),
         },
 
-        Commands::Assemble(AssemblyArgs {
+        Commands::Assemble {
             source,
-            output_path: output_directory,
-        }) => engine::assemble(config, source, output_directory),
+            output_path,
+        } => engine::assemble(config, source, output_path),
 
-        Commands::Disassemble(DisassemblyArgs {
+        Commands::Disassemble {
             target:
                 DisassemblyTarget {
                     instruction: Some(instruction),
                     segment: None,
                 },
             address: start_address,
-        }) => engine::disassemble_instruction(instruction, start_address),
+        } => engine::disassemble_instruction(instruction, start_address),
 
-        Commands::Disassemble(DisassemblyArgs {
+        Commands::Disassemble {
             target:
                 DisassemblyTarget {
                     instruction: None,
                     segment: Some(segment),
                 },
             address: start_address,
-        }) => engine::disassemble_segment(config, segment, start_address),
+        } => engine::disassemble_segment(config, segment, start_address),
 
-        Commands::ExePath => print_exe_path(),
-
-        Commands::ConfigPath(ConfigPathArgs { ensure_exists }) => print_config_path(ensure_exists),
+        Commands::Path(PathCommand::Binary) => print_exe_path(),
+        Commands::Path(PathCommand::Config { ensure_exists }) => print_config_path(ensure_exists),
 
         #[cfg(debug_assertions)]
         Commands::Experiment => experimental_code(),
@@ -73,7 +67,7 @@ fn main() {
 }
 
 fn print_exe_path() -> Result<()> {
-    println!("{}", current_exe()?.display());
+    println!("{}", std::env::current_exe()?.display());
     Ok(())
 }
 
