@@ -40,7 +40,7 @@ pub enum Commands {
     /// Disassembles machine code into human-readable assembly.
     Disassemble {
         #[command(subcommand)]
-        command: DisassemblyCommand,
+        command: DisassembleCommand,
 
         /// The starting address of the instruction(s) to disassemble.
         #[arg(long, alias = "addr", value_parser = ValueParser::new(parse_u32))]
@@ -57,7 +57,7 @@ pub enum Commands {
 }
 
 #[derive(Debug, Subcommand)]
-pub enum DisassemblyCommand {
+pub enum DisassembleCommand {
     /// Disassembles a single machine code instruction.
     Instruction {
         /// A machine code instruction.

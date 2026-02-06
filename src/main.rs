@@ -5,7 +5,7 @@ use anyhow::Result;
 use clap::Parser;
 use minimal_logging::macros::{fatalln, grayln};
 
-use cmd_args::{CmdArgs, Commands, DisassemblyCommand, PathCommand};
+use cmd_args::{CmdArgs, Commands, DisassembleCommand, PathCommand};
 
 fn main() {
     let args = CmdArgs::parse();
@@ -37,12 +37,12 @@ fn main() {
         } => engine::assemble(config, source, output_path),
 
         Commands::Disassemble {
-            command: DisassemblyCommand::Instruction { instruction },
+            command: DisassembleCommand::Instruction { instruction },
             address: start_address,
         } => engine::disassemble_instruction(instruction, start_address),
 
         Commands::Disassemble {
-            command: DisassemblyCommand::Segment { path: segment },
+            command: DisassembleCommand::Segment { path: segment },
             address: start_address,
         } => engine::disassemble_segment(config, segment, start_address),
 
