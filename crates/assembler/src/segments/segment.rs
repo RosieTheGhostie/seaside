@@ -146,6 +146,8 @@ impl SegmentBuildInfo {
         for (value, span) in values {
             let float: f32 = if let Value::Float(float @ F32_MIN..=F32_MAX) = value {
                 float as _
+            } else if let Value::Int(int) = value {
+                int as _
             } else {
                 return Err(RichError::new(AssembleError::WrongType, expr_span.clone())
                     .with_label(Label::new(span).with_message("expected f32")));
@@ -172,7 +174,11 @@ impl SegmentBuildInfo {
         self.next += n_bytes as UnsignedOffset;
         self.bytes.reserve(n_bytes);
         for (value, span) in values {
-            let Value::Float(double) = value else {
+            let double: f64 = if let Value::Float(double) = value {
+                double
+            } else if let Value::Int(int) = value {
+                int as _
+            } else {
                 return Err(RichError::new(AssembleError::WrongType, expr_span.clone())
                     .with_label(Label::new(span).with_message("expected f64")));
             };
@@ -220,8 +226,7 @@ impl SegmentBuildInfo {
         for c in StringBuilder::new(value, span) {
             let c = c?;
             let mut buffer = [0_u8; 4];
-            c.encode_utf8(&mut buffer);
-            let n_bytes = c.len_utf8();
+            let n_bytes = c.encode_utf8(&mut buffer).len();
 
             self.bytes.reserve(n_bytes);
             self.next += n_bytes as UnsignedOffset;

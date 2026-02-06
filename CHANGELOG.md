@@ -20,6 +20,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Switch to GNU GPLv3 license.
 - Reconfigure interpreter to accept a seaside executable file instead of a project directory.
+- Reconfigure assembler to output a seaside executable instead of raw segments.
 - Place unimplemented functionality behind a feature gate instead of commenting it out.
 - Make 'disassemble' command use subcommands rather than mutually exclusive options.
 - Replace 'exe-path' command with 'path binary' command.
@@ -43,6 +44,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Integers not being converted to floating-point numbers when assembling a floating-point value
+  array.
 - Confusion about "syscalls" vs. "system services".
 - Readability issues throughout the project.
 - Some broken paths in documentation comments.
