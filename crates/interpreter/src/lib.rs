@@ -16,7 +16,6 @@ use std::{
     collections::HashMap,
     fs::File,
     io::{self, prelude::*},
-    path::PathBuf,
 };
 
 use anyhow::Result;
@@ -30,7 +29,8 @@ use seaside_constants::{
         spim::{self, Spim},
     },
 };
-use seaside_type_aliases::{Address, ServiceCode, Size};
+use seaside_executable::Executable;
+use seaside_type_aliases::{Address, ServiceCode, Size, size};
 
 use file_handle::FileHandle;
 use memory::regions::Region;
@@ -40,7 +40,6 @@ use rng::Rng;
 pub struct Interpreter {
     pub state: InterpreterState,
     services: HashMap<ServiceCode, for<'a> fn(&'a mut InterpreterState) -> Result<(), Exception>>,
-    pub freeable_heap_allocations: bool,
     pub show_crash_handler: bool,
 }
 
@@ -56,26 +55,38 @@ pub struct InterpreterState {
 }
 
 impl Interpreter {
-    pub fn init(
-        config: &Config,
-        text: PathBuf,
-        r#extern: Option<PathBuf>,
-        data: Option<PathBuf>,
-        ktext: Option<PathBuf>,
-        kdata: Option<PathBuf>,
-        argv: Vec<String>,
-    ) -> Result<Self> {
-        let memory = Memory::init(config, text, r#extern, data, ktext, kdata)?;
+    pub const DEFAULT_ARGUMENT_ALLOCATION_SIZE: Size = 4 * size::unsigned::KiB;
+    pub const STACK_ALIGNMENT: u8 = 4;
+
+    pub fn init(config: &Config, executable: Executable, argv: Vec<String>) -> Result<Self> {
+        let seaside_executable::Body {
+            flags,
+            memory_map,
+            services,
+            debug_info: _, // TODO: implement debugging
+            segments,
+        } = executable.body;
+
+        let memory = Memory::new(&memory_map, &segments, flags);
         let pc = memory.initial_pc();
-        let services = Self::init_services(
-            &config.features.services,
-            config.features.freeable_heap_allocations,
-        )?;
-        let registers = RegisterFile::init(&config.register_defaults);
+        let services = Self::init_services(&services, flags)?;
+
+        let mut registers = RegisterFile::default();
+        registers.write(
+            CpuRegister::GlobalPtr,
+            memory_map.segments.r#extern.range.upper_midpoint(),
+        );
+        registers.write(
+            CpuRegister::StackPtr,
+            (memory.stack_base() & Self::STACK_ALIGNMENT_MASK)
+                - Self::DEFAULT_ARGUMENT_ALLOCATION_SIZE,
+        );
+
         let mut files: HashMap<u32, FileHandle> = HashMap::new();
         files.insert(0, FileHandle::new_stdin());
         files.insert(1, FileHandle::new_stdout());
         files.insert(2, FileHandle::new_stderr());
+
         let mut interpreter = Self {
             state: InterpreterState {
                 memory,
@@ -88,13 +99,10 @@ impl Interpreter {
                 exit_code: None,
             },
             services,
-            freeable_heap_allocations: config.features.freeable_heap_allocations,
             show_crash_handler: config.features.show_crash_handler,
         };
-        interpreter
-            .state
-            .init_argv(argv, config.memory_map.segments.runtime_data.range.limit())
-            .map(|_| interpreter)
+
+        interpreter.state.init_argv(argv).map(|_| interpreter)
     }
 
     pub fn run(&mut self) -> Result<(), Exception> {
@@ -120,14 +128,16 @@ impl Interpreter {
         self.execute(instruction)
     }
 
+    const STACK_ALIGNMENT_MASK: Address = Address::MAX << Self::STACK_ALIGNMENT.ilog2();
+
     fn init_services(
         services: &Services,
-        freeable_heap_allocations: bool,
+        flags: seaside_executable::Flags,
     ) -> Result<HashMap<ServiceCode, for<'a> fn(&'a mut InterpreterState) -> Result<(), Exception>>>
     {
         let mut service_fns = HashMap::new();
         for (&code, &service) in services.iter() {
-            let r#fn = InterpreterState::get_service_fn(service, freeable_heap_allocations);
+            let r#fn = InterpreterState::get_service_fn(service, flags);
             service_fns.insert(code, r#fn);
         }
 
@@ -138,7 +148,7 @@ impl Interpreter {
 impl InterpreterState {
     pub fn get_service_fn(
         service: Service,
-        freeable_heap_allocations: bool,
+        flags: seaside_executable::Flags,
     ) -> fn(&mut InterpreterState) -> Result<(), Exception> {
         match service {
             Service::Spim(Spim::Print(spim::Print::Int)) => InterpreterState::print_int,
@@ -188,11 +198,12 @@ impl InterpreterState {
             Service::Mars(Mars::Dialog(mars::Dialog::Message(mars::MessageDialog::String))) => {
                 InterpreterState::message_dialog_string
             }
-            Service::Spim(Spim::System(spim::System::Sbrk)) if freeable_heap_allocations => {
-                |state: &mut InterpreterState| state.sbrk(true)
-            }
             Service::Spim(Spim::System(spim::System::Sbrk)) => {
-                |state: &mut InterpreterState| state.sbrk(false)
+                if flags.freeable_heap_allocations() {
+                    |state: &mut InterpreterState| state.sbrk(true)
+                } else {
+                    |state: &mut InterpreterState| state.sbrk(false)
+                }
             }
             Service::Spim(Spim::System(spim::System::Exit)) => InterpreterState::exit,
             Service::Spim(Spim::System(spim::System::Exit2)) => InterpreterState::exit_2,
@@ -229,41 +240,61 @@ impl InterpreterState {
         );
     }
 
-    pub fn init_argv(&mut self, argv: Vec<String>, stack_base: Address) -> Result<()> {
+    /// Initialize memory and registers with any program arguments that might exist.
+    ///
+    /// This implementation is more or less a direct translation of MARS', which (as of writing
+    /// this) can be found [here] in the `storeProgramArguments` method of the `ProgramArgumentList`
+    /// class.
+    ///
+    /// [here]: https://github.com/dpetersanderson/MARS/blob/main/mars/simulator/ProgramArgumentList.java
+    pub fn init_argv(&mut self, argv: Vec<String>) -> Result<()> {
+        const DEFAULT_ARGUMENT_ALLOCATION_SIZE: Size = 4 * size::unsigned::KiB;
+
         let argc: Size = argv.len() as _;
         if argc == 0 {
             return Ok(());
         }
 
+        let stack_base: Address = self.memory.stack_base();
         let mut current: Address = stack_base;
+
         let mut arg_addresses: Vec<Address> = Vec::with_capacity(argv.len());
         for arg in &argv {
+            // Add a nul byte to the end of the string.
             current -= 1;
+
+            // Write the string to memory.
+            //
+            // We're writing things backwards because the stack grows towards 0x00000000.
             for byte in arg.bytes().rev() {
                 self.memory.write_u8(current, byte)?;
                 current -= 1;
             }
 
+            // `current` will point to the byte just before the start of the string.
             arg_addresses.push(current + 1);
         }
 
-        let mut stack_frame_base: Address = self.registers.read(CpuRegister::StackPtr);
-        if current < stack_frame_base {
-            stack_frame_base = current - (current % 4) - 4;
+        // We need the stack pointer to be word-aligned, so we unset the lower two bits.
+        let mut stack_ptr: Address = (stack_base - DEFAULT_ARGUMENT_ALLOCATION_SIZE) & 0xffff_fffc;
+        if current < stack_ptr {
+            // Compensate for default argument allocation being too small.
+            stack_ptr = current - (current % 4) - 4;
         }
 
-        stack_frame_base -= 4;
-        for &arg_address in arg_addresses.iter().rev() {
-            self.memory.write_u32(stack_frame_base, arg_address, true)?;
-            stack_frame_base -= 4;
+        // Add a 0 byte to the end of the `argv` array (for some reason).
+        stack_ptr -= 4;
+
+        // Write `argv` onto the stack.
+        for arg_address in arg_addresses.into_iter().rev() {
+            self.memory.write_u32(stack_ptr, arg_address, true)?;
+            stack_ptr -= 4;
         }
 
-        self.memory.write_u32(stack_frame_base, argc, true)?;
-        self.registers
-            .write(CpuRegister::StackPtr, stack_frame_base);
+        self.memory.write_u32(stack_ptr, argc, true)?;
+        self.registers.write(CpuRegister::StackPtr, stack_ptr);
         self.registers.write(CpuRegister::Arg0, argc);
-        self.registers
-            .write(CpuRegister::Arg1, stack_frame_base + 4);
+        self.registers.write(CpuRegister::Arg1, stack_ptr + 4);
 
         Ok(())
     }

@@ -22,22 +22,23 @@ fn main() {
         }
     };
     if let Err(err) = match args.command {
-        Commands::Run(RunArgs { directory, argv }) => {
-            match engine::init_interpreter(config, directory, argv) {
-                Ok(mut interpreter) => engine::run(&mut interpreter).map(|exit_code| {
-                    if let Some(exit_code) = exit_code {
-                        grayln!("program terminated with exit code {exit_code}")
-                    } else {
-                        grayln!("program dropped off the bottom")
-                    }
-                }),
-                Err(error) => Err(error),
-            }
-        }
+        Commands::Run(RunArgs {
+            executable_path: directory,
+            argv,
+        }) => match engine::init_interpreter(config, directory, argv) {
+            Ok(mut interpreter) => engine::run(&mut interpreter).map(|exit_code| {
+                if let Some(exit_code) = exit_code {
+                    grayln!("program terminated with exit code {exit_code}")
+                } else {
+                    grayln!("program dropped off the bottom")
+                }
+            }),
+            Err(error) => Err(error),
+        },
 
         Commands::Assemble(AssemblyArgs {
             source,
-            output_directory,
+            output_path: output_directory,
         }) => engine::assemble(config, source, output_directory),
 
         Commands::Disassemble(DisassemblyArgs {

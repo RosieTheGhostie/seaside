@@ -10,10 +10,6 @@
       "description": "The schema to validate this document against.",
       "type": "string"
     },
-    "version": {
-      "description": "The intended version of seaside to configure.",
-      "$ref": "#/$defs/semver"
-    },
     "endian": {
       "description": "Which byte order to use when parsing/generating machine code and binary data.",
       "$ref": "#/$defs/endian"
@@ -77,7 +73,7 @@
           "deprecated": true
         }
       },
-      "not": { "required": ["system_services", "syscalls"] }
+      "not": { "required": [ "system_services", "syscalls" ] }
     },
     "memory_map": {
       "description": "Maps various memory regions to address ranges. This information is crucial for initializing the interpreter.",
@@ -103,6 +99,10 @@
               "description": ".text",
               "$ref": "#/$defs/segment"
             },
+            "ktext": {
+              "description": ".ktext",
+              "$ref": "#/$defs/segment"
+            },
             "extern": {
               "description": ".extern",
               "$ref": "#/$defs/segment"
@@ -111,7 +111,11 @@
               "description": ".data",
               "$ref": "#/$defs/segment"
             },
-            "runtime_data": {
+            "kdata": {
+              "description": ".kdata",
+              "$ref": "#/$defs/segment"
+            },
+            "stack_and_heap": {
               "description": "The portion of memory in which the stack and heap live.",
               "type": "object",
               "properties": {
@@ -131,217 +135,32 @@
                   "minItems": 2,
                   "additionalItems": false
                 },
-                "heap_size": {
-                  "description": "The maximum number of bytes to allocate for the heap at runtime.",
+                "allocate_stack": {
+                  "description": "The maximum number of bytes to allocate for the stack at runtime.",
                   "$ref": "#/$defs/u32"
                 },
-                "stack_size": {
-                  "description": "The maximum number of bytes to allocate for the stack at runtime.",
+                "allocate_heap": {
+                  "description": "The maximum number of bytes to allocate for the heap at runtime.",
                   "$ref": "#/$defs/u32"
                 }
               },
-              "required": ["range", "heap_size", "stack_size"]
-            },
-            "ktext": {
-              "description": ".ktext",
-              "$ref": "#/$defs/segment"
-            },
-            "kdata": {
-              "description": ".kdata",
-              "$ref": "#/$defs/segment"
+              "required": [ "range", "allocate_stack", "allocate_heap" ]
             },
             "mmio": {
               "description": "MMIO",
               "$ref": "#/$defs/segment"
             }
           },
-          "required": ["text", "extern", "data", "runtime_data", "ktext", "kdata", "mmio"]
+          "required": [ "text", "extern", "data", "stack_and_heap", "ktext", "kdata", "mmio" ]
         }
       },
-      "required": ["exception_handler", "user_space", "kernel_space", "segments"],
-      "additionalProperties": false
-    },
-    "register_defaults": {
-      "description": "Set default values for certain registers.",
-      "type": "object",
-      "properties": {
-        "hi": {
-          "description": "Either the upper word of a 64-bit operation or the remainder from a division operation.",
-          "$ref": "#/$defs/u32",
-          "default": 0
-        },
-        "lo": {
-          "description": "Either the lower word of a 64-bit operation or the quotient from a division operation.",
-          "$ref": "#/$defs/u32",
-          "default": 0
-        },
-        "general_purpose": {
-          "description": "Registers for the CPU.",
-          "type": "object",
-          "properties": {
-            "at": {
-              "description": "A very temporary value designated for assemblers.",
-              "$ref": "#/$defs/u32",
-              "default": 0
-            },
-            "v0": {
-              "description": "Return values and results of most system services.",
-              "$ref": "#/$defs/u32",
-              "default": 0
-            },
-            "v1": {
-              "description": "Return values and results of some system services.",
-              "$ref": "#/$defs/u32",
-              "default": 0
-            },
-            "a0": {
-              "description": "The first argument to a procedure. Occasionally used as a return value by some system services.",
-              "$ref": "#/$defs/u32",
-              "default": 0
-            },
-            "a1": {
-              "description": "The second argument to a procedure. Occasionally used as a return value by some system services.",
-              "$ref": "#/$defs/u32",
-              "default": 0
-            },
-            "a2": {
-              "description": "The third argument to a procedure. Occasionally used as a return value by some system services.",
-              "$ref": "#/$defs/u32",
-              "default": 0
-            },
-            "a3": {
-              "description": "The fourth argument to a procedure. Occasionally used as a return value by some system services.",
-              "$ref": "#/$defs/u32",
-              "default": 0
-            },
-            "t0": {
-              "$ref": "#/$defs/t<n>"
-            },
-            "t1": {
-              "$ref": "#/$defs/t<n>"
-            },
-            "t2": {
-              "$ref": "#/$defs/t<n>"
-            },
-            "t3": {
-              "$ref": "#/$defs/t<n>"
-            },
-            "t4": {
-              "$ref": "#/$defs/t<n>"
-            },
-            "t5": {
-              "$ref": "#/$defs/t<n>"
-            },
-            "t6": {
-              "$ref": "#/$defs/t<n>"
-            },
-            "t7": {
-              "$ref": "#/$defs/t<n>"
-            },
-            "s0": {
-              "$ref": "#/$defs/s<n>"
-            },
-            "s1": {
-              "$ref": "#/$defs/s<n>"
-            },
-            "s2": {
-              "$ref": "#/$defs/s<n>"
-            },
-            "s3": {
-              "$ref": "#/$defs/s<n>"
-            },
-            "s4": {
-              "$ref": "#/$defs/s<n>"
-            },
-            "s5": {
-              "$ref": "#/$defs/s<n>"
-            },
-            "s6": {
-              "$ref": "#/$defs/s<n>"
-            },
-            "s7": {
-              "$ref": "#/$defs/s<n>"
-            },
-            "t8": {
-              "$ref": "#/$defs/t<n>"
-            },
-            "t9": {
-              "$ref": "#/$defs/t<n>"
-            },
-            "k0": {
-              "$ref": "#/$defs/k<n>"
-            },
-            "k1": {
-              "$ref": "#/$defs/k<n>"
-            },
-            "gp": {
-              "description": "A pointer to the global area.",
-              "$ref": "#/$defs/u32",
-              "default": 268468224
-            },
-            "sp": {
-              "description": "A pointer to the top of the stack.",
-              "$ref": "#/$defs/u32",
-              "default": 2147479548
-            },
-            "fp": {
-              "description": "The frame pointer.",
-              "$ref": "#/$defs/u32",
-              "default": 0
-            },
-            "ra": {
-              "description": "The address to return to at the end of a procedure.",
-              "$ref": "#/$defs/u32",
-              "default": 0
-            }
-          },
-          "additionalProperties": false
-        },
-        "coprocessor_0": {
-          "description": "Registers for coprocessor 0.",
-          "type": "object",
-          "properties": {
-            "vaddr": {
-              "description": "The memory address at which the exception occurred.",
-              "$ref": "#/$defs/u32",
-              "default": 0
-            },
-            "status": {
-              "description": "Holds the interrupt mask and enable bits.",
-              "$ref": "#/$defs/u32",
-              "default": 65297
-            },
-            "cause": {
-              "description": "Describes the type of exception and holds pending interrupt bits.",
-              "$ref": "#/$defs/u32",
-              "default": 0
-            },
-            "epc": {
-              "description": "The address of the instruction that caused the exception.",
-              "$ref": "#/$defs/u32",
-              "default": 0
-            }
-          },
-          "additionalProperties": false
-        },
-        "floating_point": {
-          "description": "Registers for the FPU (a.k.a., coprocessor 1).",
-          "type": "object",
-          "patternProperties": {
-            "^f(?:\\d|[0-2]\\d|3[01])$": {
-              "$ref": "#/$defs/u32",
-              "default": 0
-            }
-          },
-          "additionalProperties": false
-        }
-      },
+      "required": [ "exception_handler", "user_space", "kernel_space", "segments" ],
       "additionalProperties": false
     }
   },
-  "required": ["version", "memory_map"],
+  "required": [ "memory_map" ],
   "additionalProperties": false,
-  "not": { "required": ["endian", "byte_order"] },
+  "not": { "required": [ "endian", "byte_order" ] },
 
   "$defs": {
     "address_range": {
@@ -369,24 +188,8 @@
       "$comment": "An explicit ordering of bytes in multi-byte data structures.",
 
       "type": "string",
-      "enum": ["little", "lsb", "big", "msb"],
+      "enum": [ "little", "lsb", "big", "msb" ],
       "default": "little"
-    },
-    "k<n>": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-
-      "description": "A miscellaneous temporary value used exclusively by the kernel.",
-
-      "$ref": "#/$defs/u32",
-      "default": 0
-    },
-    "s<n>": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-
-      "description": "A miscellaneous value meant to be preserved across procedure calls. Commonly used as local variables of non-leaf procedures.",
-
-      "$ref": "#/$defs/u32",
-      "default": 0
     },
     "segment": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -402,16 +205,8 @@
           "$ref": "#/$defs/u32"
         }
       },
-      "required": ["range", "allocate"],
+      "required": [ "range", "allocate" ],
       "additionalProperties": false
-    },
-    "semver": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-
-      "$comment": "A semantic version number compliant with SemVer v2.0.0.",
-
-      "type": "string",
-      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
     },
     "system_services": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -424,14 +219,6 @@
         }
       },
       "additionalProperties": false
-    },
-    "t<n>": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-
-      "description": "A miscellaneous temporary value.",
-
-      "$ref": "#/$defs/u32",
-      "default": 0
     },
     "u32": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",

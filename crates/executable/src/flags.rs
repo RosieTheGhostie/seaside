@@ -14,11 +14,23 @@ bitflags! {
 
 impl Flags {
     pub const fn endian(&self) -> Endian {
-        if self.contains(Flags::BIG_ENDIAN) {
+        if self.contains(Self::BIG_ENDIAN) {
             Endian::Big
         } else {
             Endian::Little
         }
+    }
+
+    pub const fn self_modifying_code(&self) -> bool {
+        self.contains(Self::SELF_MODIFYING_CODE)
+    }
+
+    pub const fn delay_slot(&self) -> bool {
+        self.contains(Self::DELAY_SLOT)
+    }
+
+    pub const fn freeable_heap_allocations(&self) -> bool {
+        self.contains(Self::FREEABLE_HEAP_ALLOCATIONS)
     }
 }
 

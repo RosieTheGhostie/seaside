@@ -1,4 +1,3 @@
-version = "1.3.0"
 endian = "little"
 project_directory_is_cwd = true
 
@@ -64,6 +63,10 @@ kernel_space = [0x80000000, 0xffffffff]
 range = [0x00400000, 0x0ffffffc]
 allocate = 0x800000              # 8 MiB
 
+[memory_map.segments.ktext]
+range = [0x80000000, 0x8fffffff]
+allocate = 0x100000              # 1 MiB
+
 [memory_map.segments.extern]
 range = [0x10000000, 0x1000ffff]
 allocate = 0x10000               # 64 KiB
@@ -72,28 +75,15 @@ allocate = 0x10000               # 64 KiB
 range = [0x10010000, 0x1003ffff]
 allocate = 0x30000               # 192 KiB
 
-[memory_map.segments.runtime_data]
-range = [0x10040000, 0x7fffffff]
-heap_size = 0x20000              # 128 KiB
-stack_size = 0x400000            # 4 MiB
-
-[memory_map.segments.ktext]
-range = [0x80000000, 0x8fffffff]
-allocate = 0x100000              # 1 MiB
-
 [memory_map.segments.kdata]
 range = [0x90000000, 0xfffeffff]
 allocate = 0x100000              # 1 MiB
 
+[memory_map.segments.stack_and_heap]
+range = [0x10040000, 0x7fffffff]
+allocate_stack = 0x400000        # 4 MiB
+allocate_heap = 0x20000          # 128 KiB
+
 [memory_map.segments.mmio]
 range = [0xffff0000, 0xffffffff]
 allocate = 0x1000                # 4 KiB
-
-[register_defaults]
-
-[register_defaults.general_purpose]
-gp = 0x10008000
-sp = 0x7fffeffc
-
-[register_defaults.coprocessor_0]
-status = 0x0000ff11

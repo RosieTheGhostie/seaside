@@ -1,19 +1,13 @@
-use core::{
-    fmt::{self, Display, Formatter},
-    iter::zip,
-};
+use core::fmt::{self, Display, Formatter};
 
-use seaside_config::RegisterDefaults;
 use seaside_constants::{
     ConditionCode,
     register::{CpuRegister, FpuRegister},
 };
 use seaside_type_aliases::Address;
-use strum::IntoEnumIterator;
 
 use crate::Exception;
 
-#[derive(Default)]
 pub struct RegisterFile {
     cpu: [u32; 32],
     pub hi: u32,
@@ -152,30 +146,30 @@ impl RegisterFile {
         self.fpu_flags &= !mask;
         self.fpu_flags |= value;
     }
+}
 
-    pub fn init(register_defaults: &RegisterDefaults) -> Self {
-        let mut register_file = Self::default();
-        for (register, &default_value) in zip(
-            CpuRegister::iter(),
-            register_defaults.general_purpose.iter(),
-        ) {
-            register_file.write(register, default_value);
+impl Default for RegisterFile {
+    fn default() -> Self {
+        Self {
+            cpu: [0x0000_0000; 32],
+            hi: 0x0000_0000,
+            lo: 0x0000_0000,
+            fpu: [0.0; 32],
+            fpu_flags: 0b0000_0000,
+            vaddr: 0x0000_0000,
+
+            // lower half of status:
+            //   11111111 000 1 00 0 1
+            //      a     --- b -- c d
+            //   a: interrupt level mask
+            //   b: user mode flag
+            //   c: exception level
+            //   d: interrupts enabled flag
+            status: 0x0000_ff11,
+
+            cause: 0x0000_0000,
+            epc: 0x0000_0000,
         }
-
-        register_file.hi = register_defaults.hi;
-        register_file.lo = register_defaults.lo;
-        for (register, &default_value) in
-            zip(FpuRegister::iter(), register_defaults.coprocessor_1.iter())
-        {
-            register_file.write(register, default_value);
-        }
-
-        register_file.vaddr = register_defaults.coprocessor_0[0];
-        register_file.status = register_defaults.coprocessor_0[1];
-        register_file.cause = register_defaults.coprocessor_0[2];
-        register_file.epc = register_defaults.coprocessor_0[3];
-
-        register_file
     }
 }
 

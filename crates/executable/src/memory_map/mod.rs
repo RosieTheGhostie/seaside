@@ -15,6 +15,8 @@ pub struct MemoryMap {
     pub exception_handler: Option<Address>,
     pub user_space: AddressRange,
     pub kernel_space: AddressRange,
+
+    #[validate(nested)]
     pub segments: Segments,
 }
 
@@ -27,11 +29,25 @@ impl MemoryMap {
                 .with_message("exception handler is not within kernel-space".into()));
         }
 
-        if self.user_space.overlapping(&self.kernel_space) {
-            return Err(ValidationError::new("no_overlap")
-                .with_message("user-space overlaps with kernel-space".into()));
-        }
+        assert_no_overlap(
+            &self.user_space,
+            &self.kernel_space,
+            "user-space overlaps with kernel-space",
+        )?;
 
+        self.segments.validate_user_space(self.user_space)?;
+        self.segments.validate_kernel_space(self.kernel_space)
+    }
+}
+
+fn assert_no_overlap(
+    range_0: &AddressRange,
+    range_1: &AddressRange,
+    message: &'static str,
+) -> Result<(), ValidationError> {
+    if !range_0.overlapping(range_1) {
         Ok(())
+    } else {
+        Err(ValidationError::new("no_overlap").with_message(message.into()))
     }
 }

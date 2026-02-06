@@ -6,25 +6,27 @@ authors = ["RosieTheGhostie <rosetheghost.dev@gmail.com>"]
 edition = "2024"
 
 [dependencies]
-anyhow = "1.0.100"
+anyhow = "1.0.101"
 num-traits = "0.2.19"
 seaside-error = { version = "*", path = "../error" }
+seaside-executable = { version = "0.1.0", path = "../executable" }
 seaside-type-aliases = { version = "*", path = "../type-aliases" }
 semver = "1.0.27"
 serde = { version = "1.0.228", features = ["derive"] }
 strum = { version = "0.27.2", features = ["derive"] }
+validator = "0.20.0"
 
 [dependencies.seaside-address-range]
 version = "*"
 path = "../address-range"
-features = ["seaside-int-utils", "serde"]
+features = ["serde"]
 
 [dependencies.seaside-constants]
 version = "*"
 path = "../constants"
-features = ["register", "seaside-int-utils", "serde", "services"]
+features = ["register", "seaside-int-utils", "serde", "services", "validator"]
 
 [dependencies.seaside-int-utils]
 version = "*"
 path = "../int-utils"
-features = ["all-zeroes", "endian", "serde"]
+features = ["endian", "serde"]

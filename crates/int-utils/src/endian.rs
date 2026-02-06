@@ -40,13 +40,6 @@ impl From<Endian> for String {
     }
 }
 
-#[cfg(feature = "all-zeroes")]
-impl crate::AllZeroes for Endian {
-    fn all_zeroes() -> Self {
-        Self::Little
-    }
-}
-
 impl Endian {
     /// Returns true if the intended byte order does not match the current platform's byte order.
     #[cfg(target_endian = "little")]

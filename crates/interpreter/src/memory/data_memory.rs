@@ -130,6 +130,10 @@ impl DataMemory {
         }
     }
 
+    pub const fn stack_base(&self) -> Address {
+        self.stack.addresses.end
+    }
+
     pub fn used_heap_space(&self) -> Size {
         self.heap.addresses.len() as Size - self.free_heap_space
     }

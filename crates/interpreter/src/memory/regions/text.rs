@@ -103,6 +103,16 @@ impl TextRegion {
         self.end_pc = Some(self.addresses.start + (self.num_instructions << 2) as UnsignedOffset);
     }
 
+    pub fn populate_instructions(&mut self, instructions: impl Iterator<Item = Instruction>) {
+        self.num_instructions = 0;
+        for (old, new) in zip(self.instructions.iter_mut(), instructions) {
+            *old = new;
+            self.num_instructions += 1;
+        }
+
+        self.end_pc = Some(self.addresses.start + (self.num_instructions << 2) as UnsignedOffset);
+    }
+
     fn calculate_index(&self, address: Address, assert_aligned: bool) -> Option<usize> {
         if !assert_aligned || is_aligned(address, size_of::<Instruction>() as _) {
             self.calculate_index_unaligned(address)

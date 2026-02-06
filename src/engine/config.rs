@@ -4,10 +4,10 @@
 //! - [`get_config`]: Finds and parses a configuration file.
 //! - [`find_global_config`]: Finds the global configuration file.
 
-use std::{fs::read_to_string, path::PathBuf};
+use std::path::PathBuf;
 
 use anyhow::{Context, Error, Result};
-use seaside_config::{Config, Validate};
+use seaside_config::Config;
 use seaside_error::EngineError;
 
 use super::{lazy_project_dirs::PROJECT_DIRS, resolve};
@@ -29,7 +29,7 @@ pub fn get_config(args: &CmdArgs) -> Result<Config> {
         &stupid_binding
     };
 
-    let config: Config = toml::from_str(&read_to_string(config_path)?)?;
+    let config: Config = toml::from_str(&std::fs::read_to_string(config_path)?)?;
     config.validate().map(|_| config)
 }
 

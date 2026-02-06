@@ -122,6 +122,10 @@ impl Memory {
         self.instruction_memory.pc_past_end(pc)
     }
 
+    pub const fn stack_base(&self) -> Address {
+        self.data_memory.stack_base()
+    }
+
     pub const fn free_heap_space(&self) -> Size {
         self.data_memory.free_heap_space
     }

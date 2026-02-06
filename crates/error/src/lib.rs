@@ -29,9 +29,6 @@ pub enum EngineError {
     #[error("engine expected a resource, but couldn't find it")]
     NotFound,
 
-    #[error("this version of seaside is incompatible with the config provided")]
-    OutdatedVersion,
-
     #[error("parsing failed")]
     ParsingFailure,
 }

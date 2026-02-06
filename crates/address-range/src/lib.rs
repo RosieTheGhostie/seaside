@@ -342,15 +342,7 @@ impl Contains<AddressRange> for AddressRange {
 
 impl Overlapping<AddressRange> for AddressRange {
     fn overlapping(&self, other: &Self) -> bool {
-        self.limit >= other.base
-    }
-}
-
-#[cfg(feature = "seaside-int-utils")]
-impl seaside_int_utils::AllZeroes for AddressRange {
-    fn all_zeroes() -> Self {
-        // SAFETY: `0 >= 0`
-        unsafe { Self::new_unchecked(0, 0) }
+        self.contains_address(other.base) || other.contains_address(self.base)
     }
 }
 

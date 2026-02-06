@@ -13,11 +13,16 @@ use seaside_type_aliases::ServiceCode;
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
+#[cfg_attr(feature = "validator", derive(validator::Validate))]
 pub struct Services {
     #[cfg_attr(feature = "serde", serde(flatten))]
     data: HashMap<ServiceCode, Service>,
 
     #[cfg_attr(feature = "serde", serde(skip))]
+    #[cfg_attr(
+        feature = "validator",
+        validate(range(min = 1, message = "missing a service to exit program"))
+    )]
     n_exits: usize,
 }
 
@@ -53,14 +58,5 @@ impl Services {
 
     pub fn iter(&self) -> hash_map::Iter<'_, ServiceCode, Service> {
         self.data.iter()
-    }
-}
-
-#[cfg(feature = "seaside-int-utils")]
-impl seaside_int_utils::AllZeroes for Services {
-    fn all_zeroes() -> Self {
-        Self {
-            ..Default::default()
-        }
     }
 }

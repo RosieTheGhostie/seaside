@@ -131,7 +131,7 @@ impl DataRegion {
         }
     }
 
-    pub fn populate(&mut self, bytes: Vec<u8>) {
+    pub fn populate(&mut self, bytes: &[u8]) {
         self.data[..bytes.len()].copy_from_slice(&bytes);
     }
 

@@ -9,11 +9,6 @@ edition = "2024"
 seaside-type-aliases = { version = "*", path = "../type-aliases" }
 serde = { version = "1.0.219", optional = true }
 
-[dependencies.seaside-int-utils]
-version = "*"
-path = "../int-utils"
-optional = true
-
 [features]
 default = []
-full = ["seaside-int-utils", "serde"]
+full = ["serde"]

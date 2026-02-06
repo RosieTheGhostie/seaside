@@ -3,42 +3,40 @@
 //! Provides the wrapper functions [`init_interpreter`] and [`run`], which initialize and run the
 //! interpreter, respectively.
 
-use std::{env::set_current_dir, path::PathBuf};
+use std::path::Path;
 
 use anyhow::{Context, Error, Result};
 use seaside_config::Config;
 use seaside_error::EngineError;
+use seaside_executable::Executable;
 use seaside_interpreter::Interpreter;
 
-use super::resolve;
-
 /// Initializes the interpreter in preparation for execution via the [`run`] function.
-pub fn init_interpreter(
+pub fn init_interpreter<P>(
     config: Config,
-    mut directory: PathBuf,
+    executable_path: P,
     argv: Vec<String>,
-) -> Result<Interpreter> {
-    if !directory.is_dir() {
-        return Err(Error::new(EngineError::InvalidProjectDirectory))
-            .context("expected project path to be a directory");
-    }
-
-    if config.project_directory_is_cwd {
-        set_current_dir(&directory)
+) -> Result<Interpreter>
+where
+    P: AsRef<Path>,
+{
+    let executable_path = executable_path.as_ref();
+    if config.project_directory_is_cwd
+        && let Some(project_directory) = executable_path.parent()
+    {
+        std::env::set_current_dir(project_directory)
             .map_err(|_| Error::new(EngineError::ExternalFailure))
-            .with_context(|| format!("failed to change the cwd to {}", directory.display()))?;
-
-        directory = PathBuf::from(".");
+            .with_context(|| {
+                format!(
+                    "failed to change the cwd to {}",
+                    project_directory.display()
+                )
+            })?;
     }
 
-    let text = resolve(&directory, "text", true)
-        .ok_or_else(|| Error::new(EngineError::InvalidProjectDirectory))
-        .context("missing 'text' file in project directory")?;
-    let r#extern = resolve(&directory, "extern", true);
-    let data = resolve(&directory, "data", true);
-    let ktext = resolve(&directory, "ktext", true);
-    let kdata = resolve(&directory, "kdata", true);
-    Interpreter::init(&config, text, r#extern, data, ktext, kdata, argv)
+    let executable_file = std::fs::File::open(executable_path)?;
+    let executable = Executable::from_reader(executable_file)?;
+    Interpreter::init(&config, executable, argv)
 }
 
 /// Runs `interpreter`.
@@ -53,6 +51,7 @@ pub fn run(interpreter: &mut Interpreter) -> Result<Option<u8>> {
             if interpreter.show_crash_handler {
                 interpreter.state.print_crash_handler();
             }
+
             Err(exception.into())
         }
     }

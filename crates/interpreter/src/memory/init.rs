@@ -1,75 +1,69 @@
-use std::path::PathBuf;
-
-use anyhow::Result;
-use seaside_config::{
-    Config,
-    memory_map::{RuntimeData, Segment},
+use seaside_executable::{
+    MemoryMap, Segment, Segments,
+    memory_map::{self, SegmentInfo},
 };
 use seaside_int_utils::Endian;
 
 use super::{DataMemory, DataRegion, InstructionMemory, Memory, TextRegion};
 
 impl Memory {
-    pub fn init(
-        config: &Config,
-        text: PathBuf,
-        r#extern: Option<PathBuf>,
-        data: Option<PathBuf>,
-        ktext: Option<PathBuf>,
-        kdata: Option<PathBuf>,
-    ) -> Result<Self> {
-        let segments = &config.memory_map.segments;
+    pub fn new(
+        memory_map: &MemoryMap,
+        segments: &Segments,
+        executable_flags: seaside_executable::Flags,
+    ) -> Self {
+        let endian = executable_flags.endian();
         let instruction_memory = InstructionMemory::new(
-            init_text_region(&segments.text, Some(text), config.endian)?,
-            init_text_region(&segments.ktext, ktext, config.endian)?,
-            config.memory_map.exception_handler,
-            config.features.self_modifying_code,
+            init_text_region(&memory_map.segments.text, Some(&segments.text), endian),
+            init_text_region(&memory_map.segments.ktext, segments.ktext.as_ref(), endian),
+            memory_map.exception_handler,
+            executable_flags.contains(seaside_executable::Flags::SELF_MODIFYING_CODE),
         );
-        let [heap, stack] = init_heap_and_stack(&segments.runtime_data);
+        let [stack, heap] = init_stack_and_heap(&memory_map.segments.stack_and_heap);
         let data_memory = DataMemory::new(
-            init_data_region(&segments.r#extern, r#extern)?,
-            init_data_region(&segments.data, data)?,
+            init_data_region(&memory_map.segments.r#extern, segments.r#extern.as_ref()),
+            init_data_region(&memory_map.segments.data, segments.data.as_ref()),
             heap,
             stack,
-            init_data_region(&segments.kdata, kdata)?,
-            init_data_region(&segments.mmio, None)?,
+            init_data_region(&memory_map.segments.kdata, segments.kdata.as_ref()),
+            init_data_region(&memory_map.segments.mmio, None),
         );
 
-        Ok(Self {
+        Self {
             instruction_memory,
             data_memory,
-            endian: config.endian,
-        })
+            endian,
+        }
     }
 }
 
 fn init_text_region(
-    segment: &Segment,
-    path: Option<PathBuf>,
+    segment_info: &SegmentInfo,
+    segment: Option<&Segment>,
     endian: Endian,
-) -> Result<TextRegion> {
-    let mut region = TextRegion::new(segment.range.base(), segment.allocate as _);
-    if let Some(path) = path {
-        region.populate(std::fs::read(path)?, endian);
+) -> TextRegion {
+    let mut region = TextRegion::new(segment_info.range.base(), segment_info.allocate as _);
+    if let Some(segment) = segment {
+        region.populate_instructions(segment.iter_as_text(endian));
     }
 
-    Ok(region)
+    region
 }
 
-fn init_data_region(segment: &Segment, path: Option<PathBuf>) -> Result<DataRegion> {
-    let mut region = DataRegion::new(segment.range.base(), segment.allocate as _);
-    if let Some(path) = path {
-        region.populate(std::fs::read(path)?);
+fn init_data_region(segment_info: &SegmentInfo, segment: Option<&Segment>) -> DataRegion {
+    let mut region = DataRegion::new(segment_info.range.base(), segment_info.allocate as _);
+    if let Some(segment) = segment {
+        region.populate(&**segment);
     }
 
-    Ok(region)
+    region
 }
 
-fn init_heap_and_stack(runtime_data: &RuntimeData) -> [DataRegion; 2] {
-    let heap_low_address = runtime_data.range.base();
-    let stack_low_address = runtime_data.range.limit() - runtime_data.stack_size + 1;
+fn init_stack_and_heap(stack_and_heap: &memory_map::StackAndHeap) -> [DataRegion; 2] {
+    let stack_low_address = stack_and_heap.range.limit() - stack_and_heap.allocate_stack + 1;
+    let heap_low_address = stack_and_heap.range.base();
     [
-        DataRegion::new(heap_low_address, runtime_data.heap_size as _),
-        DataRegion::new(stack_low_address, runtime_data.stack_size as _),
+        DataRegion::new(stack_low_address, stack_and_heap.allocate_stack as _),
+        DataRegion::new(heap_low_address, stack_and_heap.allocate_heap as _),
     ]
 }

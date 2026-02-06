@@ -19,7 +19,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - Switch to GNU GPLv3 license.
+- Reconfigure interpreter to accept a seaside executable file instead of a project directory.
 - Place unimplemented functionality behind a feature gate instead of commenting it out.
+- Rename `runtime_data` table in `memory_map.segments` to `stack_and_heap`.
 - Rename `LexError` variant of `seaside_assembler::error::ParseError` to `Lex`.
 - Rename `number_fmt` module in `seaside_constants` crate to `number_format`.
 - Replace `seaside_assember::directives::SegmentDirective` with `seaside_constants::StaticSegment`
@@ -28,6 +30,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Rearrange `use` statements.
 - Implement string conversion for non-error types with `strum` rather than `thiserror`.
 - Embed exception code in `enum` discriminant.
+
+### Removed
+
+- Register default value configuration via the `register_defaults` table.
+- Configuration file versioning via the `version` property.
+- `OutdatedVersion` variant of `seaside_error::EngineError` `enum`.
+- Unused `seaside_int_utils::AllZeroes` `trait`.
 
 ### Fixed
 
