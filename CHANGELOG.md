@@ -21,6 +21,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Switch to GNU GPLv3 license.
 - Reconfigure interpreter to accept a seaside executable file instead of a project directory.
 - Place unimplemented functionality behind a feature gate instead of commenting it out.
+- Make 'disassemble' command use subcommands rather than mutually exclusive options.
 - Replace 'exe-path' command with 'path binary' command.
 - Rename `runtime_data` table in `memory_map.segments` to `stack_and_heap`.
 - Rename `LexError` variant of `seaside_assembler::error::ParseError` to `Lex`.

@@ -1,7 +1,7 @@
 use core::num::ParseIntError;
 use std::path::PathBuf;
 
-use clap::{Args, Parser, Subcommand, builder::ValueParser};
+use clap::{Parser, Subcommand, builder::ValueParser};
 use seaside_type_aliases::{Address, Instruction};
 
 #[derive(Parser)]
@@ -39,8 +39,8 @@ pub enum Commands {
 
     /// Disassembles machine code into human-readable assembly.
     Disassemble {
-        #[command(flatten)]
-        target: DisassemblyTarget,
+        #[command(subcommand)]
+        command: DisassemblyCommand,
 
         /// The starting address of the instruction(s) to disassemble.
         #[arg(long, alias = "addr", value_parser = ValueParser::new(parse_u32))]
@@ -56,19 +56,23 @@ pub enum Commands {
     Experiment,
 }
 
-#[derive(Args, Debug)]
-#[group(required = true, multiple = false)]
-pub struct DisassemblyTarget {
-    /// A machine code instruction.
-    #[arg(long, value_parser = ValueParser::new(parse_u32))]
-    pub instruction: Option<Instruction>,
+#[derive(Debug, Subcommand)]
+pub enum DisassemblyCommand {
+    /// Disassembles a single machine code instruction.
+    Instruction {
+        /// A machine code instruction.
+        #[arg(value_parser = ValueParser::new(parse_u32))]
+        instruction: Instruction,
+    },
 
-    /// The path of a file containing machine code instructions.
-    #[arg(long)]
-    pub segment: Option<PathBuf>,
+    /// Disassembles a file containing machine code instructions.
+    Segment {
+        /// A path to a file containing machine code instructions.
+        path: PathBuf,
+    },
 }
 
-#[derive(Subcommand, Debug)]
+#[derive(Debug, Subcommand)]
 pub enum PathCommand {
     /// Prints the path to the seaside binary.
     Binary,

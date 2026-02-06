@@ -5,7 +5,7 @@ use anyhow::Result;
 use clap::Parser;
 use minimal_logging::macros::{fatalln, grayln};
 
-use cmd_args::{CmdArgs, Commands, DisassemblyTarget, PathCommand};
+use cmd_args::{CmdArgs, Commands, DisassemblyCommand, PathCommand};
 
 fn main() {
     let args = CmdArgs::parse();
@@ -37,20 +37,12 @@ fn main() {
         } => engine::assemble(config, source, output_path),
 
         Commands::Disassemble {
-            target:
-                DisassemblyTarget {
-                    instruction: Some(instruction),
-                    segment: None,
-                },
+            command: DisassemblyCommand::Instruction { instruction },
             address: start_address,
         } => engine::disassemble_instruction(instruction, start_address),
 
         Commands::Disassemble {
-            target:
-                DisassemblyTarget {
-                    instruction: None,
-                    segment: Some(segment),
-                },
+            command: DisassemblyCommand::Segment { path: segment },
             address: start_address,
         } => engine::disassemble_segment(config, segment, start_address),
 
@@ -59,8 +51,6 @@ fn main() {
 
         #[cfg(debug_assertions)]
         Commands::Experiment => experimental_code(),
-
-        _ => unreachable!("disassemble subcommand will always have exactly one argument"),
     } {
         fatalln!("{err}");
     }
