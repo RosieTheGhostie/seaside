@@ -1,9 +1,10 @@
 use seaside_type_aliases::{Address, Size};
 
-use crate::{
-    Exception,
-    memory::{DataRegion, Region},
+use super::{
+    DataRegion, Region,
+    regions::{ReadableRegion, SliceableRegion, SliceableRegionMut, WriteableRegion},
 };
+use crate::Exception;
 
 pub struct DataMemory {
     r#extern: DataRegion,
@@ -40,7 +41,7 @@ impl DataMemory {
     }
 
     pub const fn stack_base(&self) -> Address {
-        self.stack.addresses.end
+        self.stack.inner.addresses.end
     }
 
     pub fn used_heap_space(&self) -> Size {
@@ -88,7 +89,9 @@ impl Region for DataMemory {
     fn contains(&self, address: Address) -> bool {
         self.region_containing(address).is_some()
     }
+}
 
+impl ReadableRegion for DataMemory {
     fn read_u8(&self, address: Address) -> Result<u8, Exception> {
         match self.region_containing(address) {
             Some(region) => region.read_u8(address),
@@ -116,21 +119,9 @@ impl Region for DataMemory {
             None => Err(Exception::InvalidLoad(address)),
         }
     }
+}
 
-    fn get_slice(&self, address: Address) -> Result<&[u8], Exception> {
-        match self.region_containing(address) {
-            Some(region) => region.get_slice(address),
-            None => Err(Exception::InvalidLoad(address)),
-        }
-    }
-
-    fn get_slice_mut(&mut self, address: Address) -> Result<&mut [u8], Exception> {
-        match self.region_containing_mut(address) {
-            Some(region) => region.get_slice_mut(address),
-            None => Err(Exception::InvalidLoad(address)),
-        }
-    }
-
+impl WriteableRegion for DataMemory {
     fn write_u8(&mut self, address: Address, value: u8) -> Result<(), Exception> {
         match self.region_containing_mut(address) {
             Some(region) => region.write_u8(address, value),
@@ -171,6 +162,24 @@ impl Region for DataMemory {
         match self.region_containing_mut(address) {
             Some(region) => region.write_u64(address, value, assert_aligned),
             None => Err(Exception::InvalidStore(address)),
+        }
+    }
+}
+
+impl SliceableRegion for DataMemory {
+    fn get_slice(&self, address: Address) -> Result<&[u8], Exception> {
+        match self.region_containing(address) {
+            Some(region) => region.get_slice(address),
+            None => Err(Exception::InvalidLoad(address)),
+        }
+    }
+}
+
+impl SliceableRegionMut for DataMemory {
+    fn get_slice_mut(&mut self, address: Address) -> Result<&mut [u8], Exception> {
+        match self.region_containing_mut(address) {
+            Some(region) => region.get_slice_mut(address),
+            None => Err(Exception::InvalidLoad(address)),
         }
     }
 }

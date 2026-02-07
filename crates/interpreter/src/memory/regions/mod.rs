@@ -1,21 +1,15 @@
 pub use data::DataRegion;
-pub use region::Region;
+pub use region::{ReadableRegion, Region, SliceableRegion, SliceableRegionMut, WriteableRegion};
 pub use text::TextRegion;
 
 mod data;
+mod inner;
 mod region;
 mod text;
 
-/// Heap-allocates a byte array with the given length, filling the whole thing with zeroes.
-fn allocate_zeroed_byte_array(len: usize) -> Box<[u8]> {
-    unsafe { Box::new_zeroed_slice(len).assume_init() }
-}
+pub(self) use inner::Inner;
 
-/// Heap-allocates a word array with the given length, filling the whole thing with zeroes.
-///
-/// # Notes
-///
-/// - `len` is the length in **words**, not bytes.
-fn allocate_zeroed_word_array(len: usize) -> Box<[u32]> {
+/// Heap-allocates a byte array with the given length, filling the whole thing with zeroes.
+pub(self) fn allocate_zeroed_byte_array(len: usize) -> Box<[u8]> {
     unsafe { Box::new_zeroed_slice(len).assume_init() }
 }

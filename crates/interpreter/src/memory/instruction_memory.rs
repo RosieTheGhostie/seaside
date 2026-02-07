@@ -1,6 +1,9 @@
 use seaside_type_aliases::Address;
 
-use super::{Region, TextRegion};
+use super::{
+    Region, TextRegion,
+    regions::{ReadableRegion, SliceableRegion, SliceableRegionMut, WriteableRegion},
+};
 use crate::Exception;
 
 pub struct InstructionMemory {
@@ -30,7 +33,7 @@ impl InstructionMemory {
     }
 
     pub const fn initial_pc(&self) -> Address {
-        self.text.addresses.start
+        self.text.addresses().start
     }
 
     pub const fn pc_past_end(&self, pc: Address) -> bool {
@@ -54,7 +57,9 @@ impl Region for InstructionMemory {
     fn contains(&self, address: Address) -> bool {
         self.text.contains(address) || self.ktext.contains(address)
     }
+}
 
+impl ReadableRegion for InstructionMemory {
     fn read_u8(&self, address: Address) -> Result<u8, Exception> {
         self.text
             .read_u8(address)
@@ -78,19 +83,9 @@ impl Region for InstructionMemory {
             .read_u64(address, assert_aligned)
             .or_else(|_| self.ktext.read_u64(address, assert_aligned))
     }
+}
 
-    fn get_slice(&self, address: Address) -> Result<&[u8], Exception> {
-        self.text
-            .get_slice(address)
-            .or_else(|_| self.ktext.get_slice(address))
-    }
-
-    fn get_slice_mut(&mut self, address: Address) -> Result<&mut [u8], Exception> {
-        self.text
-            .get_slice_mut(address)
-            .or_else(|_| self.ktext.get_slice_mut(address))
-    }
-
+impl WriteableRegion for InstructionMemory {
     fn write_u8(&mut self, address: Address, value: u8) -> Result<(), Exception> {
         if self.writeable {
             self.text
@@ -143,6 +138,26 @@ impl Region for InstructionMemory {
                 .or_else(|_| self.ktext.write_u64(address, value, assert_aligned))
         } else {
             Err(Exception::InvalidStore(address))
+        }
+    }
+}
+
+impl SliceableRegion for InstructionMemory {
+    fn get_slice(&self, address: Address) -> Result<&[u8], Exception> {
+        self.text
+            .get_slice(address)
+            .or_else(|_| self.ktext.get_slice(address))
+    }
+}
+
+impl SliceableRegionMut for InstructionMemory {
+    fn get_slice_mut(&mut self, address: Address) -> Result<&mut [u8], Exception> {
+        if self.writeable {
+            self.text
+                .get_slice_mut(address)
+                .or_else(|_| self.ktext.get_slice_mut(address))
+        } else {
+            Err(Exception::InvalidLoad(address))
         }
     }
 }

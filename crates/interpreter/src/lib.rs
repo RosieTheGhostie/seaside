@@ -34,7 +34,7 @@ use seaside_executable::Executable;
 use seaside_type_aliases::{Address, ServiceCode, Size, size};
 
 use file_handle::FileHandle;
-use memory::regions::Region;
+use memory::WriteableRegion;
 use register_file::IndexByRegister;
 use rng::Rng;
 

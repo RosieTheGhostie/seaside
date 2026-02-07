@@ -1,10 +1,10 @@
 pub mod data_memory;
 pub mod instruction_memory;
-pub mod regions;
 
 pub use data_memory::DataMemory;
 pub use instruction_memory::InstructionMemory;
-pub use regions::{DataRegion, Region, TextRegion};
+
+mod regions;
 
 use seaside_executable::{
     MemoryMap, Segment, Segments,
@@ -14,94 +14,15 @@ use seaside_int_utils::Endian;
 use seaside_type_aliases::{Address, Instruction, Size};
 
 use crate::Exception;
+use regions::{DataRegion, TextRegion};
+pub(crate) use regions::{
+    ReadableRegion, Region, SliceableRegion, SliceableRegionMut, WriteableRegion,
+};
 
 pub struct Memory {
     instruction_memory: InstructionMemory,
     data_memory: DataMemory,
     endian: Endian,
-}
-
-impl Region for Memory {
-    fn contains(&self, address: Address) -> bool {
-        self.instruction_memory.contains(address) || self.data_memory.contains(address)
-    }
-
-    fn read_u8(&self, address: Address) -> Result<u8, Exception> {
-        self.instruction_memory
-            .read_u8(address)
-            .or_else(|_| self.data_memory.read_u8(address))
-    }
-
-    fn read_u16(&self, address: Address, assert_aligned: bool) -> Result<u16, Exception> {
-        self.instruction_memory
-            .read_u16(address, assert_aligned)
-            .or_else(|_| self.data_memory.read_u16(address, assert_aligned))
-    }
-
-    fn read_u32(&self, address: Address, assert_aligned: bool) -> Result<u32, Exception> {
-        self.instruction_memory
-            .read_u32(address, assert_aligned)
-            .or_else(|_| self.data_memory.read_u32(address, assert_aligned))
-    }
-
-    fn read_u64(&self, address: Address, assert_aligned: bool) -> Result<u64, Exception> {
-        self.instruction_memory
-            .read_u64(address, assert_aligned)
-            .or_else(|_| self.data_memory.read_u64(address, assert_aligned))
-    }
-
-    fn get_slice(&self, address: Address) -> Result<&[u8], Exception> {
-        // I'm checking data memory first on purpose.
-        self.data_memory
-            .get_slice(address)
-            .or_else(|_| self.instruction_memory.get_slice(address))
-    }
-
-    fn get_slice_mut(&mut self, address: Address) -> Result<&mut [u8], Exception> {
-        // I'm checking data memory first on purpose.
-        self.data_memory
-            .get_slice_mut(address)
-            .or_else(|_| self.instruction_memory.get_slice_mut(address))
-    }
-
-    fn write_u8(&mut self, address: Address, value: u8) -> Result<(), Exception> {
-        self.instruction_memory
-            .write_u8(address, value)
-            .or_else(|_| self.data_memory.write_u8(address, value))
-    }
-
-    fn write_u16(
-        &mut self,
-        address: Address,
-        value: u16,
-        assert_aligned: bool,
-    ) -> Result<(), Exception> {
-        self.instruction_memory
-            .write_u16(address, value, assert_aligned)
-            .or_else(|_| self.data_memory.write_u16(address, value, assert_aligned))
-    }
-
-    fn write_u32(
-        &mut self,
-        address: Address,
-        value: u32,
-        assert_aligned: bool,
-    ) -> Result<(), Exception> {
-        self.instruction_memory
-            .write_u32(address, value, assert_aligned)
-            .or_else(|_| self.data_memory.write_u32(address, value, assert_aligned))
-    }
-
-    fn write_u64(
-        &mut self,
-        address: Address,
-        value: u64,
-        assert_aligned: bool,
-    ) -> Result<(), Exception> {
-        self.instruction_memory
-            .write_u64(address, value, assert_aligned)
-            .or_else(|_| self.data_memory.write_u64(address, value, assert_aligned))
-    }
 }
 
 impl Memory {
@@ -179,6 +100,91 @@ impl Memory {
     }
 }
 
+impl Region for Memory {
+    fn contains(&self, address: Address) -> bool {
+        self.instruction_memory.contains(address) || self.data_memory.contains(address)
+    }
+}
+
+impl ReadableRegion for Memory {
+    fn read_u8(&self, address: Address) -> Result<u8, Exception> {
+        self.instruction_memory
+            .read_u8(address)
+            .or_else(|_| self.data_memory.read_u8(address))
+    }
+
+    fn read_u16(&self, address: Address, assert_aligned: bool) -> Result<u16, Exception> {
+        self.instruction_memory
+            .read_u16(address, assert_aligned)
+            .or_else(|_| self.data_memory.read_u16(address, assert_aligned))
+    }
+
+    fn read_u32(&self, address: Address, assert_aligned: bool) -> Result<u32, Exception> {
+        self.instruction_memory
+            .read_u32(address, assert_aligned)
+            .or_else(|_| self.data_memory.read_u32(address, assert_aligned))
+    }
+
+    fn read_u64(&self, address: Address, assert_aligned: bool) -> Result<u64, Exception> {
+        self.instruction_memory
+            .read_u64(address, assert_aligned)
+            .or_else(|_| self.data_memory.read_u64(address, assert_aligned))
+    }
+}
+
+impl WriteableRegion for Memory {
+    fn write_u8(&mut self, address: Address, value: u8) -> Result<(), Exception> {
+        self.instruction_memory
+            .write_u8(address, value)
+            .or_else(|_| self.data_memory.write_u8(address, value))
+    }
+
+    fn write_u16(
+        &mut self,
+        address: Address,
+        value: u16,
+        assert_aligned: bool,
+    ) -> Result<(), Exception> {
+        self.instruction_memory
+            .write_u16(address, value, assert_aligned)
+            .or_else(|_| self.data_memory.write_u16(address, value, assert_aligned))
+    }
+
+    fn write_u32(
+        &mut self,
+        address: Address,
+        value: u32,
+        assert_aligned: bool,
+    ) -> Result<(), Exception> {
+        self.instruction_memory
+            .write_u32(address, value, assert_aligned)
+            .or_else(|_| self.data_memory.write_u32(address, value, assert_aligned))
+    }
+
+    fn write_u64(
+        &mut self,
+        address: Address,
+        value: u64,
+        assert_aligned: bool,
+    ) -> Result<(), Exception> {
+        self.instruction_memory
+            .write_u64(address, value, assert_aligned)
+            .or_else(|_| self.data_memory.write_u64(address, value, assert_aligned))
+    }
+}
+
+impl SliceableRegion for Memory {
+    fn get_slice(&self, address: Address) -> Result<&[u8], Exception> {
+        self.data_memory.get_slice(address)
+    }
+}
+
+impl SliceableRegionMut for Memory {
+    fn get_slice_mut(&mut self, address: Address) -> Result<&mut [u8], Exception> {
+        self.data_memory.get_slice_mut(address)
+    }
+}
+
 fn init_text_region(
     segment_info: &SegmentInfo,
     segment: Option<&Segment>,
@@ -186,7 +192,7 @@ fn init_text_region(
 ) -> TextRegion {
     let mut region = TextRegion::new(segment_info.range.base(), segment_info.allocate as _);
     if let Some(segment) = segment {
-        region.populate_instructions(segment.iter_as_text(endian));
+        region.populate_instructions(segment.iter_as_text(endian), endian);
     }
 
     region

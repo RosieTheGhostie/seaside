@@ -1,61 +1,99 @@
 use core::{iter::zip, ops::Range};
 
-use seaside_int_utils::{ByteStream, Endian};
-use seaside_type_aliases::{Address, Instruction, UnsignedOffset, address::is_aligned};
+use seaside_int_utils::Endian;
+use seaside_type_aliases::{Address, Instruction, Size, UnsignedOffset};
 
-use super::{Region, allocate_zeroed_word_array};
+use super::{Inner, ReadableRegion, Region, SliceableRegion, SliceableRegionMut, WriteableRegion};
 use crate::Exception;
 
 pub struct TextRegion {
-    pub addresses: Range<Address>,
-    instructions: Box<[u32]>,
+    inner: Inner,
     pub num_instructions: usize,
     pub end_pc: Option<Address>,
 }
 
-impl Region for TextRegion {
-    fn contains(&self, address: Address) -> bool {
-        self.addresses.contains(&address)
-    }
-
-    fn read_u8(&self, address: Address) -> Result<u8, Exception> {
-        Err(Exception::InvalidLoad(address)) // todo
-    }
-
-    fn read_u16(&self, address: Address, _assert_aligned: bool) -> Result<u16, Exception> {
-        Err(Exception::InvalidLoad(address)) // todo
-    }
-
-    fn read_u32(&self, address: Address, assert_aligned: bool) -> Result<u32, Exception> {
-        match self.calculate_index(address, assert_aligned) {
-            Some(index) => Ok(self.instructions[index]),
-            None => Err(Exception::InvalidLoad(address)),
+impl TextRegion {
+    pub fn new(low_address: Address, bytes_to_allocate: Size) -> Self {
+        Self {
+            inner: Inner::new(low_address, bytes_to_allocate),
+            end_pc: None,
+            num_instructions: 0,
         }
     }
 
-    fn read_u64(&self, address: Address, _assert_aligned: bool) -> Result<u64, Exception> {
-        Err(Exception::InvalidLoad(address)) // todo
+    pub const fn addresses(&self) -> &Range<Address> {
+        &self.inner.addresses
     }
 
-    fn get_slice(&self, address: Address) -> Result<&[u8], Exception> {
-        Err(Exception::InvalidLoad(address)) // todo
+    pub fn populate(&mut self, bytes: &[u8]) {
+        self.inner.populate(bytes);
+        self.num_instructions = bytes.len() >> 2;
+        self.update_end_pc();
     }
 
-    fn get_slice_mut(&mut self, address: Address) -> Result<&mut [u8], Exception> {
-        Err(Exception::InvalidLoad(address)) // todo
+    pub fn populate_instructions(
+        &mut self,
+        instructions: impl Iterator<Item = Instruction>,
+        endian: Endian,
+    ) {
+        let to_bytes_fn = match endian {
+            Endian::Little => Instruction::to_le_bytes,
+            Endian::Big => Instruction::to_be_bytes,
+        };
+        let (instruction_chunks, _) = self
+            .inner
+            .bytes
+            .as_chunks_mut::<{ size_of::<Instruction>() }>();
+        self.num_instructions = instruction_chunks.len();
+        for (old, new) in zip(instruction_chunks, instructions) {
+            old.copy_from_slice(&to_bytes_fn(new));
+        }
+
+        self.update_end_pc();
     }
 
-    fn write_u8(&mut self, address: Address, _value: u8) -> Result<(), Exception> {
-        Err(Exception::InvalidStore(address)) // todo
+    fn update_end_pc(&mut self) {
+        self.end_pc =
+            Some(self.inner.addresses.start + (self.num_instructions << 2) as UnsignedOffset);
+    }
+}
+
+impl Region for TextRegion {
+    fn contains(&self, address: Address) -> bool {
+        self.inner.contains(address)
+    }
+}
+
+impl ReadableRegion for TextRegion {
+    fn read_u8(&self, address: Address) -> Result<u8, Exception> {
+        self.inner.read_u8(address)
+    }
+
+    fn read_u16(&self, address: Address, assert_aligned: bool) -> Result<u16, Exception> {
+        self.inner.read_u16(address, assert_aligned)
+    }
+
+    fn read_u32(&self, address: Address, assert_aligned: bool) -> Result<u32, Exception> {
+        self.inner.read_u32(address, assert_aligned)
+    }
+
+    fn read_u64(&self, address: Address, assert_aligned: bool) -> Result<u64, Exception> {
+        self.inner.read_u64(address, assert_aligned)
+    }
+}
+
+impl WriteableRegion for TextRegion {
+    fn write_u8(&mut self, address: Address, value: u8) -> Result<(), Exception> {
+        self.inner.write_u8(address, value)
     }
 
     fn write_u16(
         &mut self,
         address: Address,
-        _value: u16,
-        _assert_aligned: bool,
+        value: u16,
+        assert_aligned: bool,
     ) -> Result<(), Exception> {
-        Err(Exception::InvalidStore(address)) // todo
+        self.inner.write_u16(address, value, assert_aligned)
     }
 
     fn write_u32(
@@ -64,65 +102,71 @@ impl Region for TextRegion {
         value: u32,
         assert_aligned: bool,
     ) -> Result<(), Exception> {
-        let Some(index) = self.calculate_index(address, assert_aligned) else {
-            return Err(Exception::InvalidStore(address));
-        };
-        self.instructions[index] = value;
-
-        Ok(())
+        self.inner.write_u32(address, value, assert_aligned)
     }
 
     fn write_u64(
         &mut self,
         address: Address,
-        _value: u64,
-        _assert_aligned: bool,
+        value: u64,
+        assert_aligned: bool,
     ) -> Result<(), Exception> {
-        Err(Exception::InvalidStore(address)) // todo
+        self.inner.write_u64(address, value, assert_aligned)
     }
 }
 
-impl TextRegion {
-    pub fn new(low_address: Address, bytes_to_allocate: usize) -> Self {
-        let words_to_allocate = bytes_to_allocate >> 2;
-        Self {
-            addresses: low_address..(low_address + bytes_to_allocate as Address),
-            instructions: allocate_zeroed_word_array(words_to_allocate),
-            end_pc: None,
-            num_instructions: 0,
+impl SliceableRegion for TextRegion {
+    fn get_slice(&self, address: Address) -> Result<&[u8], Exception> {
+        self.inner.get_slice(address)
+    }
+}
+
+impl SliceableRegionMut for TextRegion {
+    fn get_slice_mut(&mut self, address: Address) -> Result<&mut [u8], Exception> {
+        self.inner.get_slice_mut(address)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod hello_world {
+        use seaside_type_aliases::Size;
+
+        use crate::memory::TextRegion;
+
+        pub const START: seaside_type_aliases::Address = 0x0040_0000;
+        pub const TEXT: [u8; 24] = [
+            0x04, 0x00, 0x02, 0x24, 0x01, 0x10, 0x01, 0x3c, 0x00, 0x00, 0x24, 0x34, 0x0c, 0x00,
+            0x00, 0x00, 0x0a, 0x00, 0x02, 0x24, 0x0c, 0x00, 0x00, 0x00,
+        ];
+        pub const N_BYTES: Size = TEXT.len() as _;
+
+        pub fn text() -> TextRegion {
+            let mut region = TextRegion::new(START, N_BYTES);
+            region.populate(&TEXT);
+            region
         }
     }
 
-    pub fn populate(&mut self, bytes: Vec<u8>, endian: Endian) {
-        let byte_stream = ByteStream::<'_, u32>::new(&bytes, endian);
-        for (old, new) in zip(self.instructions.iter_mut(), byte_stream) {
-            *old = new;
-        }
-
-        self.num_instructions = bytes.len() >> 2;
-        self.end_pc = Some(self.addresses.start + (self.num_instructions << 2) as UnsignedOffset);
-    }
-
-    pub fn populate_instructions(&mut self, instructions: impl Iterator<Item = Instruction>) {
-        self.num_instructions = 0;
-        for (old, new) in zip(self.instructions.iter_mut(), instructions) {
-            *old = new;
-            self.num_instructions += 1;
-        }
-
-        self.end_pc = Some(self.addresses.start + (self.num_instructions << 2) as UnsignedOffset);
-    }
-
-    fn calculate_index(&self, address: Address, assert_aligned: bool) -> Option<usize> {
-        if !assert_aligned || is_aligned(address, size_of::<Instruction>() as _) {
-            self.calculate_index_unaligned(address)
-        } else {
-            None
+    #[test]
+    fn read_u8_valid() {
+        let text = hello_world::text();
+        for (i, expected) in hello_world::TEXT.into_iter().enumerate() {
+            let address = hello_world::START + i as UnsignedOffset;
+            assert_eq!(text.read_u8(address), Ok(expected));
         }
     }
 
-    fn calculate_index_unaligned(&self, address: Address) -> Option<usize> {
-        self.contains(address)
-            .then(|| ((address - self.addresses.start) >> 2) as _)
+    #[test]
+    fn read_u8_invalid() {
+        let text = hello_world::text();
+        for address in [
+            hello_world::START - 1,
+            hello_world::START + hello_world::N_BYTES as UnsignedOffset,
+        ] {
+            assert_eq!(text.read_u8(address), Err(Exception::InvalidLoad(address)));
+        }
     }
 }

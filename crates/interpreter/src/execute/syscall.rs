@@ -7,7 +7,7 @@ use seaside_type_aliases::{Address, SignedSize};
 
 use crate::{
     Exception, Interpreter, InterpreterState, SyscallFailureKind,
-    memory::Region,
+    memory::{SliceableRegion, SliceableRegionMut},
     register_file::{IndexByRegister, TryIndexByRegister},
 };
 

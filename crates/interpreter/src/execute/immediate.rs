@@ -9,7 +9,7 @@ use seaside_type_aliases::{Address, Instruction, Offset};
 
 use crate::{
     Exception, Interpreter, InterpreterState, math,
-    memory::Region,
+    memory::{ReadableRegion, WriteableRegion},
     register_file::{IndexByRegister, TryIndexByRegister},
 };
 
