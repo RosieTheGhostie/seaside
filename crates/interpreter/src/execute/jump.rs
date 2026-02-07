@@ -12,7 +12,7 @@ impl Interpreter {
         instruction: Instruction,
     ) -> Result<(), Exception> {
         let jump_index = fields::jump_index(instruction);
-        let address = (self.state.pc & 0xf0000000) | (jump_index << 2);
+        let address = (self.state.pc & 0xf000_0000) | (jump_index << 2);
         if opcode == Opcode::JumpAndLink {
             self.state.link();
         }

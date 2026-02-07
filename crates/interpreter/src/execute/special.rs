@@ -1,7 +1,6 @@
 use num_traits::FromPrimitive;
 use seaside_constants::{fn_codes::SpecialFn, register::CpuRegister};
 use seaside_disassembler::fields;
-use seaside_int_utils::SignExtend;
 use seaside_type_aliases::Instruction;
 
 use crate::{Exception, Interpreter, InterpreterState, math, register_file::IndexByRegister};
@@ -68,7 +67,8 @@ impl Interpreter {
 impl InterpreterState {
     /// Shifts `rt_value` left by `shamt` bits and stores the result in CPU register `rd`.
     fn sll(&mut self, rd: CpuRegister, rt_value: u32, shamt: u8) -> Result<(), Exception> {
-        self.registers.write(rd, rt_value << shamt);
+        self.registers
+            .write(rd, math::u32::shift_left(rt_value, shamt as _));
         Ok(())
     }
 
@@ -86,33 +86,38 @@ impl InterpreterState {
 
     /// Shifts `rt_value` right by `shamt` bits and stores the result in CPU register `rd`.
     fn srl(&mut self, rd: CpuRegister, rt_value: u32, shamt: u8) -> Result<(), Exception> {
-        self.registers.write(rd, rt_value >> shamt);
+        self.registers
+            .write(rd, math::u32::shift_right(rt_value, shamt as _));
         Ok(())
     }
 
     /// Shifts `rt_value` right by `shamt` bits (copying the most significant bit of `rt_value` to
     /// fill the space) and stores the result in CPU register `rd`.
     fn sra(&mut self, rd: CpuRegister, rt_value: u32, shamt: u8) -> Result<(), Exception> {
-        self.registers.write(rd, rt_value as i32 >> shamt);
+        self.registers
+            .write(rd, math::u32::shift_right_arithmetic(rt_value, shamt as _));
         Ok(())
     }
 
     /// Shifts `rt_value` left by `rs_value` bits and stores the result in CPU register `rd`.
     fn sllv(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        self.registers.write(rd, rt_value << rs_value);
+        self.registers
+            .write(rd, math::u32::shift_left(rt_value, rs_value));
         Ok(())
     }
 
     /// Shifts `rt_value` right by `rs_value` bits and stores the result in CPU register `rd`.
     fn srlv(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        self.registers.write(rd, rt_value >> rs_value);
+        self.registers
+            .write(rd, math::u32::shift_right(rt_value, rs_value));
         Ok(())
     }
 
     /// Shifts `rt_value` right by `rs_value` bits (copying the most significant bit of `rt_value`
     /// to fill the space) and stores the result in CPU register `rd`.
     fn srav(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        self.registers.write(rd, rt_value as i32 >> rs_value);
+        self.registers
+            .write(rd, math::u32::shift_right_arithmetic(rt_value, rs_value));
         Ok(())
     }
 
@@ -180,9 +185,9 @@ impl InterpreterState {
     /// Multiplies `rs_value` and `rt_value` as signed integers, storing the most significant word
     /// of the product in register `hi` and the least significant word in register `lo`.
     fn mult(&mut self, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        let product: u64 = i64::wrapping_mul(rs_value.sign_extend(), rt_value.sign_extend()) as _;
-        self.registers.hi = (product >> 32) as _;
-        self.registers.lo = (product & u32::MAX as u64) as _;
+        let product = math::i32::mul(rs_value as _, rt_value as _);
+        self.registers.hi = product.upper_half as _;
+        self.registers.lo = product.lower_half as _;
 
         Ok(())
     }
@@ -200,9 +205,13 @@ impl InterpreterState {
     /// Divides `rs_value` by `rt_value` as signed integers, storing the quotient in register `lo`
     /// and the remainder in register `hi`.
     fn div(&mut self, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        if rt_value != 0 {
-            self.registers.hi = i32::wrapping_rem(rs_value as _, rt_value as _) as _;
-            self.registers.lo = i32::wrapping_div(rs_value as _, rt_value as _) as _;
+        if let Some(math::Division {
+            quotient,
+            remainder,
+        }) = math::i32::divmod(rs_value as _, rt_value as _)
+        {
+            self.registers.hi = remainder as _;
+            self.registers.lo = quotient as _;
         }
 
         Ok(())
@@ -230,10 +239,10 @@ impl InterpreterState {
     /// Raises an [integer overflow/underflow][Exception::IntegerOverflowOrUnderflow] exception if
     /// the sum cannot be represented as a signed 32-bit integer.
     fn add(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        let sum = i32::checked_add(rs_value as _, rt_value as _)
-            .ok_or(Exception::IntegerOverflowOrUnderflow)?;
-        self.registers.write(rd, sum);
-
+        self.registers.write(
+            rd,
+            math::i32::add_with_overflow(rs_value as _, rt_value as _)?,
+        );
         Ok(())
     }
 
@@ -250,10 +259,10 @@ impl InterpreterState {
     /// Raises an [integer overflow/underflow][Exception::IntegerOverflowOrUnderflow] exception if
     /// the sum cannot be represented as a signed 32-bit integer.
     fn sub(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        let difference = i32::checked_sub(rs_value as _, rt_value as _)
-            .ok_or(Exception::IntegerOverflowOrUnderflow)?;
-        self.registers.write(rd, difference);
-
+        self.registers.write(
+            rd,
+            math::i32::sub_with_underflow(rs_value as _, rt_value as _)?,
+        );
         Ok(())
     }
 
@@ -266,28 +275,28 @@ impl InterpreterState {
     /// Computes the bitwise AND of `rs_value` and `rt_value`, storing the result in CPU register
     /// `rd`.
     fn and(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        self.registers.write(rd, rs_value & rt_value);
+        self.registers.write(rd, math::u32::and(rs_value, rt_value));
         Ok(())
     }
 
     /// Computes the bitwise OR of `rs_value` and `rt_value`, storing the result in CPU register
     /// `rd`.
     fn or(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        self.registers.write(rd, rs_value | rt_value);
+        self.registers.write(rd, math::u32::or(rs_value, rt_value));
         Ok(())
     }
 
     /// Computes the bitwise XOR of `rs_value` and `rt_value`, storing the result in CPU register
     /// `rd`.
     fn xor(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        self.registers.write(rd, rs_value ^ rt_value);
+        self.registers.write(rd, math::u32::xor(rs_value, rt_value));
         Ok(())
     }
 
     /// Computes the bitwise NOR of `rs_value` and `rt_value`, storing the result in CPU register
     /// `rd`.
     fn nor(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        self.registers.write(rd, !(rs_value | rt_value));
+        self.registers.write(rd, math::u32::nor(rs_value, rt_value));
         Ok(())
     }
 

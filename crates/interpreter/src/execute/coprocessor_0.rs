@@ -62,9 +62,11 @@ impl InterpreterState {
     /// Sets the program counter (PC) to the value of register `epc`, then sets bit 1 of register
     /// `status` to 0.
     fn eret(&mut self, instruction: Instruction) -> Result<(), Exception> {
-        if instruction == 0x42000018 {
+        const ERET: Instruction = 0x4200_0018;
+
+        if instruction == ERET {
             self.pc = self.registers.epc;
-            self.registers.status &= !(0x2_u32); // set bit 1 to 0
+            self.registers.status &= !0x2; // set bit 1 to 0
             Ok(())
         } else {
             Err(Exception::MalformedInstruction)

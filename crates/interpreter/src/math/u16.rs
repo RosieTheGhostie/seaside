@@ -37,6 +37,47 @@ pub const fn add_with_overflow(a: u16, b: u16) -> Result<u16, Exception> {
     }
 }
 
+/// Computes `x + offset`, wrapping at the boundaries of a [`u16`].
+///
+/// # Examples
+///
+/// ```
+/// # use seaside_interpreter::math;
+/// assert_eq!(math::u16::offset(2, 2), 4);
+/// assert_eq!(math::u16::offset(u16::MAX, 1), u16::MIN);
+/// assert_eq!(math::u16::offset(u16::MIN, -1), u16::MAX);
+/// ```
+pub const fn offset(x: u16, offset: i16) -> u16 {
+    x.wrapping_add_signed(offset)
+}
+
+/// Computes `x + offset`.
+///
+/// # Errors
+///
+/// TODO
+///
+/// # Examples
+///
+/// ```
+/// # use seaside_interpreter::{Exception, math};
+/// assert_eq!(math::u16::offset_with_overflow(2, 2), Ok(4));
+/// assert_eq!(
+///     math::u16::offset_with_overflow(u16::MAX, 1),
+///     Err(Exception::IntegerOverflowOrUnderflow),
+/// );
+/// assert_eq!(
+///     math::u16::offset_with_overflow(u16::MIN, -1),
+///     Err(Exception::IntegerOverflowOrUnderflow),
+/// );
+/// ```
+pub const fn offset_with_overflow(x: u16, offset: i16) -> Result<u16, Exception> {
+    match x.checked_add_signed(offset) {
+        Some(sum) => Ok(sum),
+        None => Err(Exception::IntegerOverflowOrUnderflow),
+    }
+}
+
 /// Computes `a - b`, wrapping at the boundaries of a [`u16`].
 ///
 /// # Examples
@@ -112,4 +153,158 @@ pub const fn mul(a: u16, b: u16) -> Product<u16> {
 /// ```
 pub const fn divmod(a: u16, b: u16) -> Option<Division<u16>> {
     if b != 0 { Some(divmod!(a, b)) } else { None }
+}
+
+/// Computes the bitwise AND of `a` and `b`.
+///
+/// # Examples
+///
+/// ```
+/// # use seaside_interpreter::math;
+/// assert_eq!(math::u16::and(0x1234, 0xf0f0), 0x1030);
+/// assert_eq!(math::u16::and(0x5678, 0xa987), 0x0000);
+/// ```
+#[inline(always)]
+pub const fn and(a: u16, b: u16) -> u16 {
+    a & b
+}
+
+/// Computes the bitwise OR of `a` and `b`.
+///
+/// # Examples
+///
+/// ```
+/// # use seaside_interpreter::math;
+/// assert_eq!(math::u16::or(0x1234, 0xf0f0), 0xf2f4);
+/// assert_eq!(math::u16::or(0x5678, 0xa987), 0xffff);
+/// ```
+#[inline(always)]
+pub const fn or(a: u16, b: u16) -> u16 {
+    a | b
+}
+
+/// Computes the bitwise XOR of `a` and `b`.
+///
+/// # Examples
+///
+/// ```
+/// # use seaside_interpreter::math;
+/// assert_eq!(math::u16::xor(0x1234, 0xf0f0), 0xe2c4);
+/// assert_eq!(math::u16::xor(0x5678, 0xa987), 0xffff);
+/// ```
+#[inline(always)]
+pub const fn xor(a: u16, b: u16) -> u16 {
+    a ^ b
+}
+
+/// Computes the bitwise NOT of `a`.
+///
+/// # Examples
+///
+/// ```
+/// # use seaside_interpreter::math;
+/// assert_eq!(math::u16::not(0x1234), 0xedcb);
+/// assert_eq!(math::u16::not(0x0000), 0xffff);
+/// assert_eq!(math::u16::not(0xffff), 0x0000);
+/// ```
+#[inline(always)]
+pub const fn not(a: u16) -> u16 {
+    !a
+}
+
+/// Computes the bitwise NAND of `a` and `b`.
+///
+/// This is equivalent to [negating](not) the [bitwise AND](and) of `a` and `b`.
+///
+/// # Examples
+///
+/// ```
+/// # use seaside_interpreter::math;
+/// assert_eq!(math::u16::nand(0x1234, 0xf0f0), 0xefcf);
+/// assert_eq!(math::u16::nand(0x5678, 0xa987), 0xffff);
+/// ```
+#[inline(always)]
+pub const fn nand(a: u16, b: u16) -> u16 {
+    not(and(a, b))
+}
+
+/// Computes the bitwise NOR of `a` and `b`.
+///
+/// This is equivalent to [negating](not) the [bitwise OR](or) of `a` and `b`.
+///
+/// # Examples
+///
+/// ```
+/// # use seaside_interpreter::math;
+/// assert_eq!(math::u16::nor(0x1234, 0xf0f0), 0x0d0b);
+/// assert_eq!(math::u16::nor(0x5678, 0xa987), 0x0000);
+/// ```
+#[inline(always)]
+pub const fn nor(a: u16, b: u16) -> u16 {
+    not(or(a, b))
+}
+
+/// Computes the bitwise XNOR of `a` and `b`.
+///
+/// This is equivalent to [negating](not) the [bitwise XOR](xor) of `a` and `b`.
+///
+/// # Examples
+///
+/// ```
+/// # use seaside_interpreter::math;
+/// assert_eq!(math::u16::xnor(0x1234, 0xf0f0), 0x1d3b);
+/// assert_eq!(math::u16::xnor(0x5678, 0xa987), 0x0000);
+/// ```
+#[inline(always)]
+pub const fn xnor(a: u16, b: u16) -> u16 {
+    not(xor(a, b))
+}
+
+/// Shifts the bits of `x` left by `n` bits.
+///
+/// Any bits that end up beyond the bounds of a [`u16`] are lost.
+///
+/// # Examples
+///
+/// ```
+/// # use seaside_interpreter::math;
+/// assert_eq!(math::u16::shift_left(0x1234, 3), 0x91a0);
+/// assert_eq!(math::u16::shift_left(0xffff, 12), 0xf000);
+/// ```
+#[inline(always)]
+pub const fn shift_left(x: u16, n: u16) -> u16 {
+    x << n
+}
+
+/// Shifts the bits of `x` right by `n` bits, filling the leftmost `n` bits with zeroes.
+///
+/// Any bits that end up beyond the bounds of a [`u16`] are lost.
+///
+/// # Examples
+///
+/// ```
+/// # use seaside_interpreter::math;
+/// assert_eq!(math::u16::shift_right(0x1234, 3), 0x0246);
+/// assert_eq!(math::u16::shift_right(0xffff, 12), 0x000f);
+/// ```
+#[inline(always)]
+pub const fn shift_right(x: u16, n: u16) -> u16 {
+    x >> n
+}
+
+/// Shifts the bits of `x` right by `n` bits, filling the leftmost `n` bits with the most
+/// significant bit of `x`.
+///
+/// Any bits that end up beyond the bounds of a [`u16`] are lost.
+///
+/// # Examples
+///
+/// ```
+/// # use seaside_interpreter::math;
+/// assert_eq!(math::u16::shift_right_arithmetic(0x1234, 3), 0x0246);
+/// assert_eq!(math::u16::shift_right_arithmetic(0xffff, 12), 0xffff);
+/// ```
+#[inline(always)]
+pub const fn shift_right_arithmetic(x: u16, n: u16) -> u16 {
+    (x.cast_signed() >> n) as _
 }

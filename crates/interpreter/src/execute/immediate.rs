@@ -8,7 +8,7 @@ use seaside_int_utils::{Endian, SignExtend};
 use seaside_type_aliases::{Address, Instruction, Offset};
 
 use crate::{
-    Exception, Interpreter, InterpreterState,
+    Exception, Interpreter, InterpreterState, math,
     memory::Region,
     register_file::{IndexByRegister, TryIndexByRegister},
 };
@@ -179,25 +179,26 @@ impl InterpreterState {
 
     /// Computes the bitwise AND of `rs_value` and `imm`, storing the result in CPU register `rt`.
     fn andi(&mut self, rt: CpuRegister, rs_value: u32, imm: u16) -> Result<(), Exception> {
-        self.registers.write(rt, rs_value & imm as u32);
+        self.registers.write(rt, math::u32::and(rs_value, imm as _));
         Ok(())
     }
 
     /// Computes the bitwise OR of `rs_value` and `imm`, storing the result in CPU register `rt`.
     fn ori(&mut self, rt: CpuRegister, rs_value: u32, imm: u16) -> Result<(), Exception> {
-        self.registers.write(rt, rs_value | imm as u32);
+        self.registers.write(rt, math::u32::or(rs_value, imm as _));
         Ok(())
     }
 
     /// Computes the bitwise XOR of `rs_value` and `imm`, storing the result in CPU register `rt`.
     fn xori(&mut self, rt: CpuRegister, rs_value: u32, imm: u16) -> Result<(), Exception> {
-        self.registers.write(rt, rs_value ^ imm as u32);
+        self.registers.write(rt, math::u32::xor(rs_value, imm as _));
         Ok(())
     }
 
     /// Shifts `imm` left by 16 bits, storing the result in CPU register `rt`.
     fn lui(&mut self, rt: CpuRegister, imm: u16) -> Result<(), Exception> {
-        self.registers.write(rt, (imm as u32) << 16);
+        self.registers
+            .write(rt, math::u32::shift_left(imm as _, 16));
         Ok(())
     }
 
