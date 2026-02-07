@@ -14,7 +14,7 @@ pub type Address = u32;
 /// # Examples
 ///
 /// ```
-/// # use seaside_type_aliases::is_aligned;
+/// # use seaside_type_aliases::address::is_aligned;
 /// // 0x12121212 == 00010010 00010010 00010010 00010010
 /// assert!(is_aligned(0x12121212, 2));
 /// assert!(!is_aligned(0x12121212, 4));

@@ -165,7 +165,7 @@ impl AddressRange {
     /// ```
     /// # #[macro_use] extern crate seaside_address_range;
     /// assert_eq!(address_range![..].midpoint(), 0x7fff_ffff);
-    /// assert_eq!(address_range![0x1001_0000..0x1001_0000].midpoint(), 0x1000_7fff);
+    /// assert_eq!(address_range![0x1000_0000..0x1001_0000].midpoint(), 0x1000_7fff);
     /// assert_eq!(address_range![0xf00d_face..=0xf00d_face].midpoint(), 0xf00d_face);
     /// ```
     ///
@@ -309,7 +309,7 @@ impl AddressRange {
     /// In the following example, `lower` is "supposed" to be empty; however, [`AddressRange`] does
     /// not support such a concept.
     ///
-    /// ```
+    /// ```ignore
     /// # use seaside_address_range::AddressRange;
     /// // Do not do this.
     /// let (lower, upper) = unsafe { AddressRange::FULL.split_unchecked(0x0000_0000) };

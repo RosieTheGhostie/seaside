@@ -8,11 +8,11 @@ pub type Span = core::ops::Range<usize>;
 /// # Examples
 ///
 /// ```
-/// # use crate::rich::span::combine_spans;
-/// assert_eq!(combine_spans(69..420, 42..100), 42..420);
-/// assert_eq!(combine_spans(21..32, 27..84), 21..84);
-/// assert_eq!(combine_spans(0..100, 300..500), 0..500);
-/// assert_eq!(combine_spans(0..100, 10..20), 0..100);
+/// # use seaside_error::rich::span::combine_spans;
+/// assert_eq!(combine_spans([69..420, 42..100]), 42..420);
+/// assert_eq!(combine_spans([21..32, 27..84]), 21..84);
+/// assert_eq!(combine_spans([0..100, 300..500]), 0..500);
+/// assert_eq!(combine_spans([0..100, 10..20]), 0..100);
 /// ```
 pub const fn combine_spans(spans: [Span; 2]) -> Span {
     Span {
@@ -29,7 +29,7 @@ pub const fn combine_spans(spans: [Span; 2]) -> Span {
 /// # Examples
 ///
 /// ```
-/// # use crate::rich::span::consume_span;
+/// # use seaside_error::rich::span::consume_span;
 /// let mut total_span = 69..420;
 /// consume_span(&mut total_span, 42..100);
 /// assert_eq!(total_span, 42..420);

@@ -29,7 +29,7 @@ pub type ParserItem<'src> = Result<(Expr<'src>, Span), RichError>;
 ///
 /// ```
 /// # use logos::Logos;
-/// # use crate::{parser::Parser, token::Token};
+/// # use seaside_assembler::{parser::Parser, token::Token};
 /// const SRC_NAME: &str = "sample.asm";
 /// const SRC: &str = r#".data
 /// kHello: .asciiz "Hello, World!\n"
@@ -48,7 +48,7 @@ pub type ParserItem<'src> = Result<(Expr<'src>, Span), RichError>;
 /// "#;
 ///
 /// let mut n_errors: usize = 0;
-/// for expr_or_err in Parser::new(Token::lexer(SRC)) {
+/// for expr_or_err in Parser::new(SRC) {
 ///     if let Err(err) = expr_or_err {
 ///         n_errors += 1;
 ///         let _ = err.report(SRC, SRC_NAME);
