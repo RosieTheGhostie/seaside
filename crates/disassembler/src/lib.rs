@@ -43,7 +43,7 @@ pub mod disassembler {
         #[test]
         fn bgez() {
             let disassembled = disassemble(0x06010045).expect("disassembly failed");
-            assert_eq!(disassembled, "bgez $s0, 0x0045");
+            assert_eq!(disassembled, "bgez $s0, 0x00000118");
         }
 
         #[test]
@@ -61,7 +61,7 @@ pub mod disassembler {
         #[test]
         fn bc1t() {
             let disassembled = disassemble(0x45190013).expect("disassembly failed");
-            assert_eq!(disassembled, "bc1t 6, 0x0013");
+            assert_eq!(disassembled, "bc1t 6, 0x00000050");
         }
 
         #[test]
