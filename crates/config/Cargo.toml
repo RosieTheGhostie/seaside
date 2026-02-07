@@ -1,9 +1,12 @@
 [package]
 name = "seaside-config"
 description = "Configuration support for seaside"
-version = "1.3.0"                                          # must match the version of seaside
-authors = ["RosieTheGhostie <rosetheghost.dev@gmail.com>"]
-edition = "2024"
+version = "1.3.0"                                 # must match the version of seaside
+authors.workspace = true
+edition.workspace = true
+readme.workspace = true
+repository.workspace = true
+license.workspace = true
 
 [dependencies]
 anyhow = "1.0.101"

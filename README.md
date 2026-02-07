@@ -110,7 +110,7 @@ Other than that, seaside shouldn't need anything else to be installed on your co
 1. Navigate to seaside's root directory. This is the directory containing 'Cargo.toml'.
 2. In your terminal/command prompt of choice, enter the following command:
     ```bash
-    cargo build -r
+    cargo build --bin seaside -r
     ```
 3. Sit back and watch the Rust compiler do its magic.
 

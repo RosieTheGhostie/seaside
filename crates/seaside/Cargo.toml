@@ -1,7 +1,6 @@
 [package]
-name = "seaside-interpreter"
-description = "The MIPS32 interpreter for seaside"
-version = "0.1.0"
+name = "seaside"
+version = "1.3.0"
 authors.workspace = true
 edition.workspace = true
 readme.workspace = true
@@ -9,34 +8,29 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-anyhow = "1.0.101"
-console = "0.16.2"
-num-traits = "0.2"
-rand = "0.9.2"
+anyhow = "1.0.100"
+directories = "6.0.0"
+seaside-assembler = { version = "*", path = "../assembler" }
 seaside-config = { version = "*", path = "../config" }
+seaside-constants = { version = "*", path = "../constants" }
 seaside-error = { version = "*", path = "../error" }
-seaside-executable = { version = "0.1.0", path = "../executable" }
+seaside-executable = { version = "*", path = "../executable" }
+seaside-int-utils = { version = "*", path = "../int-utils" }
+seaside-interpreter = { version = "*", path = "../interpreter" }
 seaside-type-aliases = { version = "*", path = "../type-aliases" }
-strum = "0.27.2"
-thiserror = "2.0.18"
+serde = "1.0.219"
+toml = "0.9.8"
+
+[dependencies.clap]
+version = "4.5.56"
+features = ["cargo", "derive"]
 
 [dependencies.minimal-logging]
 version = "0.5"
 git = "https://github.com/RosieTheGhostie/minimal-logging.git"
 features = ["full"]
 
-[dependencies.seaside-constants]
-version = "*"
-path = "../constants"
-features = ["register", "services"]
-
-[dependencies.seaside-int-utils]
-version = "*"
-path = "../int-utils"
-features = ["byte-stream", "endian"]
-
 [dependencies.seaside-disassembler]
 version = "*"
 path = "../disassembler"
-default-features = false
-features = ["fields"]
+features = ["full"]

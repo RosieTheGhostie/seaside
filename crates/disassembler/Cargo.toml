@@ -2,8 +2,11 @@
 name = "seaside-disassembler"
 description = "The MIPS32 disassembler for seaside"
 version = "0.1.0"
-authors = ["RosieTheGhostie <rosetheghost.dev@gmail.com>"]
-edition = "2024"
+authors.workspace = true
+edition.workspace = true
+readme.workspace = true
+repository.workspace = true
+license.workspace = true
 
 [dependencies]
 num-traits = "0.2"

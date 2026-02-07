@@ -30,6 +30,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Replace `seaside_assember::directives::SegmentDirective` with `seaside_constants::StaticSegment`
   and a type alias.
 - Refactor project directory handling.
+- Convert repository to a Cargo workspace.
 - Rearrange `use` statements.
 - Implement string conversion for non-error types with `strum` rather than `thiserror`.
 - Embed exception code in `enum` discriminant.

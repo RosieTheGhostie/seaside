@@ -1,7 +1,11 @@
 [package]
 name = "seaside-executable"
 version = "0.1.0"
-edition = "2024"
+authors.workspace = true
+edition.workspace = true
+readme.workspace = true
+repository.workspace = true
+license.workspace = true
 
 [dependencies]
 bitflags = { version = "2.10.0", features = ["serde"] }

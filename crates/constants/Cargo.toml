@@ -2,8 +2,11 @@
 name = "seaside-constants"
 description = "Various constant and enum definitions for use in seaside"
 version = "0.1.0"
-authors = ["RosieTheGhostie <rosetheghost.dev@gmail.com>"]
-edition = "2024"
+authors.workspace = true
+edition.workspace = true
+readme.workspace = true
+repository.workspace = true
+license.workspace = true
 
 [dependencies]
 num-derive = { version = "0.4", optional = true }
