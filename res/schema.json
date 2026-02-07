@@ -18,8 +18,8 @@
       "description": "Which byte order to use when parsing/generating machine code and binary data.",
       "$ref": "#/$defs/endian"
     },
-    "project_directory_is_cwd": {
-      "description": "When enabled, changes the current working directory at runtime to the project directory. Otherwise, the current working directory will simply be the directory in which seaside was invoked.",
+    "executable_parent_is_cwd": {
+      "description": "When enabled, changes the current working directory at runtime to the parent of the exectable. Otherwise, the current working directory will simply be the directory in which seaside was invoked.",
       "type": "boolean",
       "default": true
     },
@@ -27,26 +27,7 @@
       "description": "Customizes the features available to the seaside engine.",
       "type": "object",
       "properties": {
-        "kernel_space_accessible": {
-          "description": "Allow users to provide code and/or data relating to kernel space.",
-          "type": "boolean",
-          "default": true
-        },
-        "self_modifying_code": {
-          "description": "Enable run-time modification of text segments (.text and .ktext).",
-          "type": "boolean",
-          "default": false
-        },
-        "delay_slot": {
-          "description": "Simulate the delay slot.\n\nAs of seaside v1.2.0, this setting does nothing, but support for this feature will eventually be introduced.",
-          "type": "boolean",
-          "default": false
-        },
-        "freeable_heap_allocations": {
-          "description": "Allow sbrk to free memory when given a negative argument.",
-          "type": "boolean",
-          "default": false
-        },
+
         "show_crash_handler": {
           "description": "Enable the displaying of a crash handler when an unhandled exception is thrown.\n\nThe crash handler is inspired by the N64's crash handler, in case you were wondering.",
           "type": "boolean",
@@ -56,6 +37,21 @@
           "description": "Set features available to the assembler.",
           "type": "object",
           "properties": {
+            "self_modifying_code": {
+              "description": "Enable run-time modification of text segments (.text and .ktext).",
+              "type": "boolean",
+              "default": false
+            },
+            "delay_slot": {
+              "description": "Simulate the delay slot.\n\nAs of seaside v1.2.0, this setting does nothing, but support for this feature will eventually be introduced.",
+              "type": "boolean",
+              "default": false
+            },
+            "freeable_heap_allocations": {
+              "description": "Allow sbrk to free memory when given a negative argument.",
+              "type": "boolean",
+              "default": false
+            },
             "pseudo_instructions": {
               "description": "Allow use of pseudo-instructions and formats.\n\nAs of seaside v1.2.0, this setting does nothing, but support for this feature will eventually be introduced.",
               "type": "boolean",
@@ -63,7 +59,7 @@
             }
           }
         },
-        "system_services": {
+        "services": {
           "description": "Set system services available to the interpreter.\n\nAttempting to call an unmapped service will result in a SyscallFailure exception. The same goes for services that haven't been implemented, even if they are mapped.",
           "$ref": "#/$defs/system_services"
         },
@@ -73,7 +69,7 @@
           "deprecated": true
         }
       },
-      "not": { "required": [ "system_services", "syscalls" ] }
+      "not": { "required": [ "services", "syscalls" ] }
     },
     "memory_map": {
       "description": "Maps various memory regions to address ranges. This information is crucial for initializing the interpreter.",

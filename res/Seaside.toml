@@ -1,17 +1,16 @@
 endian = "little"
-project_directory_is_cwd = true
+executable_parent_is_cwd = true
 
 [features]
-kernel_space_accessible = true
-self_modifying_code = false
-delay_slot = false
-freeable_heap_allocations = true
 show_crash_handler = true
 
 [features.assembler]
+self_modifying_code = false
+delay_slot = false
+freeable_heap_allocations = true
 pseudo_instructions = false
 
-[features.syscalls]
+[features.services]
 1 = "spim.print.int"
 2 = "spim.print.float"
 3 = "spim.print.double"

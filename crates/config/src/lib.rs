@@ -17,7 +17,7 @@ pub struct Config {
     pub endian: Endian,
 
     #[serde(default = "primitive_defaults::r#true")]
-    pub project_directory_is_cwd: bool,
+    pub executable_parent_is_cwd: bool,
 
     #[validate(nested)]
     pub features: Features,

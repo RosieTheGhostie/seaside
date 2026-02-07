@@ -21,15 +21,16 @@ where
     P: AsRef<Path>,
 {
     let executable_path = executable_path.as_ref();
-    if config.project_directory_is_cwd
-        && let Some(project_directory) = executable_path.parent()
+    if config.executable_parent_is_cwd
+        && let Some(executable_parent) = executable_path.parent()
+        && !executable_parent.as_os_str().is_empty()
     {
-        std::env::set_current_dir(project_directory)
+        std::env::set_current_dir(executable_parent)
             .map_err(|_| Error::new(EngineError::ExternalFailure))
             .with_context(|| {
                 format!(
                     "failed to change the cwd to {}",
-                    project_directory.display()
+                    executable_parent.display()
                 )
             })?;
     }

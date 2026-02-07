@@ -9,10 +9,10 @@ mod string_builder;
 
 use std::collections::{HashMap, VecDeque};
 
-use seaside_config::Config;
-use seaside_constants::StaticSegment;
+use seaside_config::{Config, features::AssemblerOptions};
+use seaside_constants::{Services, StaticSegment};
 use seaside_error::rich::{RichError, RichResult, Span};
-use seaside_executable::Executable;
+use seaside_executable::{Executable, MemoryMap};
 use seaside_int_utils::Endian;
 use seaside_type_aliases::Address;
 
@@ -219,20 +219,29 @@ impl<'src, 'config> Assembler<'src, 'config> {
 #[derive(Clone, Debug)]
 pub struct Build<'config> {
     segments: Segments,
-    config: &'config Config,
+    endian: Endian,
+    options: &'config AssemblerOptions,
+    memory_map: &'config MemoryMap,
+    services: &'config Services,
 }
 
 impl<'config> Build<'config> {
     pub(crate) const fn new(segments: Segments, config: &'config Config) -> Self {
-        Self { segments, config }
+        Self {
+            segments,
+            endian: config.endian,
+            options: &config.features.assembler,
+            memory_map: &config.memory_map,
+            services: &config.features.services,
+        }
     }
 
     pub fn export(self) -> Executable {
         use seaside_executable::{Body, Header};
 
-        let mut body = Body::new(self.executable_flags(), self.config.memory_map.clone());
+        let mut body = Body::new(self.executable_flags(), self.memory_map.clone());
 
-        body.services = self.config.features.services.clone();
+        body.services = self.services.clone();
         self.segments
             .export_into_executable_segments(&mut body.segments);
 
@@ -243,19 +252,19 @@ impl<'config> Build<'config> {
         use seaside_executable::Flags;
 
         let mut flags = Flags::empty();
-        if self.config.endian == Endian::Big {
+        if self.endian == Endian::Big {
             flags |= Flags::BIG_ENDIAN;
         }
 
-        if self.config.features.self_modifying_code {
+        if self.options.self_modifying_code {
             flags |= Flags::SELF_MODIFYING_CODE;
         }
 
-        if self.config.features.delay_slot {
+        if self.options.delay_slot {
             flags |= Flags::DELAY_SLOT;
         }
 
-        if self.config.features.freeable_heap_allocations {
+        if self.options.freeable_heap_allocations {
             flags |= Flags::FREEABLE_HEAP_ALLOCATIONS;
         }
 

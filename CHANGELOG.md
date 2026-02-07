@@ -24,6 +24,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Place unimplemented functionality behind a feature gate instead of commenting it out.
 - Make 'disassemble' command use subcommands rather than mutually exclusive options.
 - Replace 'exe-path' command with 'path binary' command.
+- Relocate assembler-specific flags to `features.assembler`.
 - Rename `runtime_data` table in `memory_map.segments` to `stack_and_heap`.
 - Rename `LexError` variant of `seaside_assembler::error::ParseError` to `Lex`.
 - Rename `number_fmt` module in `seaside_constants` crate to `number_format`.
@@ -37,8 +38,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Removed
 
-- Register default value configuration via the `register_defaults` table.
 - Configuration file versioning via the `version` property.
+- Kernel-space accessibility configuration via the `features.kernel_space_accessible` property.
+- Register default value configuration via the `register_defaults` table.
 - `OutdatedVersion` variant of `seaside_error::EngineError` `enum`.
 - Unused `seaside_int_utils::AllZeroes` `trait`.
 - Unused `seaside-bitflags-serde` crate.
