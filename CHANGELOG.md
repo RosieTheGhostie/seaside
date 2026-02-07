@@ -49,6 +49,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Integers not being converted to floating-point numbers when assembling a floating-point value
   array.
+- Missing implementations for most memory operations on text segments.
 - Confusion about "syscalls" vs. "system services".
 - Readability issues throughout the project.
 - Some broken paths in documentation comments.
