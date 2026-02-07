@@ -1,10 +1,10 @@
-pub mod data;
-pub mod region;
-pub mod text;
-
 pub use data::DataRegion;
 pub use region::Region;
 pub use text::TextRegion;
+
+mod data;
+mod region;
+mod text;
 
 /// Heap-allocates a byte array with the given length, filling the whole thing with zeroes.
 fn allocate_zeroed_byte_array(len: usize) -> Box<[u8]> {

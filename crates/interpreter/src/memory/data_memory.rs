@@ -8,12 +8,80 @@ use crate::{
 pub struct DataMemory {
     r#extern: DataRegion,
     data: DataRegion,
-    heap: DataRegion,
-    stack: DataRegion,
     kdata: DataRegion,
+    stack: DataRegion,
+    heap: DataRegion,
     mmio: DataRegion,
     pub next_heap_address: Address,
     pub free_heap_space: Size,
+}
+
+impl DataMemory {
+    pub fn new(
+        r#extern: DataRegion,
+        data: DataRegion,
+        kdata: DataRegion,
+        stack: DataRegion,
+        heap: DataRegion,
+        mmio: DataRegion,
+    ) -> Self {
+        let next_heap_address = heap.addresses.start;
+        let free_heap_space: Size = heap.addresses.len() as _;
+        Self {
+            r#extern,
+            data,
+            kdata,
+            stack,
+            heap,
+            mmio,
+            next_heap_address,
+            free_heap_space,
+        }
+    }
+
+    pub const fn stack_base(&self) -> Address {
+        self.stack.addresses.end
+    }
+
+    pub fn used_heap_space(&self) -> Size {
+        self.heap.addresses.len() as Size - self.free_heap_space
+    }
+
+    fn region_containing(&self, address: Address) -> Option<&DataRegion> {
+        if self.r#extern.contains(address) {
+            Some(&self.r#extern)
+        } else if self.data.contains(address) {
+            Some(&self.data)
+        } else if self.kdata.contains(address) {
+            Some(&self.kdata)
+        } else if self.stack.contains(address) {
+            Some(&self.stack)
+        } else if self.heap.contains(address) {
+            Some(&self.heap)
+        } else if self.mmio.contains(address) {
+            Some(&self.mmio)
+        } else {
+            None
+        }
+    }
+
+    fn region_containing_mut(&mut self, address: Address) -> Option<&mut DataRegion> {
+        if self.r#extern.contains(address) {
+            Some(&mut self.r#extern)
+        } else if self.data.contains(address) {
+            Some(&mut self.data)
+        } else if self.kdata.contains(address) {
+            Some(&mut self.kdata)
+        } else if self.stack.contains(address) {
+            Some(&mut self.stack)
+        } else if self.heap.contains(address) {
+            Some(&mut self.heap)
+        } else if self.mmio.contains(address) {
+            Some(&mut self.mmio)
+        } else {
+            None
+        }
+    }
 }
 
 impl Region for DataMemory {
@@ -103,74 +171,6 @@ impl Region for DataMemory {
         match self.region_containing_mut(address) {
             Some(region) => region.write_u64(address, value, assert_aligned),
             None => Err(Exception::InvalidStore(address)),
-        }
-    }
-}
-
-impl DataMemory {
-    pub fn new(
-        r#extern: DataRegion,
-        data: DataRegion,
-        heap: DataRegion,
-        stack: DataRegion,
-        kdata: DataRegion,
-        mmio: DataRegion,
-    ) -> Self {
-        let next_heap_address: Address = heap.addresses.start;
-        let free_heap_space: Size = heap.addresses.len() as _;
-        Self {
-            r#extern,
-            data,
-            heap,
-            stack,
-            kdata,
-            mmio,
-            next_heap_address,
-            free_heap_space,
-        }
-    }
-
-    pub const fn stack_base(&self) -> Address {
-        self.stack.addresses.end
-    }
-
-    pub fn used_heap_space(&self) -> Size {
-        self.heap.addresses.len() as Size - self.free_heap_space
-    }
-
-    fn region_containing(&self, address: Address) -> Option<&DataRegion> {
-        if self.r#extern.contains(address) {
-            Some(&self.r#extern)
-        } else if self.data.contains(address) {
-            Some(&self.data)
-        } else if self.heap.contains(address) {
-            Some(&self.heap)
-        } else if self.stack.contains(address) {
-            Some(&self.stack)
-        } else if self.kdata.contains(address) {
-            Some(&self.kdata)
-        } else if self.mmio.contains(address) {
-            Some(&self.mmio)
-        } else {
-            None
-        }
-    }
-
-    fn region_containing_mut(&mut self, address: Address) -> Option<&mut DataRegion> {
-        if self.r#extern.contains(address) {
-            Some(&mut self.r#extern)
-        } else if self.data.contains(address) {
-            Some(&mut self.data)
-        } else if self.heap.contains(address) {
-            Some(&mut self.heap)
-        } else if self.stack.contains(address) {
-            Some(&mut self.stack)
-        } else if self.kdata.contains(address) {
-            Some(&mut self.kdata)
-        } else if self.mmio.contains(address) {
-            Some(&mut self.mmio)
-        } else {
-            None
         }
     }
 }
