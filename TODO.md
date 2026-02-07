@@ -1,0 +1,364 @@
+# TODO List for seaside Features
+
+## Assembler
+
+- [X] Single-file support
+- [ ] Multi-file support
+- [X] Basic instruction formats
+- [ ] Extended instruction formats
+- [ ] MARS-style macros
+- [ ] `.set` support
+  - [X] Parsing
+  - [ ] Assembling
+- [ ] `.eqv` support
+  - [X] Parsing
+  - [ ] Assembling
+- [ ] Debug information generation
+
+### Pseudo-instructions (0/6)
+
+- [ ] `abs $CPU, $CPU`
+- [ ] `b LABEL`
+- [ ] `beqz $CPU, LABEL`
+- [ ] `bge $CPU, $CPU, LABEL`
+- [ ] `bge $CPU, IMM<i16>, LABEL`
+- [ ] `bge $CPU, IMM<u32>, LABEL`
+
+<strong style="color: yellow">TODO: others</strong>
+
+### Extended Instruction Formats (0/12)
+
+- [ ] `add $CPU, $CPU, IMM<i16>`
+- [ ] `add $CPU, $CPU, IMM<i32>`
+- [ ] `addi $CPU, $CPU, IMM<i32>`
+- [ ] `addiu $CPU, $CPU, IMM<i32>`
+- [ ] `addu $CPU, $CPU, IMM<i32>`
+- [ ] `and $CPU, $CPU, IMM<u16>`
+- [ ] `and $CPU, IMM<u16>`
+- [ ] `andi $CPU, $CPU, IMM<u32>`
+- [ ] `andi $CPU, IMM<u16>`
+- [ ] `andi $CPU, IMM<u32>`
+- [ ] `beq $CPU, IMM<i16>, LABEL`
+- [ ] `beq $CPU, IMM<u32>, LABEL`
+
+<strong style="color: yellow">TODO: others</strong>
+
+## Interpreter
+
+- [ ] Delay slot
+
+### Instructions (138/138)
+
+#### Basic (138/138)
+
+- [X] `abs.d`
+- [X] `abs.s`
+- [X] `add`
+- [X] `add.d`
+- [X] `addi`
+- [X] `addiu`
+- [X] `add.s`
+- [X] `addu`
+- [X] `and`
+- [X] `andi`
+- [X] `bc1f`
+- [X] `bc1t`
+- [X] `beq`
+- [X] `bgez`
+- [X] `bgezal`
+- [X] `bgtz`
+- [X] `blez`
+- [X] `bltz`
+- [X] `bltzal`
+- [X] `bne`
+- [X] `break`
+- [X] `ceil.w.d`
+- [X] `ceil.w.s`
+- [X] `c.eq.d`
+- [X] `c.eq.s`
+- [X] `clo`
+- [X] `c.le.d`
+- [X] `c.le.s`
+- [X] `c.lt.d`
+- [X] `c.lt.s`
+- [X] `clz`
+- [X] `cvt.d.s`
+- [X] `cvt.d.w`
+- [X] `cvt.s.d`
+- [X] `cvt.s.w`
+- [X] `cvt.w.d`
+- [X] `cvt.w.s`
+- [X] `div`
+- [X] `div.d`
+- [X] `div.s`
+- [X] `divu`
+- [X] `eret`
+- [X] `floor.w.d`
+- [X] `floor.w.s`
+- [X] `j`
+- [X] `jal`
+- [X] `jalr`
+- [X] `jr`
+- [X] `lb`
+- [X] `lbu`
+- [X] `ldc1`
+- [X] `lh`
+- [X] `lhu`
+- [X] `ll`
+- [X] `lui`
+- [X] `lw`
+- [X] `lwc1`
+- [X] `lwl`
+- [X] `lwr`
+- [X] `madd`
+- [X] `maddu`
+- [X] `mfc0`
+- [X] `mfc1`
+- [X] `mfhi`
+- [X] `mflo`
+- [X] `mov.d`
+- [X] `movf`
+- [X] `movf.d`
+- [X] `movf.s`
+- [X] `movn`
+- [X] `movn.d`
+- [X] `movn.s`
+- [X] `mov.s`
+- [X] `movt`
+- [X] `movt.d`
+- [X] `movt.s`
+- [X] `movz`
+- [X] `movz.d`
+- [X] `movz.s`
+- [X] `msub`
+- [X] `msubu`
+- [X] `mtc0`
+- [X] `mtc1`
+- [X] `mthi`
+- [X] `mtlo`
+- [X] `mul`
+- [X] `mul.d`
+- [X] `mul.s`
+- [X] `mult`
+- [X] `multu`
+- [X] `neg.d`
+- [X] `neg.s`
+- [X] `nor`
+- [X] `or`
+- [X] `ori`
+- [X] `round.w.d`
+- [X] `round.w.s`
+- [X] `sb`
+- [X] `sc`
+- [X] `sdc1`
+- [X] `sh`
+- [X] `sll`
+- [X] `sllv`
+- [X] `slt`
+- [X] `slti`
+- [X] `sltiu`
+- [X] `sltu`
+- [X] `sqrt.d`
+- [X] `sqrt.s`
+- [X] `sra`
+- [X] `srav`
+- [X] `srl`
+- [X] `srlv`
+- [X] `sub`
+- [X] `sub.d`
+- [X] `sub.s`
+- [X] `subu`
+- [X] `sw`
+- [X] `swc1`
+- [X] `swl`
+- [X] `swr`
+- [X] `syscall`
+- [X] `teq`
+- [X] `teqi`
+- [X] `tge`
+- [X] `tgei`
+- [X] `tgeiu`
+- [X] `tgeu`
+- [X] `tlt`
+- [X] `tlti`
+- [X] `tltiu`
+- [X] `tltu`
+- [X] `tne`
+- [X] `tnei`
+- [X] `trunc.w.d`
+- [X] `trunc.w.s`
+- [X] `xor`
+- [X] `xori`
+
+#### Not Planned
+
+- `beql`
+- `bgezall`
+- `bgezl`
+- `bgtzl`
+- `blezl`
+- `bltzall`
+- `bltzl`
+- `bnel`
+- `ceil.l.d`
+- `ceil.l.s`
+- `ceil.l.w`
+- `ceil.w.l`
+- `cfc1`
+- `c.f.d`
+- `c.f.s`
+- `c.nge.d`
+- `c.nge.s`
+- `c.ngl.d`
+- `c.ngle.d`
+- `c.ngle.s`
+- `c.ngl.s`
+- `c.ngt.d`
+- `c.ngt.s`
+- `c.ole.d`
+- `c.ole.s`
+- `c.olt.d`
+- `c.olt.s`
+- `c.seq.d`
+- `c.seq.s`
+- `c.sf.d`
+- `c.sf.s`
+- `ctc1`
+- `c.ueq.d`
+- `c.ueq.s`
+- `c.ule.d`
+- `c.ule.s`
+- `c.ult.d`
+- `c.ult.s`
+- `c.un.d`
+- `c.un.s`
+- `cvt.d.l`
+- `cvt.l.d`
+- `cvt.l.s`
+- `cvt.l.w`
+- `cvt.s.l`
+- `cvt.w.l`
+- `dadd`
+- `daddi`
+- `daddiu`
+- `daddu`
+- `ddiv`
+- `ddivu`
+- `dmfc1`
+- `dmtc1`
+- `dmult`
+- `dmultu`
+- `dsll`
+- `dsll32`
+- `dsllv`
+- `dsra`
+- `dsra32`
+- `dsrav`
+- `dsrl`
+- `dsrl32`
+- `dsrlv`
+- `dsub`
+- `dsubu`
+- `floor.l.d`
+- `floor.l.s`
+- `floor.l.w`
+- `floor.w.l`
+- `ld`
+- `ldc2`
+- `ldl`
+- `ldr`
+- `ldxc1`
+- `lld`
+- `lwc2`
+- `lwc3` (or `pref`?)
+- `lwu`
+- `lwxc1`
+- `madd.d`
+- `madd.s`
+- `msub.d`
+- `msub.s`
+- `nmadd.d`
+- `nmadd.s`
+- `nmsub.d`
+- `nmsub.s`
+- `prefx`
+- `recip.d`
+- `recip.s`
+- `round.l.d`
+- `round.l.s`
+- `round.l.w`
+- `round.w.l`
+- `rsqrt.d`
+- `rsqrt.s`
+- `scd`
+- `sd`
+- `sdc2`
+- `sdl`
+- `sdr`
+- `sdxc1`
+- `swc2`
+- `swc3`
+- `swxc1`
+- `sync`
+- `trunc.l.d`
+- `trunc.l.s`
+- `trunc.l.w`
+- `trunc.w.l`
+
+### System Services (27/39)
+
+- [X] `"spim.print.int"`
+- [X] `"spim.print.float"`
+- [X] `"spim.print.double"`
+- [X] `"spim.print.char"`
+- [X] `"spim.print.string"`
+- [X] `"spim.read.int"`
+- [X] `"spim.read.float"`
+- [X] `"spim.read.double"`
+- [X] `"spim.read.char"`
+- [X] `"spim.read.string"`
+- [X] `"spim.file.open"`
+- [X] `"spim.file.read"`
+- [X] `"spim.file.write"`
+- [X] `"spim.file.close"`
+- [X] `"spim.system.sbrk"`
+- [X] `"spim.system.exit"`
+- [X] `"spim.system.exit2"`
+- [X] `"mars.print.uint"`
+- [X] `"mars.print.bin"`
+- [X] `"mars.print.hex"`
+- [X] `"mars.system.time"`
+- [X] `"mars.system.sleep"`
+- [ ] `"mars.system.midi_out"`
+- [ ] `"mars.system.midi_out_sync"`
+- [X] `"mars.random.set_seed"`
+- [X] `"mars.random.rand_int"`
+- [X] `"mars.random.rand_int_range"`
+- [X] `"mars.random.rand_float"`
+- [X] `"mars.random.rand_double"`
+- [ ] `"mars.dialog.input.confirm"`
+- [ ] `"mars.dialog.input.int"`
+- [ ] `"mars.dialog.input.float"`
+- [ ] `"mars.dialog.input.double"`
+- [ ] `"mars.dialog.input.string"`
+- [ ] `"mars.dialog.message.confirm"`
+- [ ] `"mars.dialog.message.int"`
+- [ ] `"mars.dialog.message.float"`
+- [ ] `"mars.dialog.message.double"`
+- [ ] `"mars.dialog.message.string"`
+
+## Disassembler
+
+- [X] Single-instruction disassembly
+- [X] Raw segment disassembly
+- [ ] Executable disassembly
+
+## Debug Adapter Protocol (DAP)
+
+- [ ] Create breakpoint
+- [ ] Remove breakpoint
+- [ ] Pause on breakpoint
+- [ ] Step
+- [ ] Step over
+- [ ] Read memory
+- [ ] View register file
