@@ -4,7 +4,7 @@ use seaside_disassembler::fields;
 use seaside_int_utils::SignExtend;
 use seaside_type_aliases::Instruction;
 
-use crate::{Exception, Interpreter, InterpreterState, register_file::IndexByRegister};
+use crate::{Exception, Interpreter, InterpreterState, math, register_file::IndexByRegister};
 
 impl Interpreter {
     /// Executes `instruction`, which must follow the "special" instruction format:
@@ -190,9 +190,9 @@ impl InterpreterState {
     /// Multiplies `rs_value` and `rt_value` as unsigned integers, storing the most significant word
     /// of the product in register `hi` and the least significant word in register `lo`.
     fn multu(&mut self, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        let product = u64::wrapping_mul(rs_value as _, rt_value as _);
-        self.registers.hi = (product >> 32) as _;
-        self.registers.lo = (product & u32::MAX as u64) as _;
+        let product = math::u32::mul(rs_value, rt_value);
+        self.registers.hi = product.upper_half;
+        self.registers.lo = product.lower_half;
 
         Ok(())
     }
@@ -211,9 +211,13 @@ impl InterpreterState {
     /// Divides `rs_value` by `rt_value` as unsigned integers, storing the quotient in register `lo`
     /// and the remainder in register `hi`.
     fn divu(&mut self, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        if rt_value != 0 {
-            self.registers.hi = u32::wrapping_rem(rs_value, rt_value);
-            self.registers.lo = u32::wrapping_div(rs_value, rt_value);
+        if let Some(math::Division {
+            quotient,
+            remainder,
+        }) = math::u32::divmod(rs_value, rt_value)
+        {
+            self.registers.hi = remainder;
+            self.registers.lo = quotient;
         }
 
         Ok(())
@@ -235,8 +239,7 @@ impl InterpreterState {
 
     /// Adds `rs_value` and `rt_value` together, storing the sum in CPU register `rd`.
     fn addu(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        self.registers
-            .write(rd, u32::wrapping_add(rs_value, rt_value));
+        self.registers.write(rd, math::u32::add(rs_value, rt_value));
         Ok(())
     }
 
@@ -256,8 +259,7 @@ impl InterpreterState {
 
     /// Subtracts `rt_value` from `rs_value`, storing the difference in CPU register `rd`.
     fn subu(&mut self, rd: CpuRegister, rs_value: u32, rt_value: u32) -> Result<(), Exception> {
-        self.registers
-            .write(rd, u32::wrapping_sub(rs_value, rt_value));
+        self.registers.write(rd, math::u32::sub(rs_value, rt_value));
         Ok(())
     }
 

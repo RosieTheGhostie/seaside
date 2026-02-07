@@ -4,7 +4,7 @@ use seaside_disassembler::fields;
 use seaside_int_utils::SignExtend;
 use seaside_type_aliases::Instruction;
 
-use crate::{Exception, Interpreter, InterpreterState, register_file::IndexByRegister};
+use crate::{Exception, Interpreter, InterpreterState, math, register_file::IndexByRegister};
 
 impl Interpreter {
     /// Executes `instruction`, which must follow the "special 2" instruction format:
@@ -48,9 +48,9 @@ impl InterpreterState {
     /// Multiplies `rs_value` and `rt_value` as unsigned integers, adding the most significant word
     /// of the product to register `hi` and the least significant word to register `lo`.
     fn maddu(&mut self, rt_value: u32, rs_value: u32) -> Result<(), Exception> {
-        let product = u64::wrapping_mul(rs_value as _, rt_value as _);
-        self.registers.hi = u32::wrapping_add(self.registers.hi, (product >> 32) as _);
-        self.registers.lo = u32::wrapping_add(self.registers.lo, (product & u32::MAX as u64) as _);
+        let product = math::u32::mul(rs_value, rt_value);
+        self.registers.hi = math::u32::add(self.registers.hi, product.upper_half);
+        self.registers.lo = math::u32::add(self.registers.lo, product.lower_half);
 
         Ok(())
     }
@@ -76,9 +76,9 @@ impl InterpreterState {
     /// Multiplies `rs_value` and `rt_value` as unsigned integers, subtracting the most significant
     /// word of the product from register `hi` and the least significant word from register `lo`.
     fn msubu(&mut self, rt_value: u32, rs_value: u32) -> Result<(), Exception> {
-        let product = u64::wrapping_mul(rs_value as _, rt_value as _);
-        self.registers.hi = u32::wrapping_sub(self.registers.hi, (product >> 32) as _);
-        self.registers.lo = u32::wrapping_sub(self.registers.lo, (product & u32::MAX as u64) as _);
+        let product = math::u32::mul(rs_value, rt_value);
+        self.registers.hi = math::u32::sub(self.registers.hi, product.upper_half);
+        self.registers.lo = math::u32::sub(self.registers.lo, product.lower_half);
 
         Ok(())
     }

@@ -1,4 +1,5 @@
 pub mod exception;
+pub mod math;
 pub mod memory;
 pub mod register_file;
 pub mod syscall_failure;
