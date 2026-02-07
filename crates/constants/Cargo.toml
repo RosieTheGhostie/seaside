@@ -42,7 +42,7 @@ git = "https://github.com/RosieTheGhostie/take-exact"
 optional = true
 
 [features]
-instruction-format = []
+instruction-format = ["opcodes"]
 number-format = ["dep:num-derive", "dep:strum"]
 opcodes = ["dep:num-derive", "dep:strum"]
 register = [
