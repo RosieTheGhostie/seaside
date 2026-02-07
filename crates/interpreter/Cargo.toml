@@ -28,7 +28,7 @@ features = ["full"]
 [dependencies.seaside-constants]
 version = "*"
 path = "../constants"
-features = ["register", "services"]
+features = ["number-format", "register", "services"]
 
 [dependencies.seaside-int-utils]
 version = "*"
