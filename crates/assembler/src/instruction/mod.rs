@@ -37,7 +37,6 @@ pub fn process_instruction<'src>(
         end: expr_span.start + operator.len(),
     };
 
-    // Using `map_err` would cause `expr_span` to get moved out unless we cloned it. :(
     let operator: Operator = operator.parse().map_err(|_| {
         RichError::new(AssembleError::UnknownOperator, expr_span.clone())
             .with_narrow_span(operator_span)
