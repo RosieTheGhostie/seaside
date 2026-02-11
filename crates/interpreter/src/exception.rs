@@ -4,6 +4,11 @@ use thiserror::Error;
 use crate::SyscallFailureKind;
 
 #[derive(Clone, Copy, Debug, Eq, Error, Hash, Ord, PartialEq, PartialOrd)]
+#[cfg_attr(
+    test,
+    derive(strum::EnumDiscriminants),
+    strum_discriminants(vis(pub(self)), derive(strum::EnumIter, Ord, PartialOrd))
+)]
 #[repr(u32)]
 pub enum Exception {
     #[error("malformed instruction")]
@@ -63,5 +68,28 @@ impl Exception {
         } else {
             None
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn codes_fit_within_5_bits() {
+        const fn cannot_fit_in_5_bits(discriminant: &ExceptionDiscriminants) -> bool {
+            const MAX_5_BIT_VALUE: u32 = (1 << 5) - 1;
+
+            *discriminant as u32 > MAX_5_BIT_VALUE
+        }
+
+        use strum::IntoEnumIterator;
+
+        assert_eq!(
+            ExceptionDiscriminants::iter()
+                .filter(cannot_fit_in_5_bits)
+                .next(),
+            None,
+        );
     }
 }
