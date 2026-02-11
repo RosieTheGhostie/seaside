@@ -34,7 +34,7 @@ impl InterpreterState {
     fn mfc0(&mut self, rt: CpuRegister, rd: u8) -> Result<(), Exception> {
         let rd_value = match rd {
             Coprocessor0Register::VADDR => self.registers.vaddr,
-            Coprocessor0Register::STATUS => self.registers.status,
+            Coprocessor0Register::STATUS => self.registers.status.into_bits(),
             Coprocessor0Register::CAUSE => self.registers.cause,
             Coprocessor0Register::EPC => self.registers.epc,
             _ => return Err(Exception::MalformedInstruction),
@@ -47,15 +47,14 @@ impl InterpreterState {
     /// Stores the value of CPU register `rt` in coprocessor 0 register `rd`.
     fn mtc0(&mut self, rd: u8, rt: CpuRegister) -> Result<(), Exception> {
         let rt_value: u32 = self.registers.read(rt);
-        let destination = match rd {
-            Coprocessor0Register::VADDR => &mut self.registers.vaddr,
-            Coprocessor0Register::STATUS => &mut self.registers.status,
-            Coprocessor0Register::CAUSE => &mut self.registers.cause,
-            Coprocessor0Register::EPC => &mut self.registers.epc,
+        match rd {
+            Coprocessor0Register::VADDR => self.registers.vaddr = rt_value,
+            Coprocessor0Register::STATUS => self.registers.status.set_bits(rt_value),
+            Coprocessor0Register::CAUSE => self.registers.cause = rt_value,
+            Coprocessor0Register::EPC => self.registers.epc = rt_value,
             _ => return Err(Exception::MalformedInstruction),
-        };
+        }
 
-        *destination = rt_value;
         Ok(())
     }
 
@@ -66,7 +65,7 @@ impl InterpreterState {
 
         if instruction == ERET {
             self.pc = self.registers.epc;
-            self.registers.status &= !0x2; // set bit 1 to 0
+            self.registers.status.set_exception_level(false);
             Ok(())
         } else {
             Err(Exception::MalformedInstruction)
