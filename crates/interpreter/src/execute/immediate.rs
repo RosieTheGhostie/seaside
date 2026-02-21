@@ -1,11 +1,6 @@
 use num_traits::FromPrimitive;
-use seaside_constants::{
-    Opcode,
-    register::{CpuRegister, FpuRegister},
-};
+use seaside_core::{Endian, prelude::*, traits::SignExtend, types::Offset};
 use seaside_disassembler::fields;
-use seaside_int_utils::{Endian, SignExtend};
-use seaside_type_aliases::{Address, Instruction, Offset};
 
 use crate::{
     Exception, Interpreter, InterpreterState, math,
@@ -63,7 +58,8 @@ impl Interpreter {
             LoadDoubleCoprocessor1 => self.state.ldc1(rt.to_fpu(), rs_value, imm),
             StoreWordCoprocessor1 => self.state.swc1(rt.to_fpu(), rs_value, imm),
             StoreDoubleCoprocessor1 => self.state.sdc1(rt.to_fpu(), rs_value, imm),
-            _ => Err(Exception::InterpreterFailure),
+            _ => todo!(),
+            // _ => Err(Exception::InterpreterFailure),
         }
     }
 
@@ -79,7 +75,8 @@ impl Interpreter {
         rs_value: u32,
         imm: u16,
     ) -> Result<(), Exception> {
-        use seaside_constants::fn_codes::RegisterImmediateFn::{self, *};
+        use seaside_core::consts::codes::RegisterImmediateFn::{self, *};
+
         let r#fn = RegisterImmediateFn::from_u8(rt as _).ok_or(Exception::ReservedInstruction)?;
         match r#fn {
             BranchLessThanZero => self.state.bltz(rs_value, imm, false),
@@ -92,6 +89,7 @@ impl Interpreter {
             TrapNotEqualImmediate => self.state.tnei(rs_value, imm),
             BranchLessThanZeroAndLink => self.state.bltz(rs_value, imm, true),
             BranchGreaterEqualZeroAndLink => self.state.bgez(rs_value, imm, true),
+            _ => todo!(),
         }
     }
 }

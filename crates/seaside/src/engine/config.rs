@@ -8,7 +8,7 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Error, Result};
 use seaside_config::Config;
-use seaside_error::EngineError;
+use seaside_core::EngineError;
 
 use super::{lazy_project_dirs::PROJECT_DIRS, resolve};
 use crate::CmdArgs;

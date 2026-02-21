@@ -1,11 +1,7 @@
 use core::mem::transmute;
 
 use num_traits::FromPrimitive;
-use seaside_constants::{
-    ConditionCode, Opcode,
-    register::{CpuRegister, FpuRegister},
-};
-use seaside_type_aliases::Instruction;
+use seaside_core::prelude::*;
 
 pub fn opcode(instruction: Instruction) -> Option<Opcode> {
     Opcode::from_u8((instruction >> 26) as _)

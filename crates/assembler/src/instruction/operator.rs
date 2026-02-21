@@ -1,11 +1,14 @@
 use core::str::FromStr;
 
-use seaside_constants::{
-    NumberFormat, Opcode,
-    fn_codes::{
-        Coprocessor0Fn, Coprocessor1Fn, Coprocessor1RegisterImmediateFn, RegisterImmediateFn,
-        Special2Fn, SpecialFn,
+use seaside_core::{
+    consts::{
+        codes::{
+            Coprocessor0Fn, Coprocessor1Fn, Coprocessor1RegisterImmediateFn, RegisterImmediateFn,
+            Special2Fn, SpecialFn,
+        },
+        formats::NumberFormat,
     },
+    prelude::*,
 };
 
 use super::macros::*;

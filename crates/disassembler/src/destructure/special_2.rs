@@ -1,6 +1,5 @@
 use num_traits::FromPrimitive;
-use seaside_constants::fn_codes::Special2Fn;
-use seaside_type_aliases::Instruction;
+use seaside_core::{consts::codes::Special2Fn, prelude::*};
 
 use super::{Component, DestructuredInstruction, Operation};
 use crate::fields;

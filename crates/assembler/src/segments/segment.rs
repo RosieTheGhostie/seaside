@@ -1,6 +1,9 @@
-use seaside_error::rich::{Label, RichError, RichResult, Span};
-use seaside_int_utils::Endian;
-use seaside_type_aliases::{Address, Size, UnsignedOffset};
+use seaside_core::{
+    Endian,
+    prelude::*,
+    types::{Size, UnsignedOffset},
+};
+use seaside_rich_error::{Label, RichError, RichResult, Span};
 
 use crate::{
     directives::StringDirective, error::AssembleError, parser::Value, string_builder::StringBuilder,

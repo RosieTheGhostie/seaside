@@ -4,8 +4,7 @@ pub mod segments;
 pub use segment_info::{SegmentInfo, StackAndHeap};
 pub use segments::Segments;
 
-use seaside_address_range::{AddressRange, traits::Overlapping};
-use seaside_type_aliases::Address;
+use seaside_core::{AddressRange, prelude::*, traits::Overlapping};
 use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationError};
 

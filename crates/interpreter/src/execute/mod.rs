@@ -6,9 +6,8 @@ mod special;
 mod special_2;
 mod syscall;
 
-use seaside_constants::InstructionFormat;
+use seaside_core::{consts::formats::InstructionFormat, prelude::*};
 use seaside_disassembler::fields;
-use seaside_type_aliases::Instruction;
 
 use crate::{Exception, Interpreter};
 

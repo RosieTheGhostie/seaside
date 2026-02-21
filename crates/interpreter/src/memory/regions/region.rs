@@ -1,4 +1,4 @@
-use seaside_type_aliases::Address;
+use seaside_core::prelude::*;
 
 use crate::Exception;
 

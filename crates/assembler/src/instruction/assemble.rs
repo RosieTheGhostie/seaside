@@ -1,17 +1,15 @@
-use seaside_constants::{
-    ConditionCode, NumberFormat,
-    fn_codes::Coprocessor1RegisterImmediateFn,
-    register::{Coprocessor0Register, CpuRegister, FpuRegister},
+use seaside_core::{
+    consts::{codes::Coprocessor1RegisterImmediateFn, formats::NumberFormat},
+    prelude::*,
 };
-use seaside_type_aliases::Instruction;
 
 /// Inserts value(s) into field(s) with the corresponding number of bits.
 macro_rules! insert {
     [$({$n_bits:literal} $field:expr),* $(,)? => $machine_code:ident] => {
-        $($machine_code = ($machine_code << $n_bits) | $field as ::seaside_type_aliases::Instruction;)*
+        $($machine_code = ($machine_code << $n_bits) | $field as ::seaside_core::types::Instruction;)*
     };
     [$({$n_bits:literal} $field:expr),* $(,)? => &$machine_code:ident] => {
-        $(*$machine_code = (*$machine_code << $n_bits) | $field as ::seaside_type_aliases::Instruction;)*
+        $(*$machine_code = (*$machine_code << $n_bits) | $field as ::seaside_core::types::Instruction;)*
     };
 }
 pub(super) use insert;

@@ -1,11 +1,12 @@
 use num_traits::{FromPrimitive, Zero};
-use seaside_constants::{
-    NumberFormat,
-    fn_codes::{Coprocessor1Fn, Coprocessor1RegisterImmediateFn},
-    register::{CpuRegister, FpuRegister},
+use seaside_core::{
+    consts::{
+        codes::{Coprocessor1Fn, Coprocessor1RegisterImmediateFn},
+        formats::NumberFormat,
+    },
+    prelude::*,
 };
 use seaside_disassembler::fields;
-use seaside_type_aliases::Instruction;
 
 use crate::{
     Exception, Interpreter, InterpreterState,
@@ -70,6 +71,7 @@ impl Interpreter {
             Some(Coprocessor1RegisterImmediateFn::BranchCoprocessor1Flag) => {
                 return self.state.bc1c(ft, instruction);
             }
+            Some(_) => todo!(),
             None => {}
         }
 
@@ -118,6 +120,7 @@ impl Interpreter {
             CompareEqual => self.state.c_eq_s(fd, fs_value, ft_value),
             CompareLessThan => self.state.c_lt_s(fd, fs_value, ft_value),
             CompareLessEqual => self.state.c_le_s(fd, fs_value, ft_value),
+            _ => todo!(),
         }
     }
 
@@ -155,6 +158,7 @@ impl Interpreter {
             CompareEqual => self.state.c_eq_d(fd, fs_value, ft_value),
             CompareLessThan => self.state.c_lt_d(fd, fs_value, ft_value),
             CompareLessEqual => self.state.c_le_d(fd, fs_value, ft_value),
+            _ => todo!(),
         }
     }
 

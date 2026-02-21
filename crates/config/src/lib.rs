@@ -5,9 +5,8 @@ mod primitive_defaults;
 pub use features::Features;
 
 use anyhow::{Error, Result};
-use seaside_error::EngineError;
+use seaside_core::{Endian, EngineError};
 use seaside_executable::MemoryMap;
-use seaside_int_utils::Endian;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 

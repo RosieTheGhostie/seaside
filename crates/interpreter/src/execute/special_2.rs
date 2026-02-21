@@ -1,7 +1,6 @@
 use num_traits::FromPrimitive;
-use seaside_constants::{fn_codes::Special2Fn, register::CpuRegister};
+use seaside_core::{consts::codes::Special2Fn, prelude::*};
 use seaside_disassembler::fields;
-use seaside_type_aliases::Instruction;
 
 use crate::{Exception, Interpreter, InterpreterState, math, register_file::IndexByRegister};
 

@@ -1,10 +1,6 @@
 use num_traits::FromPrimitive;
-use seaside_constants::{
-    fn_codes::Coprocessor0Fn,
-    register::{Coprocessor0Register, CpuRegister},
-};
+use seaside_core::{consts::codes::Coprocessor0Fn, prelude::*};
 use seaside_disassembler::fields;
-use seaside_type_aliases::Instruction;
 
 use crate::{Exception, Interpreter, InterpreterState, register_file::IndexByRegister};
 

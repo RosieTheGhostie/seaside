@@ -2,8 +2,7 @@ use core::{ffi::CStr, time::Duration};
 use std::{fs, io::prelude::*, thread, time::SystemTime};
 
 use console::Term;
-use seaside_constants::register::{CpuRegister, FpuRegister};
-use seaside_type_aliases::{Address, SignedSize};
+use seaside_core::{prelude::*, types::SignedSize};
 
 use crate::{
     Exception, Interpreter, InterpreterState, SyscallFailureKind,

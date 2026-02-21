@@ -13,22 +13,8 @@ ariadne = "0.6.0"
 const_format = { version = "0.2.34", features = ["fmt"] }
 logos = "0.16.1"
 seaside-config = { version = "*", path = "../config" }
+seaside-core = { version = "0.1.0", path = "../core" }
 seaside-executable = { version = "0.1.0", path = "../executable" }
-seaside-type-aliases = { version = "*", path = "../type-aliases" }
+seaside-rich-error = { version = "0.2.0", path = "../rich-error" }
 strum = { version = "0.27.2", features = ["derive"] }
 thiserror = "2.0.12"
-
-[dependencies.seaside-constants]
-version = "*"
-path = "../constants"
-features = ["register", "number-format", "opcodes", "static-segment"]
-
-[dependencies.seaside-error]
-version = "*"
-path = "../error"
-features = ["rich"]
-
-[dependencies.seaside-int-utils]
-version = "*"
-path = "../int-utils"
-features = ["endian"]

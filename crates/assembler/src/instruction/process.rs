@@ -1,9 +1,5 @@
-use seaside_constants::{
-    ConditionCode,
-    register::{Coprocessor0Register, CpuRegister, FpuRegister},
-};
-use seaside_error::rich::{Label, RichError, RichResult, Span};
-use seaside_type_aliases::Address;
+use seaside_core::prelude::*;
+use seaside_rich_error::{Label, RichError, RichResult, Span};
 
 use crate::{error::AssembleError, parser::Operand};
 
@@ -223,7 +219,7 @@ const CC_MESSAGE: &str = "expected cc index (0..8)";
 pub fn cc(operand: Option<&(Operand<'_>, Span)>, expr_span: &Span) -> RichResult<ConditionCode> {
     match operand {
         Some((Operand::Int(cc @ 0..8), _)) => {
-            Ok(unsafe { ConditionCode::from_u8_unchecked(*cc as _) })
+            Ok(unsafe { ConditionCode::from_raw_unchecked(*cc as _) })
         }
         Some((_, span)) => Err(new_error(expr_span.clone(), span.clone(), CC_MESSAGE)),
         None => Err(RichError::new(
@@ -250,7 +246,7 @@ where
 {
     match operands_iter.next() {
         Some((Operand::Int(cc @ 0..8), _)) => Ok((
-            unsafe { ConditionCode::from_u8_unchecked(*cc as _) },
+            unsafe { ConditionCode::from_raw_unchecked(*cc as _) },
             operands_iter.next(),
         )),
         Some((Operand::Int(_), span)) => {

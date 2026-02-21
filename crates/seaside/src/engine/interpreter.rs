@@ -7,7 +7,7 @@ use std::path::Path;
 
 use anyhow::{Context, Error, Result};
 use seaside_config::Config;
-use seaside_error::EngineError;
+use seaside_core::EngineError;
 use seaside_executable::Executable;
 use seaside_interpreter::Interpreter;
 

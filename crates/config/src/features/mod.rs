@@ -2,7 +2,7 @@ pub mod assembler;
 
 pub use assembler::AssemblerOptions;
 
-use seaside_constants::Services;
+use seaside_core::Services;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 

@@ -6,12 +6,11 @@ pub use instruction_memory::InstructionMemory;
 
 mod regions;
 
+use seaside_core::{Endian, prelude::*, types::Size};
 use seaside_executable::{
     MemoryMap, Segment, Segments,
     memory_map::{self, SegmentInfo},
 };
-use seaside_int_utils::Endian;
-use seaside_type_aliases::{Address, Instruction, Size};
 
 use crate::Exception;
 use regions::{DataRegion, TextRegion};
@@ -201,7 +200,7 @@ fn init_text_region(
 fn init_data_region(segment_info: &SegmentInfo, segment: Option<&Segment>) -> DataRegion {
     let mut region = DataRegion::new(segment_info.range.base(), segment_info.allocate as _);
     if let Some(segment) = segment {
-        region.populate(&**segment);
+        region.populate(segment);
     }
 
     region

@@ -1,6 +1,6 @@
 use core::fmt::{self, Formatter};
 
-use seaside_constants::register::{CpuRegister, FpuRegister};
+use seaside_core::prelude::*;
 
 use super::{RegisterFile, TryIndexByRegister};
 

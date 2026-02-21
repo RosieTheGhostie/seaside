@@ -1,6 +1,6 @@
 use core::str::CharIndices;
 
-use seaside_error::rich::{RichError, RichResult, Span};
+use seaside_rich_error::{RichError, RichResult, Span};
 
 use crate::error::AssembleError;
 

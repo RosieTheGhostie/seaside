@@ -1,5 +1,5 @@
 use bitflags::bitflags;
-use seaside_int_utils::Endian;
+use seaside_core::Endian;
 use serde::{Deserialize, Serialize};
 
 bitflags! {

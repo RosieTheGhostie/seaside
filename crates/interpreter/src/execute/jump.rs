@@ -1,7 +1,5 @@
-use seaside_constants::{Opcode, register::CpuRegister};
+use seaside_core::{prelude::*, traits::SignExtend, types::Offset};
 use seaside_disassembler::fields;
-use seaside_int_utils::SignExtend;
-use seaside_type_aliases::{Address, Instruction, Offset};
 
 use crate::{Exception, Interpreter, InterpreterState, register_file::IndexByRegister};
 

@@ -16,7 +16,8 @@ use seaside_assembler::{
     parser::{Expr, Parser},
 };
 use seaside_config::Config;
-use seaside_error::{EngineError, rich::Span};
+use seaside_core::EngineError;
+use seaside_rich_error::Span;
 
 /// Assembles `source` into a format usable by the seaside interpreter.
 ///

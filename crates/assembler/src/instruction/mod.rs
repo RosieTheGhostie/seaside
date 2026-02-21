@@ -6,12 +6,8 @@ mod assemble;
 mod macros;
 mod process;
 
-use seaside_constants::{
-    ConditionCode, Opcode,
-    register::{CpuRegister, FpuRegister},
-};
-use seaside_error::rich::{RichError, RichResult, Span};
-use seaside_type_aliases::{Address, Instruction};
+use seaside_core::prelude::*;
+use seaside_rich_error::{RichError, RichResult, Span};
 
 use crate::{error::AssembleError, parser::Operand};
 use assemble::insert;
@@ -419,6 +415,7 @@ pub fn process_instruction<'src>(
             )?;
             assemble::i_type(&mut machine_code, rs, ft.to_cpu(), imm as u16);
         }
+        _ => todo!(),
     }
 
     process::finish(operands_iter.next(), expr_span)?;

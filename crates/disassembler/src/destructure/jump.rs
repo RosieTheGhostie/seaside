@@ -1,5 +1,4 @@
-use seaside_constants::Opcode;
-use seaside_type_aliases::Instruction;
+use seaside_core::prelude::*;
 
 use super::{Component, DestructuredInstruction, Operation};
 use crate::fields;

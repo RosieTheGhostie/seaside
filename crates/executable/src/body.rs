@@ -1,5 +1,4 @@
-use seaside_constants::{Service, Services};
-use seaside_type_aliases::{Instruction, ServiceCode};
+use seaside_core::{Services, consts::services::Service, prelude::*, types::ServiceCode};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 

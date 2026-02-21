@@ -3,7 +3,7 @@ pub mod fields;
 
 #[cfg(feature = "disassembler")]
 pub mod disassembler {
-    use seaside_type_aliases::{Address, Instruction};
+    use seaside_core::prelude::*;
 
     use super::destructure::destructure;
 

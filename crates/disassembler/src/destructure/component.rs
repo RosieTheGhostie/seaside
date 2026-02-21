@@ -1,7 +1,4 @@
-use seaside_constants::{
-    ConditionCode, NumberFormat,
-    register::{Coprocessor0Register, CpuRegister, FpuRegister},
-};
+use seaside_core::{consts::formats::NumberFormat, prelude::*};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum Component {

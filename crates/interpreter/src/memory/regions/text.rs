@@ -1,7 +1,10 @@
 use core::{iter::zip, ops::Range};
 
-use seaside_int_utils::Endian;
-use seaside_type_aliases::{Address, Instruction, Size, UnsignedOffset};
+use seaside_core::{
+    Endian,
+    prelude::*,
+    types::{Size, UnsignedOffset},
+};
 
 use super::{Inner, ReadableRegion, Region, SliceableRegion, SliceableRegionMut, WriteableRegion};
 use crate::Exception;
@@ -132,11 +135,11 @@ mod tests {
     use super::*;
 
     mod hello_world {
-        use seaside_type_aliases::Size;
+        use seaside_core::{prelude::*, types::Size};
 
         use crate::memory::TextRegion;
 
-        pub const START: seaside_type_aliases::Address = 0x0040_0000;
+        pub const START: Address = 0x0040_0000;
         pub const TEXT: [u8; 24] = [
             0x04, 0x00, 0x02, 0x24, 0x01, 0x10, 0x01, 0x3c, 0x00, 0x00, 0x24, 0x34, 0x0c, 0x00,
             0x00, 0x00, 0x0a, 0x00, 0x02, 0x24, 0x0c, 0x00, 0x00, 0x00,

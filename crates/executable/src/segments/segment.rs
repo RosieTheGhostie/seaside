@@ -1,7 +1,6 @@
 use core::ops::{Deref, DerefMut};
 
-use seaside_int_utils::{ByteStream, Endian};
-use seaside_type_aliases::Instruction;
+use seaside_core::{ByteStream, Endian, prelude::*};
 use serde::{Deserialize, Serialize};
 use serde_bytes::ByteBuf;
 
@@ -47,7 +46,7 @@ impl Segment {
 
     fn new_text_dont_swap_bytes(instructions: &[Instruction]) -> Self {
         let pointer: *const u8 = instructions.as_ptr() as _;
-        let len = instructions.len() * size_of::<Instruction>();
+        let len = core::mem::size_of_val(instructions);
 
         // SAFETY: References are always valid.
         let byte_slice = unsafe { core::slice::from_raw_parts(pointer, len) };
@@ -56,7 +55,7 @@ impl Segment {
     }
 
     fn new_text_swap_bytes(instructions: &[Instruction]) -> Self {
-        let mut bytes = Vec::with_capacity(instructions.len() * size_of::<Instruction>());
+        let mut bytes = Vec::with_capacity(core::mem::size_of_val(instructions));
         for instruction in instructions {
             bytes.extend_from_slice(&instruction.swap_bytes().to_ne_bytes());
         }

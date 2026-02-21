@@ -10,23 +10,11 @@ license.workspace = true
 [dependencies]
 bitflags = { version = "2.10.0", features = ["serde"] }
 rmp-serde = "1.3.1"
-seaside-type-aliases = { version = "*", path = "../type-aliases" }
+seaside-core = { version = "0.1.0", path = "../core", features = [
+  "serde",
+  "validator",
+] }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_bytes = "0.11.19"
 thiserror = "2.0.18"
 validator = { version = "0.20.0", features = ["derive"] }
-
-[dependencies.seaside-address-range]
-version = "*"
-path = "../address-range"
-features = ["serde"]
-
-[dependencies.seaside-constants]
-version = "*"
-path = "../constants"
-features = ["register", "serde", "services"]
-
-[dependencies.seaside-int-utils]
-version = "0.4.0"
-path = "../int-utils"
-features = ["byte-stream", "endian"]

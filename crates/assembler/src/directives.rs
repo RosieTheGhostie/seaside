@@ -1,6 +1,6 @@
 use strum::{Display, EnumString};
 
-pub type SegmentDirective = seaside_constants::StaticSegment;
+pub type SegmentDirective = seaside_core::consts::StaticSegment;
 
 #[derive(Clone, Copy, Debug, Display, EnumString, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[strum(serialize_all = "lowercase")]

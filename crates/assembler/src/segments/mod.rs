@@ -2,7 +2,7 @@ pub use segment::SegmentBuildInfo;
 
 mod segment;
 
-use seaside_constants::StaticSegment;
+use seaside_core::consts::StaticSegment;
 use seaside_executable::memory_map;
 use strum::EnumCount;
 

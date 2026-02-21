@@ -13,7 +13,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Issue templates.
 - Dedicated installer.
 - Ability to query the file path of the global configuration file via the 'path config' command.
-- Feature flags to various crates.
 - Type aliases `Size`, `SignedSize`, `Offset`, and `UnsignedOffset`.
 
 ### Changed
@@ -27,9 +26,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Relocate assembler-specific flags to `features.assembler`.
 - Rename `runtime_data` table in `memory_map.segments` to `stack_and_heap`.
 - Rename `LexError` variant of `seaside_assembler::error::ParseError` to `Lex`.
-- Rename `number_fmt` module in `seaside_constants` crate to `number_format`.
-- Replace `seaside_assember::directives::SegmentDirective` with `seaside_constants::StaticSegment`
-  and a type alias.
+- Aggregate smaller crates into `seaside_core` crate.
+- Replace `seaside_assember::directives::SegmentDirective` with
+  `seaside_core::consts::StaticSegment` and a type alias.
 - Refactor project directory handling.
 - Convert `$status` register to a dedicated bitfield type.
 - Convert repository to a Cargo workspace.
@@ -42,7 +41,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Configuration file versioning via the `version` property.
 - Kernel-space accessibility configuration via the `features.kernel_space_accessible` property.
 - Register default value configuration via the `register_defaults` table.
-- `OutdatedVersion` variant of `seaside_error::EngineError` `enum`.
+- `OutdatedVersion` variant of `seaside_core::EngineError` `enum`.
 - Unused `seaside_int_utils::AllZeroes` `trait`.
 - Unused `seaside-bitflags-serde` crate.
 

@@ -12,14 +12,12 @@ anyhow = "1.0.100"
 directories = "6.0.0"
 seaside-assembler = { version = "*", path = "../assembler" }
 seaside-config = { version = "*", path = "../config" }
-seaside-constants = { version = "*", path = "../constants" }
-seaside-error = { version = "*", path = "../error" }
+seaside-core = { version = "0.1.0", path = "../core" }
 seaside-executable = { version = "*", path = "../executable" }
-seaside-int-utils = { version = "*", path = "../int-utils" }
 seaside-interpreter = { version = "*", path = "../interpreter" }
-seaside-type-aliases = { version = "*", path = "../type-aliases" }
+seaside-rich-error = { version = "0.2.0", path = "../rich-error" }
 serde = "1.0.219"
-toml = "0.9.8"
+toml = "1.0.3"
 
 [dependencies.clap]
 version = "4.5.56"

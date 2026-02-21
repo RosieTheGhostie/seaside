@@ -7,9 +7,9 @@ mod inner;
 mod region;
 mod text;
 
-pub(self) use inner::Inner;
+use inner::Inner;
 
 /// Heap-allocates a byte array with the given length, filling the whole thing with zeroes.
-pub(self) fn allocate_zeroed_byte_array(len: usize) -> Box<[u8]> {
+fn allocate_zeroed_byte_array(len: usize) -> Box<[u8]> {
     unsafe { Box::new_zeroed_slice(len).assume_init() }
 }

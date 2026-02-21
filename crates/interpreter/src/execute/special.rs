@@ -1,7 +1,6 @@
 use num_traits::FromPrimitive;
-use seaside_constants::{fn_codes::SpecialFn, register::CpuRegister};
+use seaside_core::{consts::codes::SpecialFn, prelude::*};
 use seaside_disassembler::fields;
-use seaside_type_aliases::Instruction;
 
 use crate::{Exception, Interpreter, InterpreterState, math, register_file::IndexByRegister};
 
@@ -60,6 +59,7 @@ impl Interpreter {
             TrapLessThanUnsigned => self.state.tltu(rs_value, rt_value),
             TrapEqual => self.state.teq(rs_value, rt_value),
             TrapNotEqual => self.state.tne(rs_value, rt_value),
+            _ => todo!(),
         }
     }
 }

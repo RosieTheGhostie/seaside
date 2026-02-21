@@ -1,7 +1,9 @@
 use core::ops::Range;
 
-use seaside_constants::register::IndexedRegister;
-use seaside_type_aliases::{Address, Offset, Size};
+use seaside_core::{
+    prelude::*,
+    types::{Offset, Size},
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]

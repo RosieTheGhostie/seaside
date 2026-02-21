@@ -10,17 +10,7 @@ license.workspace = true
 
 [dependencies]
 num-traits = "0.2"
-seaside-type-aliases = { version = "*", path = "../type-aliases" }
-
-[dependencies.seaside-constants]
-version = "*"
-path = "../constants"
-features = ["instruction-format"]
-
-[dependencies.seaside-int-utils]
-version = "*"
-path = "../int-utils"
-features = ["sign-extend"]
+seaside-core = { version = "0.1.0", path = "../core" }
 
 [features]
 default = ["fields", "disassembler"]

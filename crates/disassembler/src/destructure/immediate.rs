@@ -1,6 +1,5 @@
 use num_traits::FromPrimitive;
-use seaside_constants::{Opcode, fn_codes::RegisterImmediateFn, register::CpuRegister};
-use seaside_type_aliases::Instruction;
+use seaside_core::{consts::codes::RegisterImmediateFn, prelude::*};
 
 use super::{Component, DestructuredInstruction, Operation};
 use crate::fields;
@@ -88,6 +87,7 @@ fn destructure_regimm(
         | TrapLessThanImmediateUnsigned
         | TrapEqualImmediate
         | TrapNotEqualImmediate => Component::Immediate(imm),
+        _ => todo!(),
     };
 
     Some(DestructuredInstruction::new(

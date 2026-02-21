@@ -1,0 +1,26 @@
+use crate::consts::codes::Opcode;
+
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+pub enum InstructionFormat {
+    Special,
+    Immediate,
+    Jump,
+    Coprocessor0,
+    Coprocessor1,
+    Special2,
+}
+
+impl From<Opcode> for InstructionFormat {
+    fn from(opcode: Opcode) -> Self {
+        use Opcode::*;
+
+        match opcode {
+            Special => Self::Special,
+            Jump | JumpAndLink => Self::Jump,
+            Coprocessor0 => Self::Coprocessor0,
+            Coprocessor1 => Self::Coprocessor1,
+            Special2 => Self::Special2,
+            _ => Self::Immediate,
+        }
+    }
+}

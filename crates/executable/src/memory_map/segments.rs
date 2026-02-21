@@ -1,4 +1,4 @@
-use seaside_address_range::{AddressRange, traits::Contains};
+use seaside_core::{AddressRange, traits::Contains};
 use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationError};
 

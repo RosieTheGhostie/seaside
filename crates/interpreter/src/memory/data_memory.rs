@@ -1,4 +1,4 @@
-use seaside_type_aliases::{Address, Size};
+use seaside_core::{prelude::*, types::Size};
 
 use super::{
     DataRegion, Region,

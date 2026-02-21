@@ -12,6 +12,7 @@ pub use syscall_failure::SyscallFailureKind;
 mod execute;
 mod file_handle;
 mod rng;
+mod service;
 
 use std::{
     collections::HashMap,
@@ -22,25 +23,21 @@ use std::{
 use anyhow::Result;
 use minimal_logging::macros::debugln;
 use seaside_config::Config;
-use seaside_constants::{
-    Service, Services,
-    register::CpuRegister,
-    services::{
-        mars::{self, Mars},
-        spim::{self, Spim},
-    },
+use seaside_core::{
+    prelude::*,
+    types::{ServiceCode, Size, size},
 };
 use seaside_executable::Executable;
-use seaside_type_aliases::{Address, ServiceCode, Size, size};
 
 use file_handle::FileHandle;
 use memory::WriteableRegion;
 use register_file::IndexByRegister;
 use rng::Rng;
+use service::ServiceFn;
 
 pub struct Interpreter {
     pub state: InterpreterState,
-    services: HashMap<ServiceCode, for<'a> fn(&'a mut InterpreterState) -> Result<(), Exception>>,
+    services: HashMap<ServiceCode, ServiceFn>,
     pub show_crash_handler: bool,
 }
 
@@ -70,7 +67,7 @@ impl Interpreter {
 
         let memory = Memory::new(&memory_map, &segments, flags);
         let pc = memory.initial_pc();
-        let services = Self::init_services(&services, flags)?;
+        let services = Self::init_services(&services, flags);
 
         let mut registers = RegisterFile::default();
         registers.write(
@@ -88,22 +85,23 @@ impl Interpreter {
         files.insert(1, FileHandle::new_stdout());
         files.insert(2, FileHandle::new_stderr());
 
-        let mut interpreter = Self {
-            state: InterpreterState {
-                memory,
-                registers,
-                pc,
-                files,
-                next_fd: 3,
-                rngs: HashMap::new(),
-                stdout_pending_flush: false,
-                exit_code: None,
-            },
+        let mut state = InterpreterState {
+            memory,
+            registers,
+            pc,
+            files,
+            next_fd: 3,
+            rngs: HashMap::new(),
+            stdout_pending_flush: false,
+            exit_code: None,
+        };
+        state.init_argv(argv)?;
+
+        Ok(Self {
+            state,
             services,
             show_crash_handler: config.features.show_crash_handler,
-        };
-
-        interpreter.state.init_argv(argv).map(|_| interpreter)
+        })
     }
 
     pub fn run(&mut self) -> Result<(), Exception> {
@@ -130,100 +128,9 @@ impl Interpreter {
     }
 
     const STACK_ALIGNMENT_MASK: Address = Address::MAX << Self::STACK_ALIGNMENT.ilog2();
-
-    fn init_services(
-        services: &Services,
-        flags: seaside_executable::Flags,
-    ) -> Result<HashMap<ServiceCode, for<'a> fn(&'a mut InterpreterState) -> Result<(), Exception>>>
-    {
-        let mut service_fns = HashMap::new();
-        for (&code, &service) in services.iter() {
-            let r#fn = InterpreterState::get_service_fn(service, flags);
-            service_fns.insert(code, r#fn);
-        }
-
-        Ok(service_fns)
-    }
 }
 
 impl InterpreterState {
-    pub fn get_service_fn(
-        service: Service,
-        flags: seaside_executable::Flags,
-    ) -> fn(&mut InterpreterState) -> Result<(), Exception> {
-        match service {
-            Service::Spim(Spim::Print(spim::Print::Int)) => InterpreterState::print_int,
-            Service::Mars(Mars::Print(mars::Print::Uint)) => InterpreterState::print_uint,
-            Service::Mars(Mars::Print(mars::Print::Bin)) => InterpreterState::print_bin,
-            Service::Mars(Mars::Print(mars::Print::Hex)) => InterpreterState::print_hex,
-            Service::Spim(Spim::Print(spim::Print::Float)) => InterpreterState::print_float,
-            Service::Spim(Spim::Print(spim::Print::Double)) => InterpreterState::print_double,
-            Service::Spim(Spim::Print(spim::Print::Char)) => InterpreterState::print_char,
-            Service::Spim(Spim::Print(spim::Print::String)) => InterpreterState::print_string,
-            Service::Spim(Spim::Read(spim::Read::Int)) => InterpreterState::read_int,
-            Service::Spim(Spim::Read(spim::Read::Float)) => InterpreterState::read_float,
-            Service::Spim(Spim::Read(spim::Read::Double)) => InterpreterState::read_double,
-            Service::Spim(Spim::Read(spim::Read::Char)) => InterpreterState::read_char,
-            Service::Spim(Spim::Read(spim::Read::String)) => InterpreterState::read_string,
-            Service::Spim(Spim::File(spim::File::Open)) => InterpreterState::open_file,
-            Service::Spim(Spim::File(spim::File::Read)) => InterpreterState::read_file,
-            Service::Spim(Spim::File(spim::File::Write)) => InterpreterState::write_file,
-            Service::Spim(Spim::File(spim::File::Close)) => InterpreterState::close_file,
-            Service::Mars(Mars::Dialog(mars::Dialog::Input(mars::InputDialog::Confirm))) => {
-                InterpreterState::confirm_dialog
-            }
-            Service::Mars(Mars::Dialog(mars::Dialog::Input(mars::InputDialog::Int))) => {
-                InterpreterState::input_dialog_int
-            }
-            Service::Mars(Mars::Dialog(mars::Dialog::Input(mars::InputDialog::Float))) => {
-                InterpreterState::input_dialog_float
-            }
-            Service::Mars(Mars::Dialog(mars::Dialog::Input(mars::InputDialog::Double))) => {
-                InterpreterState::input_dialog_double
-            }
-            Service::Mars(Mars::Dialog(mars::Dialog::Input(mars::InputDialog::String))) => {
-                InterpreterState::input_dialog_string
-            }
-            Service::Mars(Mars::Dialog(mars::Dialog::Message(mars::MessageDialog::General))) => {
-                InterpreterState::message_dialog
-            }
-            Service::Mars(Mars::Dialog(mars::Dialog::Message(mars::MessageDialog::Int))) => {
-                InterpreterState::message_dialog_int
-            }
-            Service::Mars(Mars::Dialog(mars::Dialog::Message(mars::MessageDialog::Float))) => {
-                InterpreterState::message_dialog_float
-            }
-            Service::Mars(Mars::Dialog(mars::Dialog::Message(mars::MessageDialog::Double))) => {
-                InterpreterState::message_dialog_double
-            }
-            Service::Mars(Mars::Dialog(mars::Dialog::Message(mars::MessageDialog::String))) => {
-                InterpreterState::message_dialog_string
-            }
-            Service::Spim(Spim::System(spim::System::Sbrk)) => {
-                if flags.freeable_heap_allocations() {
-                    |state: &mut InterpreterState| state.sbrk(true)
-                } else {
-                    |state: &mut InterpreterState| state.sbrk(false)
-                }
-            }
-            Service::Spim(Spim::System(spim::System::Exit)) => InterpreterState::exit,
-            Service::Spim(Spim::System(spim::System::Exit2)) => InterpreterState::exit_2,
-            Service::Mars(Mars::System(mars::System::Time)) => InterpreterState::time,
-            Service::Mars(Mars::System(mars::System::Sleep)) => InterpreterState::sleep,
-            Service::Mars(Mars::System(mars::System::MidiOut)) => InterpreterState::midi_out,
-            Service::Mars(Mars::System(mars::System::MidiOutSync)) => {
-                InterpreterState::midi_out_sync
-            }
-            Service::Mars(Mars::Random(mars::Random::SetSeed)) => InterpreterState::set_seed,
-            Service::Mars(Mars::Random(mars::Random::RandInt)) => InterpreterState::rand_int,
-            Service::Mars(Mars::Random(mars::Random::RandIntRange)) => {
-                InterpreterState::rand_int_range
-            }
-            Service::Mars(Mars::Random(mars::Random::RandFloat)) => InterpreterState::rand_float,
-            Service::Mars(Mars::Random(mars::Random::RandDouble)) => InterpreterState::rand_double,
-        }
-    }
-
     pub fn trigger_exception(&mut self, exception: Exception, exception_handler: Address) {
         self.registers.vaddr = exception.vaddr().unwrap_or_default();
         self.registers.status.set_exception_level(true);
@@ -248,7 +155,7 @@ impl InterpreterState {
     /// class.
     ///
     /// [here]: https://github.com/dpetersanderson/MARS/blob/main/mars/simulator/ProgramArgumentList.java
-    pub fn init_argv(&mut self, argv: Vec<String>) -> Result<()> {
+    pub fn init_argv(&mut self, argv: Vec<String>) -> Result<(), Exception> {
         const DEFAULT_ARGUMENT_ALLOCATION_SIZE: Size = 4 * size::unsigned::KiB;
 
         let argc: Size = argv.len() as _;

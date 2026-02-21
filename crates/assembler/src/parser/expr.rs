@@ -1,7 +1,7 @@
 use core::fmt::{self, Display, Formatter};
 
-use seaside_error::rich::Span;
-use seaside_type_aliases::{Address, Size};
+use seaside_core::{prelude::*, types::Size};
+use seaside_rich_error::Span;
 
 use super::{Operand, Value};
 use crate::directives::{SegmentDirective, StringDirective, ValueDirective};

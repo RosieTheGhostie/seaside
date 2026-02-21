@@ -13,8 +13,7 @@ mod operation;
 mod special;
 mod special_2;
 
-use seaside_constants::InstructionFormat;
-use seaside_type_aliases::{Address, Instruction};
+use seaside_core::{consts::formats::InstructionFormat, prelude::*};
 
 use crate::fields;
 

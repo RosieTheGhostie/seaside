@@ -1,4 +1,4 @@
-use seaside_error::rich::{ErrorCode, ToErrorCode};
+use seaside_rich_error::{ErrorCode, ToErrorCode};
 use thiserror::Error;
 
 use super::LexError;

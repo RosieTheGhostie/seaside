@@ -1,9 +1,0 @@
-[package]
-name = "seaside-type-aliases"
-description = "A handful of type aliases for seaside"
-version = "0.1.0"
-authors.workspace = true
-edition.workspace = true
-readme.workspace = true
-repository.workspace = true
-license.workspace = true

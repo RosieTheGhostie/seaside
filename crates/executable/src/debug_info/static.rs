@@ -1,6 +1,6 @@
 use core::ops::Range;
 
-use seaside_type_aliases::Address;
+use seaside_core::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use super::variable::DisplayMode;

@@ -1,4 +1,4 @@
-use seaside_type_aliases::Address;
+use seaside_core::prelude::*;
 
 use super::{
     Region, TextRegion,
@@ -37,16 +37,16 @@ impl InstructionMemory {
     }
 
     pub const fn pc_past_end(&self, pc: Address) -> bool {
-        if let Some(text_end_pc) = self.text.end_pc {
-            if pc < text_end_pc {
-                return false;
-            }
+        if let Some(text_end_pc) = self.text.end_pc
+            && pc < text_end_pc
+        {
+            return false;
         }
 
-        if let Some(ktext_end_pc) = self.ktext.end_pc {
-            if pc < ktext_end_pc {
-                return false;
-            }
+        if let Some(ktext_end_pc) = self.ktext.end_pc
+            && pc < ktext_end_pc
+        {
+            return false;
         }
 
         true

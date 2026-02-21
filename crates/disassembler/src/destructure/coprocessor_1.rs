@@ -1,9 +1,11 @@
 use num_traits::FromPrimitive;
-use seaside_constants::{
-    NumberFormat,
-    fn_codes::{Coprocessor1Fn, Coprocessor1RegisterImmediateFn},
+use seaside_core::{
+    consts::{
+        codes::{Coprocessor1Fn, Coprocessor1RegisterImmediateFn},
+        formats::NumberFormat,
+    },
+    prelude::*,
 };
-use seaside_type_aliases::Instruction;
 
 use super::{Component, DestructuredInstruction, Operation};
 use crate::fields;
@@ -34,6 +36,7 @@ pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> 
                 components,
             ));
         }
+        Some(_) => todo!(),
         None => {}
     }
 
@@ -73,6 +76,7 @@ pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> 
             components[2] = Component::FpuRegister(fs);
             components[3] = Component::FpuRegister(ft);
         }
+        _ => todo!(),
     }
 
     Some(DestructuredInstruction::new(

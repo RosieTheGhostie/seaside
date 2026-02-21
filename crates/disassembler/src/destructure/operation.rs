@@ -1,9 +1,9 @@
-use seaside_constants::{
-    Opcode,
-    fn_codes::{
+use seaside_core::{
+    consts::codes::{
         Coprocessor0Fn, Coprocessor1Fn, Coprocessor1RegisterImmediateFn, RegisterImmediateFn,
         Special2Fn, SpecialFn,
     },
+    prelude::*,
 };
 
 #[derive(Clone, Copy, Debug)]

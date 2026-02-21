@@ -1,6 +1,6 @@
 use core::num::{ParseFloatError, ParseIntError};
 
-use seaside_error::rich::{ErrorCode, ToErrorCode};
+use seaside_rich_error::{ErrorCode, ToErrorCode};
 use thiserror::Error;
 
 #[derive(Clone, Copy, Debug, Eq, Error, Hash, PartialEq)]

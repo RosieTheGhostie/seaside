@@ -10,11 +10,9 @@ mod string_builder;
 use std::collections::{HashMap, VecDeque};
 
 use seaside_config::{Config, features::AssemblerOptions};
-use seaside_constants::{Services, StaticSegment};
-use seaside_error::rich::{RichError, RichResult, Span};
+use seaside_core::{Endian, Services, consts::StaticSegment, prelude::*};
 use seaside_executable::{Executable, MemoryMap};
-use seaside_int_utils::Endian;
-use seaside_type_aliases::Address;
+use seaside_rich_error::{RichError, RichResult, Span};
 
 use directives::ValueDirective;
 use error::AssembleError;
@@ -239,7 +237,7 @@ impl<'config> Build<'config> {
     pub fn export(self) -> Executable {
         use seaside_executable::{Body, Header};
 
-        let mut body = Body::new(self.executable_flags(), self.memory_map.clone());
+        let mut body = Body::new(self.executable_flags(), *self.memory_map);
 
         body.services = self.services.clone();
         self.segments

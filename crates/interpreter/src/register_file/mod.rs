@@ -7,11 +7,7 @@ mod status;
 
 use core::fmt::{self, Display, Formatter};
 
-use seaside_constants::{
-    ConditionCode,
-    register::{CpuRegister, FpuRegister},
-};
-use seaside_type_aliases::Address;
+use seaside_core::prelude::*;
 
 use crate::Exception;
 
@@ -72,7 +68,7 @@ impl TryIndexByRegister<FpuRegister, f64> for RegisterFile {
 
             // FIXME: This is potentially incorrect, but I don't have a big-endian machine to test
             // it on at the moment.
-            Ok(unsafe { core::mem::transmute::<_, f64>([self.fpu[i], self.fpu[i + 1]]) })
+            Ok(unsafe { core::mem::transmute::<[f32; 2], f64>([self.fpu[i], self.fpu[i + 1]]) })
         } else {
             Err(Exception::MalformedInstruction)
         }

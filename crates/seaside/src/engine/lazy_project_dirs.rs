@@ -2,7 +2,7 @@ use std::{path::Path, sync::OnceLock};
 
 use anyhow::{Error, Result};
 use directories::ProjectDirs;
-use seaside_error::EngineError;
+use seaside_core::EngineError;
 
 /// A wrapper around [`ProjectDirs`] that only computes the project directories once.
 pub struct LazyProjectDirs(OnceLock<ProjectDirs>);

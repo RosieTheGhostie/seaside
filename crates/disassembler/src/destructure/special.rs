@@ -1,6 +1,5 @@
 use num_traits::FromPrimitive;
-use seaside_constants::fn_codes::SpecialFn;
-use seaside_type_aliases::Instruction;
+use seaside_core::{consts::codes::SpecialFn, prelude::*};
 
 use super::{Component, DestructuredInstruction, Operation};
 use crate::fields;
@@ -58,6 +57,7 @@ pub fn destructure(instruction: Instruction) -> Option<DestructuredInstruction> 
             components[3] = Component::Cc(fields::cc_from_cpu_register(rt));
         }
         SystemCall => {}
+        _ => todo!(),
     };
 
     Some(DestructuredInstruction::new(

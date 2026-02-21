@@ -9,11 +9,11 @@ mod value;
 
 use const_format::formatcp;
 use logos::{Lexer, Logos, SpannedIter};
-use seaside_error::rich::{
+use seaside_core::types::Size;
+use seaside_rich_error::{
     Label, RichError, RichResult, Span, ToErrorCode,
     span::{combine_spans, consume_span},
 };
-use seaside_type_aliases::Size;
 
 use crate::{error::ParseError, token::Token};
 

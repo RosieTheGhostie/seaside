@@ -2,7 +2,7 @@ use core::num::ParseIntError;
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand, builder::ValueParser};
-use seaside_type_aliases::{Address, Instruction};
+use seaside_core::prelude::*;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
