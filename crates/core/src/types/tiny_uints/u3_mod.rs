@@ -1,11 +1,7 @@
-use core::{
-    fmt::{self, Debug, Display, Formatter},
-    ops::{
-        Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Div,
-        DivAssign, Mul, MulAssign, Not, Rem, RemAssign, Shl, ShlAssign, Shr, ShrAssign, Sub,
-        SubAssign,
-    },
-};
+use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Rem, Shl, Shr, Sub};
+use num_traits::Unsigned;
+
+use super::{r#impl, impl_ops};
 
 /// The 3-bit unsigned integer type.
 #[allow(non_camel_case_types)]
@@ -137,36 +133,6 @@ impl u3 {
     pub const fn from_bool(b: bool) -> Self {
         // SAFETY: A `bool` is one bit wide, so it will always fit inside a `u3`.
         unsafe { Self::new_unchecked(b as _) }
-    }
-
-    /// Casts this integer to a [`u8`].
-    #[inline(always)]
-    pub const fn as_u8(self) -> u8 {
-        self.0 as _
-    }
-
-    /// Casts this integer to a [`u16`].
-    #[inline(always)]
-    pub const fn as_u16(self) -> u16 {
-        self.0 as _
-    }
-
-    /// Casts this integer to a [`u32`].
-    #[inline(always)]
-    pub const fn as_u32(self) -> u32 {
-        self.0 as _
-    }
-
-    /// Casts this integer to a [`u64`].
-    #[inline(always)]
-    pub const fn as_u64(self) -> u64 {
-        self.0 as _
-    }
-
-    /// Casts this integer to a [`u128`].
-    #[inline(always)]
-    pub const fn as_u128(self) -> u128 {
-        self.0 as _
     }
 
     /// Checked integer addition. Computes `self + rhs`, returning [`None`] if overflow occurred.
@@ -687,7 +653,7 @@ impl u3 {
     #[inline(always)]
     pub const fn ilog10(self) -> u32 {
         self.checked_ilog10()
-            .expect(super::tiny_uint_panic_messages::NON_POSITIVE_LOGARITHM_ARGUMENT)
+            .expect(super::panic_messages::NON_POSITIVE_LOGARITHM_ARGUMENT)
     }
 
     /// Returns the base 10 logarithm of the number, rounded down.
@@ -719,355 +685,96 @@ impl u3 {
     }
 }
 
-impl From<bool> for u3 {
-    fn from(value: bool) -> Self {
-        Self::from_bool(value)
+r#impl!(AsPrimitive for u3);
+r#impl!(Bounded for u3);
+r#impl!(Debug for u3);
+r#impl!(Display for u3);
+r#impl!(FromPrimitive for u3);
+r#impl!(Not for u3);
+r#impl!(Num for u3);
+r#impl!(NumCast for u3);
+r#impl!(ToPrimitive for u3);
+impl Unsigned for u3 {}
+
+impl_ops! {
+    #![type = u3]
+
+    #[assign(trait = AddAssign, fn = add_assign)]
+    impl Add {
+        fn add(self, rhs) -> .. {
+            self.checked_add(rhs)
+                .expect(super::panic_messages::ADD_WITH_OVERFLOW)
+        }
     }
-}
 
-impl TryFrom<u8> for u3 {
-    type Error = &'static str;
-
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
-        Self::new(value).ok_or(super::tiny_uint_panic_messages::CONVERT_WITH_OVERFLOW)
+    #[assign(trait = BitAndAssign, fn = bitand_assign)]
+    impl BitAnd {
+        fn bitand(self, rhs) -> .. {
+            self.and(rhs)
+        }
     }
-}
 
-impl From<u3> for u8 {
-    fn from(value: u3) -> Self {
-        value.as_u8()
+    #[assign(trait = BitOrAssign, fn = bitor_assign)]
+    impl BitOr {
+        fn bitor(self, rhs) -> .. {
+            self.or(rhs)
+        }
     }
-}
 
-impl From<u3> for u16 {
-    fn from(value: u3) -> Self {
-        value.as_u16()
+    #[assign(trait = BitXorAssign, fn = bitxor_assign)]
+    impl BitXor {
+        fn bitxor(self, rhs) -> .. {
+            self.xor(rhs)
+        }
     }
-}
 
-impl From<u3> for u32 {
-    fn from(value: u3) -> Self {
-        value.as_u32()
+    #[assign(trait = DivAssign, fn = div_assign)]
+    impl Div {
+        fn div(self, rhs) -> .. {
+            self.checked_div(rhs)
+                .expect(super::panic_messages::DIVIDE_BY_ZERO)
+        }
     }
-}
 
-impl From<u3> for u64 {
-    fn from(value: u3) -> Self {
-        value.as_u64()
+    #[assign(trait = MulAssign, fn = mul_assign)]
+    impl Mul {
+        fn mul(self, rhs) -> .. {
+            self.checked_mul(rhs)
+                .expect(super::panic_messages::MULTIPLY_WITH_OVERFLOW)
+        }
     }
-}
 
-impl From<u3> for u128 {
-    fn from(value: u3) -> Self {
-        value.as_u128()
+    #[assign(trait = RemAssign, fn = rem_assign)]
+    impl Rem {
+        fn rem(self, rhs) -> .. {
+            self.checked_rem(rhs)
+                .expect(super::panic_messages::REMAINDER_WITH_ZERO_DIVISOR)
+        }
     }
-}
 
-impl Add for u3 {
-    type Output = Self;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        self.checked_add(rhs)
-            .expect(super::tiny_uint_panic_messages::ADD_WITH_OVERFLOW)
+    #[assign(trait = ShlAssign, fn = shl_assign)]
+    impl Shl {
+        fn shl(self, rhs) -> .. {
+            Self::new_wrapped(self.as_u8() << rhs.as_u8())
+        }
     }
-}
 
-impl Add<&Self> for u3 {
-    type Output = Self;
+    #[assign(trait = ShrAssign, fn = shr_assign)]
+    impl Shr {
+        fn shr(self, rhs) -> .. {
+            let shifted_u8 = self.as_u8() >> rhs.as_u8();
 
-    fn add(self, rhs: &Self) -> Self::Output {
-        self.add(*rhs)
+            // SAFETY: Unsigned right shifts can only make values smaller.
+            unsafe { Self::new_unchecked(shifted_u8) }
+        }
     }
-}
 
-impl AddAssign for u3 {
-    fn add_assign(&mut self, rhs: Self) {
-        *self = self.add(rhs);
-    }
-}
-
-impl AddAssign<&Self> for u3 {
-    fn add_assign(&mut self, rhs: &Self) {
-        self.add_assign(*rhs);
-    }
-}
-
-impl BitAnd for u3 {
-    type Output = Self;
-
-    fn bitand(self, rhs: Self) -> Self::Output {
-        self.and(rhs)
-    }
-}
-
-impl BitAnd<&Self> for u3 {
-    type Output = Self;
-
-    fn bitand(self, rhs: &Self) -> Self::Output {
-        self.bitand(*rhs)
-    }
-}
-
-impl BitAndAssign for u3 {
-    fn bitand_assign(&mut self, rhs: Self) {
-        *self = self.bitand(rhs);
-    }
-}
-
-impl BitAndAssign<&Self> for u3 {
-    fn bitand_assign(&mut self, rhs: &Self) {
-        self.bitand_assign(*rhs);
-    }
-}
-
-impl BitOr for u3 {
-    type Output = Self;
-
-    fn bitor(self, rhs: Self) -> Self::Output {
-        self.or(rhs)
-    }
-}
-
-impl BitOr<&Self> for u3 {
-    type Output = Self;
-
-    fn bitor(self, rhs: &Self) -> Self::Output {
-        self.bitor(*rhs)
-    }
-}
-
-impl BitOrAssign for u3 {
-    fn bitor_assign(&mut self, rhs: Self) {
-        *self = self.bitor(rhs);
-    }
-}
-
-impl BitOrAssign<&Self> for u3 {
-    fn bitor_assign(&mut self, rhs: &Self) {
-        self.bitor_assign(*rhs);
-    }
-}
-
-impl BitXor for u3 {
-    type Output = Self;
-
-    fn bitxor(self, rhs: Self) -> Self::Output {
-        self.xor(rhs)
-    }
-}
-
-impl BitXor<&Self> for u3 {
-    type Output = Self;
-
-    fn bitxor(self, rhs: &Self) -> Self::Output {
-        self.bitxor(*rhs)
-    }
-}
-
-impl BitXorAssign for u3 {
-    fn bitxor_assign(&mut self, rhs: Self) {
-        *self = self.bitxor(rhs);
-    }
-}
-
-impl BitXorAssign<&Self> for u3 {
-    fn bitxor_assign(&mut self, rhs: &Self) {
-        self.bitxor_assign(*rhs);
-    }
-}
-
-impl Debug for u3 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        <u8 as Debug>::fmt(&self.as_u8(), f)
-    }
-}
-
-impl Display for u3 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        <u8 as Display>::fmt(&self.as_u8(), f)
-    }
-}
-
-impl Div for u3 {
-    type Output = Self;
-
-    fn div(self, rhs: Self) -> Self::Output {
-        self.checked_div(rhs)
-            .expect(super::tiny_uint_panic_messages::DIVIDE_BY_ZERO)
-    }
-}
-
-impl Div<&Self> for u3 {
-    type Output = Self;
-
-    fn div(self, rhs: &Self) -> Self::Output {
-        self.div(*rhs)
-    }
-}
-
-impl DivAssign for u3 {
-    fn div_assign(&mut self, rhs: Self) {
-        *self = self.div(rhs);
-    }
-}
-
-impl DivAssign<&Self> for u3 {
-    fn div_assign(&mut self, rhs: &Self) {
-        self.div_assign(*rhs);
-    }
-}
-
-impl Mul for u3 {
-    type Output = Self;
-
-    fn mul(self, rhs: Self) -> Self::Output {
-        self.checked_mul(rhs)
-            .expect(super::tiny_uint_panic_messages::MULTIPLY_WITH_OVERFLOW)
-    }
-}
-
-impl Mul<&Self> for u3 {
-    type Output = Self;
-
-    fn mul(self, rhs: &Self) -> Self::Output {
-        self.mul(*rhs)
-    }
-}
-
-impl MulAssign for u3 {
-    fn mul_assign(&mut self, rhs: Self) {
-        *self = self.mul(rhs);
-    }
-}
-
-impl MulAssign<&Self> for u3 {
-    fn mul_assign(&mut self, rhs: &Self) {
-        self.mul_assign(*rhs);
-    }
-}
-
-impl Not for u3 {
-    type Output = Self;
-
-    fn not(self) -> Self::Output {
-        self ^ Self::MAX
-    }
-}
-
-impl Rem for u3 {
-    type Output = Self;
-
-    fn rem(self, rhs: Self) -> Self::Output {
-        self.checked_rem(rhs)
-            .expect(super::tiny_uint_panic_messages::REMAINDER_WITH_ZERO_DIVISOR)
-    }
-}
-
-impl Rem<&Self> for u3 {
-    type Output = Self;
-
-    fn rem(self, rhs: &Self) -> Self::Output {
-        self.rem(*rhs)
-    }
-}
-
-impl RemAssign for u3 {
-    fn rem_assign(&mut self, rhs: Self) {
-        *self = self.rem(rhs);
-    }
-}
-
-impl RemAssign<&Self> for u3 {
-    fn rem_assign(&mut self, rhs: &Self) {
-        self.rem_assign(*rhs);
-    }
-}
-
-impl Shl for u3 {
-    type Output = Self;
-
-    fn shl(self, rhs: Self) -> Self::Output {
-        Self::new_wrapped(self.as_u8() << rhs.as_u8())
-    }
-}
-
-impl Shl<&Self> for u3 {
-    type Output = Self;
-
-    fn shl(self, rhs: &Self) -> Self::Output {
-        self.shl(*rhs)
-    }
-}
-
-impl ShlAssign for u3 {
-    fn shl_assign(&mut self, rhs: Self) {
-        *self = self.shl(rhs);
-    }
-}
-
-impl ShlAssign<&Self> for u3 {
-    fn shl_assign(&mut self, rhs: &Self) {
-        self.shl_assign(*rhs);
-    }
-}
-
-impl Shr for u3 {
-    type Output = Self;
-
-    fn shr(self, rhs: Self) -> Self::Output {
-        let shifted_u8 = self.as_u8() >> rhs.as_u8();
-
-        // SAFETY: Unsigned right shifts can only make values smaller.
-        unsafe { Self::new_unchecked(shifted_u8) }
-    }
-}
-
-impl Shr<&Self> for u3 {
-    type Output = Self;
-
-    fn shr(self, rhs: &Self) -> Self::Output {
-        self.shr(*rhs)
-    }
-}
-
-impl ShrAssign for u3 {
-    fn shr_assign(&mut self, rhs: Self) {
-        *self = self.shr(rhs);
-    }
-}
-
-impl ShrAssign<&Self> for u3 {
-    fn shr_assign(&mut self, rhs: &Self) {
-        self.shr_assign(*rhs);
-    }
-}
-
-impl Sub for u3 {
-    type Output = Self;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        self.checked_sub(rhs)
-            .expect(super::tiny_uint_panic_messages::SUBTRACT_WITH_OVERFLOW)
-    }
-}
-
-impl Sub<&Self> for u3 {
-    type Output = Self;
-
-    fn sub(self, rhs: &Self) -> Self::Output {
-        self.sub(*rhs)
-    }
-}
-
-impl SubAssign for u3 {
-    fn sub_assign(&mut self, rhs: Self) {
-        *self = self.sub(rhs);
-    }
-}
-
-impl SubAssign<&Self> for u3 {
-    fn sub_assign(&mut self, rhs: &Self) {
-        self.sub_assign(*rhs);
+    #[assign(trait = SubAssign, fn = sub_assign)]
+    impl Sub {
+        fn sub(self, rhs) -> .. {
+            self.checked_sub(rhs)
+                .expect(super::panic_messages::SUBTRACT_WITH_OVERFLOW)
+        }
     }
 }
 
