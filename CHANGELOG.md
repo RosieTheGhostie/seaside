@@ -13,6 +13,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Issue templates.
 - Dedicated installer.
 - Ability to query the file path of the global configuration file via the 'path config' command.
+- Custom unsigned integer types.
 - Type aliases `Size`, `SignedSize`, `Offset`, and `UnsignedOffset`.
 
 ### Changed
