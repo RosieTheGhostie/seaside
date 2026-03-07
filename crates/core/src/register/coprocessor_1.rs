@@ -6,7 +6,8 @@ use core::{
 use num_traits::FromPrimitive;
 use strum::EnumIter;
 
-use super::{IndexedRegister, ParseError};
+use super::{ParseError, RegisterIndex};
+use crate::u5;
 
 #[derive(Clone, Copy, Debug, EnumIter, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[repr(u8)]
@@ -55,37 +56,13 @@ impl FpuRegister {
         "f27", "f28", "f29", "f30", "f31",
     ];
 
-    /// Attempts to construct an [`FpuRegister`] from its raw index value.
-    ///
-    /// This will return [`None`] if `index` is greater than [`FpuRegister::MAX_RAW`].
-    ///
-    /// # See Also
-    ///
-    /// - [`from_raw_unchecked`](Self::from_raw_unchecked)
-    pub const fn from_raw(index: u8) -> Option<Self> {
-        if index <= Self::MAX_RAW {
-            Some(unsafe { Self::from_raw_unchecked(index) })
-        } else {
-            None
-        }
-    }
-
     /// Constructs an [`FpuRegister`] from its raw index value.
-    ///
-    /// # Safety
-    ///
-    /// The caller is responsible for ensuring `index` is less than or equal to
-    /// [`FpuRegister::MAX_RAW`]. Failure to do so may result in undefined behavior.
-    ///
-    /// # See Also
-    ///
-    /// - [`from_raw`](Self::from_raw)
-    pub const unsafe fn from_raw_unchecked(index: u8) -> Self {
-        unsafe { core::mem::transmute::<u8, Self>(index) }
+    pub const fn from_raw(index: u5) -> Self {
+        unsafe { core::mem::transmute::<u5, Self>(index) }
     }
 
     pub fn parse_indexed(s: &str) -> Result<Self, ParseError> {
-        if let Ok(indexed) = IndexedRegister::from_str(s) {
+        if let Ok(indexed) = RegisterIndex::from_str(s) {
             Ok(indexed.to_fpu())
         } else {
             s.parse()
@@ -140,7 +117,7 @@ impl FromStr for FpuRegister {
 
 impl FromPrimitive for FpuRegister {
     fn from_u8(n: u8) -> Option<Self> {
-        Self::from_raw(n)
+        u5::from_u8(n).map(Self::from_raw)
     }
 
     fn from_u64(n: u64) -> Option<Self> {

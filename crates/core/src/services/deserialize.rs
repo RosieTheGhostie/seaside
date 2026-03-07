@@ -3,7 +3,7 @@ use core::fmt::{self, Formatter};
 use serde::{Deserialize, Deserializer, de};
 
 use super::{Service, Services};
-use crate::types::ServiceCode;
+use crate::ServiceCode;
 
 impl<'de> Deserialize<'de> for Services {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>

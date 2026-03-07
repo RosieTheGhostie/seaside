@@ -23,10 +23,7 @@ use std::{
 use anyhow::Result;
 use minimal_logging::macros::debugln;
 use seaside_config::Config;
-use seaside_core::{
-    prelude::*,
-    types::{ServiceCode, Size, size},
-};
+use seaside_core::{ServiceCode, prelude::*, size};
 use seaside_executable::Executable;
 
 use file_handle::FileHandle;

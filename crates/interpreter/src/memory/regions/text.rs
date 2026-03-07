@@ -1,10 +1,6 @@
 use core::{iter::zip, ops::Range};
 
-use seaside_core::{
-    Endian,
-    prelude::*,
-    types::{Size, UnsignedOffset},
-};
+use seaside_core::{Endian, prelude::*};
 
 use super::{Inner, ReadableRegion, Region, SliceableRegion, SliceableRegionMut, WriteableRegion};
 use crate::Exception;
@@ -135,7 +131,7 @@ mod tests {
     use super::*;
 
     mod hello_world {
-        use seaside_core::{prelude::*, types::Size};
+        use seaside_core::prelude::*;
 
         use crate::memory::TextRegion;
 

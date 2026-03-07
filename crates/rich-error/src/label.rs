@@ -4,14 +4,14 @@ use super::Span;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Label {
-    pub message: String,
+    pub message: Box<str>,
     pub span: Span,
 }
 
 impl Label {
-    pub const fn new(span: Span) -> Self {
+    pub fn new(span: Span) -> Self {
         Self {
-            message: String::new(),
+            message: Box::default(),
             span,
         }
     }
@@ -20,7 +20,7 @@ impl Label {
     where
         S: ToString,
     {
-        self.message = message.to_string();
+        self.message = message.to_string().into_boxed_str();
         self
     }
 

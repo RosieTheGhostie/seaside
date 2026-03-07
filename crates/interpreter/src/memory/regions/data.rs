@@ -1,6 +1,6 @@
 use core::ops::{Deref, DerefMut};
 
-use seaside_core::{prelude::*, types::Size};
+use seaside_core::prelude::*;
 
 use super::Inner;
 

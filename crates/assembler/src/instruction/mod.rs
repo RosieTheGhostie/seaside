@@ -1,117 +1,67 @@
-pub mod operator;
-
-pub use operator::Operator;
-
-mod assemble;
 mod macros;
 mod process;
 
-use seaside_core::prelude::*;
-use seaside_rich_error::{RichError, RichResult, Span};
+use seaside_core::{UnpackedInstruction, prelude::*};
+use seaside_rich_error::{RichError, RichResultBuilder, Span, map_err, result::Bailed};
 
 use crate::{error::AssembleError, parser::Operand};
-use assemble::insert;
 use macros::*;
-use process::{Destination, maybe, maybe_or};
+use process::{Destination, Processor};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum ProcessedInstruction<'src> {
-    MachineCode(Instruction),
+    Resolved(UnpackedInstruction),
     Unresolved(UnresolvedInstruction<'src>),
 }
 
 pub fn process_instruction<'src>(
+    result_builder: &mut RichResultBuilder,
     operator: &'src str,
     operands: Vec<(Operand<'src>, Span)>,
     expr_span: &Span,
     pc: Address,
-) -> RichResult<ProcessedInstruction<'src>> {
-    use Operator::*;
-
-    let operator_span = Span {
-        start: expr_span.start,
-        end: expr_span.start + operator.len(),
+) -> Result<ProcessedInstruction<'src>, Bailed> {
+    let Some(mut template) = UnpackedInstruction::parse_from_operator(operator) else {
+        return result_builder.bail(
+            RichError::new(AssembleError::UnknownOperator, expr_span.clone())
+                .with_narrow_span(Span {
+                    start: expr_span.start,
+                    end: expr_span.start + operator.len(),
+                })
+                .with_help(
+                    "if you are trying to use a pseudo-operator, those aren't supported yet",
+                ),
+        );
     };
 
-    let operator: Operator = operator.parse().map_err(|_| {
-        RichError::new(AssembleError::UnknownOperator, expr_span.clone())
-            .with_narrow_span(operator_span)
-            .with_help("if you are trying to use a pseudo-operator, those aren't supported yet")
-    })?;
     let mut operands_iter = operands.iter();
-    let opcode = Opcode::from(operator);
-    let fn_code = operator.op_or_fn_code();
-
-    let mut machine_code: Instruction = opcode as _;
-    match operator {
-        // sll $rd, $rt, shamt
-        special![ShiftLeftLogical, ShiftRightLogical, ShiftRightArithmetic] => {
-            let rd = process::cpu_register(operands_iter.next(), expr_span)?;
-            let rt = process::cpu_register(operands_iter.next(), expr_span)?;
-            let shamt = process::shamt(operands_iter.next(), expr_span)?;
-            assemble::r_type(&mut machine_code, CpuRegister::Zero, rt, rd, shamt, fn_code);
+    let mut processor = Processor::new(
+        result_builder,
+        &mut operands_iter as &mut dyn Iterator<Item = _>,
+        expr_span,
+    );
+    match &mut template {
+        special![{fields} ShiftLeftLogical, ShiftRightLogical, ShiftRightArithmetic] => {
+            process::shift_by_amount(&mut processor, fields)
         }
-        // movt $rd, $rs
-        // movt $rd, $rs, cc
-        special!(MoveConditional, condition: condition) => {
-            let rd = process::cpu_register(operands_iter.next(), expr_span)?;
-            let rs = process::cpu_register(operands_iter.next(), expr_span)?;
-            let cc = maybe_or(
-                operands_iter.next(),
-                expr_span,
-                ConditionCode::_0,
-                process::cc,
-            )?;
-            assemble::movc(&mut machine_code, rs, cc, condition, rd, fn_code);
-        }
-        // sllv $rd, $rt, $rs
+        special!({fields} MoveConditional) => process::cpu_move_conditional(&mut processor, fields),
         special![
+            {fields}
             ShiftLeftLogicalVariable,
             ShiftRightLogicalVariable,
-            ShiftRightArithmeticVariable
-        ] => {
-            let rd = process::cpu_register(operands_iter.next(), expr_span)?;
-            let rt = process::cpu_register(operands_iter.next(), expr_span)?;
-            let rs = process::cpu_register(operands_iter.next(), expr_span)?;
-            assemble::r_type(&mut machine_code, rs, rt, rd, 0, fn_code);
+            ShiftRightArithmeticVariable,
+        ] => process::shift_by_variable(&mut processor, fields),
+        special!({fields} JumpRegister) => process::jr(&mut processor, fields),
+        special!({fields} JumpAndLinkRegister) => process::jalr(&mut processor, fields),
+        special!({_} SystemCall) | coprocessor_0!({_} ErrorReturn) => Ok(()),
+        special!({fields} Break) => process::r#break(&mut processor, fields),
+        special![{fields} MoveFromHigh, MoveFromLow] => {
+            process::move_from_high_or_low(&mut processor, fields)
         }
-        // jr $rs
-        special![JumpRegister, MoveToHigh, MoveToLow] => {
-            let rs = process::cpu_register(operands_iter.next(), expr_span)?;
-            insert!({5} rs, {21} fn_code => machine_code);
-        }
-        // jalr $rs
-        // jalr $rd, $rs
-        special!(JumpAndLinkRegister, condition: _) => {
-            let rs_or_rd = process::cpu_register(operands_iter.next(), expr_span)?;
-            let (rs, rd) =
-                if let Some(rs) = maybe(operands_iter.next(), expr_span, process::cpu_register)? {
-                    (rs, rs_or_rd)
-                } else {
-                    (rs_or_rd, CpuRegister::ReturnAddr)
-                };
-            assemble::r_type(&mut machine_code, rs, CpuRegister::Zero, rd, 0, fn_code);
-        }
-        // syscall
-        special!(SystemCall, condition: _) => {
-            insert!({26} fn_code => machine_code);
-        }
-        // break
-        // break code
-        special!(Break, condition: _) => {
-            let code = maybe_or(operands_iter.next(), expr_span, 0, process::code)?;
-            insert!({20} code, {6} fn_code => machine_code);
-        }
-        // mfhi $rd
-        special![MoveFromHigh, MoveFromLow] => {
-            let rd = process::cpu_register(operands_iter.next(), expr_span)?;
-            insert!({15} rd, {11} fn_code => machine_code);
-        }
-        // mult $rs, $rt
         special![
+            {fields}
             Multiply,
             MultiplyUnsigned,
-            Divide,
             DivideUnsigned,
             TrapGreaterEqual,
             TrapGreaterEqualUnsigned,
@@ -119,19 +69,9 @@ pub fn process_instruction<'src>(
             TrapLessThanUnsigned,
             TrapEqual,
             TrapNotEqual,
-        ]
-        | special_2![
-            MultiplyAdd,
-            MultiplyAddUnsigned,
-            MultiplySubtract,
-            MultiplySubtractUnsigned,
-        ] => {
-            let rs = process::cpu_register(operands_iter.next(), expr_span)?;
-            let rt = process::cpu_register(operands_iter.next(), expr_span)?;
-            assemble::r_type(&mut machine_code, rs, rt, CpuRegister::Zero, 0, fn_code);
-        }
-        // movz $rd, $rs, $rt
+        ] => process::int_math_2_ops(&mut processor, fields),
         special![
+            {fields}
             MoveZero,
             MoveNotZero,
             Add,
@@ -144,41 +84,41 @@ pub fn process_instruction<'src>(
             Nor,
             SetLessThan,
             SetLessThanUnsigned,
-        ]
-        | special_2!(Multiply) => {
-            let rd = process::cpu_register(operands_iter.next(), expr_span)?;
-            let rs = process::cpu_register(operands_iter.next(), expr_span)?;
-            let rt = process::cpu_register(operands_iter.next(), expr_span)?;
-            assemble::r_type(&mut machine_code, rs, rt, rd, 0, fn_code);
-        }
+        ] => process::int_math_3_ops(&mut processor, fields),
         // bltz $rs, address
         // bltz $rs, label
         register_immediate![
+            {fields}
             BranchLessThanZero,
             BranchGreaterEqualZero,
             BranchLessThanZeroAndLink,
             BranchGreaterEqualZeroAndLink,
         ] => {
-            let rs = process::cpu_register(operands_iter.next(), expr_span)?;
-            let offset = match process::destination(operands_iter.next(), expr_span)? {
+            fields.rs = processor.cpu_register()?.to_indexed();
+            match processor.destination()? {
                 Destination::Address(address, span) => {
-                    address_to_offset(address, pc, expr_span, &span)?
+                    fields.imm = address_to_offset(
+                        processor.result_builder,
+                        processor.expr_span,
+                        &span,
+                        address,
+                        pc,
+                    )? as _;
                 }
                 Destination::Label(label, span) => {
-                    process::finish(operands_iter.next(), expr_span)?;
-                    return Ok(ProcessedInstruction::Unresolved(
-                        UnresolvedInstruction::BranchRegImm {
-                            operator,
-                            rs,
-                            label: (label, span),
-                        },
-                    ));
+                    processor.finish()?;
+                    return Ok(ProcessedInstruction::Unresolved(UnresolvedInstruction {
+                        template,
+                        label: (label, span),
+                    }));
                 }
             };
-            assemble::regimm(&mut machine_code, rs, fn_code, offset as u16);
+
+            Ok(())
         }
         // tgei $rs, imm_16
         register_immediate![
+            {fields}
             TrapGreaterEqualImmediate,
             TrapGreaterEqualImmediateUnsigned,
             TrapLessThanImmediate,
@@ -186,118 +126,117 @@ pub fn process_instruction<'src>(
             TrapEqualImmediate,
             TrapNotEqualImmediate,
         ] => {
-            let rs = process::cpu_register(operands_iter.next(), expr_span)?;
-            let imm = process::imm_i16(operands_iter.next(), expr_span)?;
-            assemble::regimm(&mut machine_code, rs, fn_code, imm as u16);
+            fields.rs = processor.cpu_register()?.to_indexed();
+            fields.imm = processor.signed_immediate()? as _;
+
+            Ok(())
         }
         // j address
         // j label
-        Jump | JumpAndLink => {
-            let jump_index = match process::destination(operands_iter.next(), expr_span)? {
+        jump![{fields} Jump, JumpAndLink] => {
+            match processor.destination()? {
                 Destination::Address(address, span) => {
-                    address_to_index(address, pc, expr_span, &span)?
+                    fields.set_index(address_to_index(
+                        processor.result_builder,
+                        processor.expr_span,
+                        &span,
+                        address,
+                        pc,
+                    )?);
                 }
                 Destination::Label(label, span) => {
-                    process::finish(operands_iter.next(), expr_span)?;
-                    return Ok(ProcessedInstruction::Unresolved(
-                        UnresolvedInstruction::Jump {
-                            operator,
-                            label: (label, span),
-                        },
-                    ));
+                    processor.finish()?;
+                    return Ok(ProcessedInstruction::Unresolved(UnresolvedInstruction {
+                        template,
+                        label: (label, span),
+                    }));
                 }
             };
-            assemble::j_type(&mut machine_code, jump_index);
+
+            Ok(())
         }
         // beq $rs, $rt, address
         // beq $rs, $rt, label
-        BranchEqual | BranchNotEqual => {
-            let rs = process::cpu_register(operands_iter.next(), expr_span)?;
-            let rt = process::cpu_register(operands_iter.next(), expr_span)?;
-            let offset = match process::destination(operands_iter.next(), expr_span)? {
+        immediate![
+            {fields}
+            BranchEqual,
+            BranchEqualLikely,
+            BranchNotEqual,
+            BranchNotEqualLikely,
+        ] => {
+            fields.rs = processor.cpu_register()?.to_indexed();
+            fields.rt = processor.cpu_register()?.to_indexed();
+            match processor.destination()? {
                 Destination::Address(address, span) => {
-                    address_to_offset(address, pc, expr_span, &span)?
+                    fields.imm = address_to_offset(
+                        processor.result_builder,
+                        processor.expr_span,
+                        &span,
+                        address,
+                        pc,
+                    )? as _;
                 }
                 Destination::Label(label, span) => {
-                    process::finish(operands_iter.next(), expr_span)?;
-                    return Ok(ProcessedInstruction::Unresolved(
-                        UnresolvedInstruction::BranchIType {
-                            operator,
-                            rs,
-                            rt,
-                            label: (label, span),
-                        },
-                    ));
+                    processor.finish()?;
+                    return Ok(ProcessedInstruction::Unresolved(UnresolvedInstruction {
+                        template,
+                        label: (label, span),
+                    }));
                 }
             };
-            assemble::i_type(&mut machine_code, rs, rt, offset as u16);
+
+            Ok(())
         }
         // blez $rs, address
         // blez $rs, label
-        BranchLessEqualZero | BranchGreaterThanZero => {
-            let rs = process::cpu_register(operands_iter.next(), expr_span)?;
-            let offset = match process::destination(operands_iter.next(), expr_span)? {
+        immediate![
+            {fields}
+            BranchLessEqualZero,
+            BranchLessEqualZeroLikely,
+            BranchGreaterThanZero,
+            BranchGreaterThanZeroLikely,
+        ] => {
+            fields.rs = processor.cpu_register()?.to_indexed();
+            match processor.destination()? {
                 Destination::Address(address, span) => {
-                    address_to_offset(address, pc, expr_span, &span)?
+                    fields.imm = address_to_offset(
+                        processor.result_builder,
+                        processor.expr_span,
+                        &span,
+                        address,
+                        pc,
+                    )? as _;
                 }
                 Destination::Label(label, span) => {
-                    process::finish(operands_iter.next(), expr_span)?;
-                    return Ok(ProcessedInstruction::Unresolved(
-                        UnresolvedInstruction::BranchIType {
-                            operator,
-                            rs,
-                            rt: CpuRegister::Zero,
-                            label: (label, span),
-                        },
-                    ));
+                    processor.finish()?;
+                    return Ok(ProcessedInstruction::Unresolved(UnresolvedInstruction {
+                        template,
+                        label: (label, span),
+                    }));
                 }
             };
-            assemble::i_type(&mut machine_code, rs, CpuRegister::Zero, offset as u16);
+
+            Ok(())
         }
-        // addi $rt, $rs, imm_i16
-        AddImmediate
-        | AddImmediateUnsigned
-        | SetLessThanImmediate
-        | SetLessThanImmediateUnsigned => {
-            let rt = process::cpu_register(operands_iter.next(), expr_span)?;
-            let rs = process::cpu_register(operands_iter.next(), expr_span)?;
-            let imm = process::imm_i16(operands_iter.next(), expr_span)?;
-            assemble::i_type(&mut machine_code, rs, rt, imm as u16);
+        immediate![
+            {fields}
+            AddImmediate,
+            AddImmediateUnsigned,
+            SetLessThanImmediate,
+            SetLessThanImmediateUnsigned,
+        ] => process::int_math_signed_immediate(&mut processor, fields),
+        immediate![{fields} AndImmediate, OrImmediate, XorImmediate] => {
+            process::int_math_unsigned_immediate(&mut processor, fields)
         }
-        // andi $rt, $rs, imm_u16
-        AndImmediate | OrImmediate | XorImmediate => {
-            let rt = process::cpu_register(operands_iter.next(), expr_span)?;
-            let rs = process::cpu_register(operands_iter.next(), expr_span)?;
-            let imm = process::imm_u16(operands_iter.next(), expr_span)?;
-            assemble::i_type(&mut machine_code, rs, rt, imm);
+        immediate!({fields} LoadUpperImmediate) => process::lui(&mut processor, fields),
+        coprocessor_0![{fields} MoveFromCoprocessor0, MoveToCoprocessor0] => {
+            process::move_between_cpu_and_coprocessor_0(&mut processor, fields)
         }
-        // lui $rt, imm_i16
-        LoadUpperImmediate => {
-            let rt = process::cpu_register(operands_iter.next(), expr_span)?;
-            let imm = process::imm_u16(operands_iter.next(), expr_span)?;
-            assemble::i_type(&mut machine_code, CpuRegister::Zero, rt, imm);
+        coprocessor_1![{fields} Add, Subtract, Multiply, Divide] => {
+            process::float_math_3_ops(&mut processor, fields)
         }
-        // mfc0 $rt, $rd
-        // note: $rd is a coprocessor 0 register, not a cpu register
-        coprocessor_0![MoveFromCoprocessor0, MoveToCoprocessor0] => {
-            let rt = process::cpu_register(operands_iter.next(), expr_span)?;
-            let rd = process::coprocessor_0_register(operands_iter.next(), expr_span)?;
-            assemble::coprocessor_0(&mut machine_code, fn_code, rt, rd);
-        }
-        // eret
-        coprocessor_0!(ErrorReturn) => {
-            insert!({5} fn_code, {21} 0x18 => machine_code);
-        }
-        // add.s $fd, $fs, $ft
-        coprocessor_1![{fmt} Add, Subtract, Multiply, Divide] => {
-            let fd = process::fpu_register(operands_iter.next(), expr_span)?;
-            let fs = process::fpu_register(operands_iter.next(), expr_span)?;
-            let ft = process::fpu_register(operands_iter.next(), expr_span)?;
-            assemble::coprocessor_1(&mut machine_code, fmt, ft, fs, fd, fn_code);
-        }
-        // sqrt.s $fd, $fs
         coprocessor_1![
-            {fmt}
+            {fields}
             SquareRoot,
             AbsoluteValue,
             Move,
@@ -309,277 +248,267 @@ pub fn process_instruction<'src>(
             ConvertToSingle,
             ConvertToDouble,
             ConvertToWord,
-        ] => {
-            let fd = process::fpu_register(operands_iter.next(), expr_span)?;
-            let fs = process::fpu_register(operands_iter.next(), expr_span)?;
-            assemble::coprocessor_1(&mut machine_code, fmt, FpuRegister::F0, fs, fd, fn_code);
+        ] => process::float_math_2_ops(&mut processor, fields),
+        coprocessor_1!({fields} MoveConditional) => {
+            process::coprocessor_1_move_conditional(&mut processor, fields)
         }
-        // movt.s $fd, $fs
-        // movt.s $fd, $fs, cc
-        coprocessor_1!({fmt} MoveConditional, condition: condition) => {
-            let fd = process::fpu_register(operands_iter.next(), expr_span)?;
-            let fs = process::fpu_register(operands_iter.next(), expr_span)?;
-            let cc = maybe_or(
-                operands_iter.next(),
-                expr_span,
-                ConditionCode::_0,
-                process::cc,
-            )?;
-            assemble::coprocessor_1_with_cc_c(
-                &mut machine_code,
-                fmt,
-                cc,
-                condition,
-                fd,
-                fs,
-                fn_code,
-            );
+        coprocessor_1![{fields} MoveZero, MoveNotZero] => {
+            process::coprocessor_1_move_by_comparison(&mut processor, fields)
         }
-        // movz.s $fd, $fs, $rt
-        coprocessor_1![{fmt} MoveZero, MoveNotZero] => {
-            let fd = process::fpu_register(operands_iter.next(), expr_span)?;
-            let fs = process::fpu_register(operands_iter.next(), expr_span)?;
-            let rt = process::cpu_register(operands_iter.next(), expr_span)?;
-            assemble::coprocessor_1(&mut machine_code, fmt, rt.to_fpu(), fs, fd, fn_code);
-        }
-        // c.eq.s $fs, $ft
-        // c.eq.s cc, $fs, $ft
-        /* c.eq.s 7, $f21, $f22
-         *   op    fmt   $ft   $fs  cc       fn
-         * 010001 10000 10110 10101 111 00 110010
-         *  fpu    .s   $f22  $f21   7      c.eq
-         */
-        coprocessor_1![{fmt} CompareEqual, CompareLessThan, CompareLessEqual] => {
-            let (cc, next) = process::maybe_cc(&mut operands_iter, expr_span)?;
-            let fs = process::fpu_register(next, expr_span)?;
-            let ft = process::fpu_register(operands_iter.next(), expr_span)?;
-            insert!({5} fmt, {5} ft, {5} fs, {3} cc, {8} fn_code => machine_code);
-        }
-        // mfc1 $rt, $fs
-        coprocessor_1_register_immediate![MoveFromCoprocessor1, MoveToCoprocessor1] => {
-            let rt = process::cpu_register(operands_iter.next(), expr_span)?;
-            let fs = process::fpu_register(operands_iter.next(), expr_span)?;
-            assemble::coprocessor_1_register_immediate(&mut machine_code, fn_code, rt, fs);
+        coprocessor_1![
+            {fields}
+            CompareFalse,
+            CompareUnordered,
+            CompareEqual,
+            CompareUnorderedEqual,
+            CompareOrderedLessThan,
+            CompareUnorderedLessThan,
+            CompareOrderedLessEqual,
+            CompareUnorderedLessEqual,
+            CompareSignalFalse,
+            CompareNotGreaterLessEqual,
+            CompareSignalEqual,
+            CompareNotGreaterLess,
+            CompareLessThan,
+            CompareNotGreaterEqual,
+            CompareLessEqual,
+            CompareNotGreaterThan,
+        ] => process::float_compare(&mut processor, fields),
+        coprocessor_1_register_immediate![{fields} MoveFromCoprocessor1, MoveToCoprocessor1] => {
+            process::move_between_cpu_and_coprocessor_1(&mut processor, fields)
         }
         // bc1t address
         // bc1t label
         // bc1t cc, address
         // bc1t cc, label
-        coprocessor_1_register_immediate!(BranchCoprocessor1Flag, condition: condition) => {
-            let (cc, next) = process::maybe_cc(&mut operands_iter, expr_span)?;
-            let offset = match process::destination(next, expr_span)? {
+        coprocessor_1_register_immediate!({fields} BranchCoprocessor1Flag) => {
+            fields.set_cc(processor.maybe_condition_code_if_int()?.unwrap_or_default());
+            match processor.destination()? {
                 Destination::Address(address, span) => {
-                    address_to_offset(address, pc, expr_span, &span)?
+                    fields.set_imm(address_to_offset(
+                        processor.result_builder,
+                        processor.expr_span,
+                        &span,
+                        address,
+                        pc,
+                    )? as _);
                 }
                 Destination::Label(label, span) => {
-                    process::finish(operands_iter.next(), expr_span)?;
-                    return Ok(ProcessedInstruction::Unresolved(
-                        UnresolvedInstruction::BranchCoprocessor1Flag {
-                            cc,
-                            condition,
-                            label: (label, span),
-                        },
-                    ));
+                    processor.finish()?;
+                    return Ok(ProcessedInstruction::Unresolved(UnresolvedInstruction {
+                        template,
+                        label: (label, span),
+                    }));
                 }
-            };
-            assemble::bc1c(&mut machine_code, cc, condition, offset as u16);
-        }
-        // clz $rd, $rs
-        special_2![CountLeadingZeroes, CountLeadingOnes] => {
-            let rd = process::cpu_register(operands_iter.next(), expr_span)?;
-            let rs = process::cpu_register(operands_iter.next(), expr_span)?;
-            assemble::r_type(&mut machine_code, rs, CpuRegister::Zero, rd, 0, fn_code);
-        }
-        // lb $rt, ($rs)
-        // lb $rt, imm_i16($rs)
-        LoadByte | LoadHalf | LoadWordLeft | LoadWord | LoadByteUnsigned | LoadHalfUnsigned
-        | LoadWordRight | StoreByte | StoreHalf | StoreWordLeft | StoreWord | StoreConditional
-        | StoreWordRight | LoadLinked => {
-            let rt = process::cpu_register(operands_iter.next(), expr_span)?;
-            let (imm, rs) = process::offset_cpu_register(
-                [operands_iter.next(), operands_iter.next()],
-                expr_span,
-            )?;
-            assemble::i_type(&mut machine_code, rs, rt, imm as u16);
-        }
-        // lwc1 $ft, ($rs)
-        // lwc1 $ft, imm_i16($rs)
-        LoadWordCoprocessor1
-        | LoadDoubleCoprocessor1
-        | StoreWordCoprocessor1
-        | StoreDoubleCoprocessor1 => {
-            let ft = process::fpu_register(operands_iter.next(), expr_span)?;
-            let (imm, rs) = process::offset_cpu_register(
-                [operands_iter.next(), operands_iter.next()],
-                expr_span,
-            )?;
-            assemble::i_type(&mut machine_code, rs, ft.to_cpu(), imm as u16);
-        }
-        _ => todo!(),
-    }
+            }
 
-    process::finish(operands_iter.next(), expr_span)?;
-    Ok(ProcessedInstruction::MachineCode(machine_code))
+            Ok(())
+        }
+        coprocessor_1x![
+            {fields}
+            MultiplyAddSingle,
+            MultiplyAddDouble,
+            MultiplySubtractSingle,
+            MultiplySubtractDouble,
+            NegativeMultiplyAddSingle,
+            NegativeMultiplyAddDouble,
+            NegativeMultiplySubtractSingle,
+            NegativeMultiplySubtractDouble,
+        ] => process::float_multiply_accumulate(&mut processor, fields),
+        coprocessor_2_register_immediate![{fields} MoveFromCoprocessor2, MoveToCoprocessor2] => {
+            process::move_between_cpu_and_coprocessor_2(&mut processor, fields)
+        }
+        special_2![
+            {fields}
+            MultiplyAdd,
+            MultiplyAddUnsigned,
+            MultiplySubtract,
+            MultiplySubtractUnsigned,
+        ] => process::int_multiply_accumulate(&mut processor, fields),
+        special_2!({fields} Multiply) => process::mul(&mut processor, fields),
+        special_2![{fields} CountLeadingZeroes, CountLeadingOnes] => {
+            process::count_leading_bits(&mut processor, fields)
+        }
+        immediate![
+            {fields}
+            LoadByte,
+            LoadHalf,
+            LoadWordLeft,
+            LoadWord,
+            LoadByteUnsigned,
+            LoadHalfUnsigned,
+            LoadWordRight,
+            StoreByte,
+            StoreHalf,
+            StoreWordLeft,
+            StoreWord,
+            StoreConditional,
+            StoreWordRight,
+            LoadLinked,
+        ] => process::cpu_memory_access(&mut processor, fields),
+        immediate![
+            {fields}
+            LoadWordCoprocessor1,
+            LoadDoubleCoprocessor1,
+            StoreWordCoprocessor1,
+            StoreDoubleCoprocessor1,
+        ] => process::coprocessor_1_memory_access(&mut processor, fields),
+        _ => todo!(),
+    }?;
+
+    processor
+        .finish()
+        .map(|()| ProcessedInstruction::Resolved(template))
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum UnresolvedInstruction<'src> {
-    Jump {
-        operator: Operator,
-        label: (&'src str, Span),
-    },
-    BranchRegImm {
-        operator: Operator,
-        rs: CpuRegister,
-        label: (&'src str, Span),
-    },
-    BranchIType {
-        operator: Operator,
-        rs: CpuRegister,
-        rt: CpuRegister,
-        label: (&'src str, Span),
-    },
-    BranchCoprocessor1Flag {
-        cc: ConditionCode,
-        condition: bool,
-        label: (&'src str, Span),
-    },
+pub struct UnresolvedInstruction<'src> {
+    template: UnpackedInstruction,
+    label: (&'src str, Span),
 }
 
 impl UnresolvedInstruction<'_> {
     pub const fn spanned_label(&self) -> &(&str, Span) {
-        match self {
-            Self::Jump { operator: _, label }
-            | Self::BranchRegImm {
-                operator: _,
-                rs: _,
-                label,
-            }
-            | Self::BranchIType {
-                operator: _,
-                rs: _,
-                rt: _,
-                label,
-            }
-            | Self::BranchCoprocessor1Flag {
-                cc: _,
-                condition: _,
-                label,
-            } => label,
-        }
+        &self.label
     }
 
-    pub fn resolve(self, span: &Span, address: Address, pc: Address) -> RichResult<Instruction> {
-        use UnresolvedInstruction::*;
-        match self {
-            Jump {
-                operator,
-                label: (_, label_span),
-            } => Self::resolve_jump(operator, &label_span, span, address, pc),
-            BranchRegImm {
-                operator,
-                rs,
-                label: (_, label_span),
-            } => Self::resolve_register_immediate(operator, rs, &label_span, span, address, pc),
-            BranchIType {
-                operator,
-                rs,
-                rt,
-                label: (_, label_span),
-            } => Self::resolve_i_type(operator, rs, rt, &label_span, span, address, pc),
-            BranchCoprocessor1Flag {
-                cc,
-                condition,
-                label: (_, label_span),
-            } => Self::resole_bc1c(cc, condition, &label_span, span, address, pc),
-        }
+    pub fn resolve(
+        mut self,
+        result_builder: &mut RichResultBuilder,
+        span: &Span,
+        address: Address,
+        pc: Address,
+    ) -> Result<UnpackedInstruction, Bailed> {
+        let context = ResolverContext {
+            result_builder,
+            instruction_span: span,
+            label_span: &self.label.1,
+            address,
+            pc,
+        };
+        match &mut self.template {
+            jump![{fields} Jump, JumpAndLink] => Self::resolve_jump(context, fields),
+            register_immediate![
+                {fields}
+                BranchLessThanZero,
+                BranchLessThanZeroLikely,
+                BranchLessThanZeroAndLink,
+                BranchLessThanZeroAndLinkLikely,
+                BranchGreaterEqualZero,
+                BranchGreaterEqualZeroLikely,
+                BranchGreaterEqualZeroAndLink,
+                BranchGreaterEqualZeroAndLinkLikely,
+            ] => Self::resolve_register_immediate(context, fields),
+            immediate![
+                {fields}
+                BranchEqual,
+                BranchEqualLikely,
+                BranchNotEqual,
+                BranchNotEqualLikely,
+                BranchLessEqualZero,
+                BranchLessEqualZeroLikely,
+                BranchGreaterThanZero,
+                BranchGreaterThanZeroLikely,
+            ] => Self::resolve_i_type(context, fields),
+            coprocessor_1_register_immediate!({fields} BranchCoprocessor1Flag) => {
+                Self::resolve_bc1c(context, fields)
+            }
+            _ => panic!("marked resolved instruction as unresolved"),
+        }?;
+
+        Ok(self.template)
     }
 
     fn resolve_jump(
-        operator: Operator,
-        label_span: &Span,
-        instruction_span: &Span,
-        address: Address,
-        pc: Address,
-    ) -> RichResult<Instruction> {
-        let mut machine_code: Instruction = 0;
-        let jump_index = address_to_index(address, pc, instruction_span, label_span)?;
-        insert!({6} Opcode::from(operator) => machine_code);
-        assemble::j_type(&mut machine_code, jump_index);
-        Ok(machine_code)
+        mut context: ResolverContext<'_>,
+        fields: &mut seaside_core::instruction::jump::Fields,
+    ) -> Result<(), Bailed> {
+        context
+            .address_to_index()
+            .map(|index| fields.set_index(index))
     }
 
     fn resolve_register_immediate(
-        operator: Operator,
-        rs: CpuRegister,
-        label_span: &Span,
-        instruction_span: &Span,
-        address: Address,
-        pc: Address,
-    ) -> RichResult<Instruction> {
-        let mut machine_code: Instruction = 0;
-        let offset = address_to_offset(address, pc, instruction_span, label_span)?;
-        insert!({6} Opcode::RegisterImmediate => machine_code);
-        assemble::regimm(
-            &mut machine_code,
-            rs,
-            operator.op_or_fn_code(),
-            offset as u16,
-        );
-        Ok(machine_code)
+        mut context: ResolverContext<'_>,
+        fields: &mut seaside_core::instruction::register_immediate::Fields,
+    ) -> Result<(), Bailed> {
+        context
+            .address_to_offset()
+            .map(|offset| fields.imm = offset as _)
     }
 
     fn resolve_i_type(
-        operator: Operator,
-        rs: CpuRegister,
-        rt: CpuRegister,
-        label_span: &Span,
-        instruction_span: &Span,
-        address: Address,
-        pc: Address,
-    ) -> RichResult<Instruction> {
-        let mut machine_code: Instruction = 0;
-        let offset = address_to_offset(address, pc, instruction_span, label_span)?;
-        insert!({6} Opcode::from(operator) => machine_code);
-        assemble::i_type(&mut machine_code, rs, rt, offset as u16);
-        Ok(machine_code)
+        mut context: ResolverContext<'_>,
+        fields: &mut seaside_core::instruction::immediate::Fields,
+    ) -> Result<(), Bailed> {
+        context
+            .address_to_offset()
+            .map(|offset| fields.imm = offset as _)
     }
 
-    fn resole_bc1c(
-        cc: ConditionCode,
-        condition: bool,
-        label_span: &Span,
-        instruction_span: &Span,
-        address: Address,
-        pc: Address,
-    ) -> RichResult<Instruction> {
-        let mut machine_code: Instruction = Opcode::Coprocessor1 as Instruction;
-        let offset = address_to_offset(address, pc, instruction_span, label_span)?;
-        assemble::bc1c(&mut machine_code, cc, condition, offset as u16);
-        Ok(machine_code)
+    fn resolve_bc1c(
+        mut context: ResolverContext<'_>,
+        fields: &mut seaside_core::instruction::coprocessor_1::RegisterImmediateFields,
+    ) -> Result<(), Bailed> {
+        context
+            .address_to_offset()
+            .map(|offset| fields.set_imm(offset as _))
+    }
+}
+
+struct ResolverContext<'a> {
+    pub result_builder: &'a mut RichResultBuilder,
+    pub instruction_span: &'a Span,
+    pub label_span: &'a Span,
+    pub address: Address,
+    pub pc: Address,
+}
+
+impl ResolverContext<'_> {
+    pub fn address_to_offset(&mut self) -> Result<i16, Bailed> {
+        address_to_offset(
+            self.result_builder,
+            self.instruction_span,
+            self.label_span,
+            self.address,
+            self.pc,
+        )
+    }
+
+    pub fn address_to_index(&mut self) -> Result<u32, Bailed> {
+        address_to_index(
+            self.result_builder,
+            self.instruction_span,
+            self.label_span,
+            self.address,
+            self.pc,
+        )
     }
 }
 
 fn address_to_offset(
-    address: Address,
-    pc: Address,
+    result_builder: &mut RichResultBuilder,
     instruction_span: &Span,
     address_span: &Span,
-) -> RichResult<i16> {
+    address: Address,
+    pc: Address,
+) -> Result<i16, Bailed> {
     let offset = (address as i32 - pc as i32) / 4 - 1;
-    <i32 as TryInto<i16>>::try_into(offset).map_err(|_| {
+    offset.try_into().map_err(map_err!(
+        result_builder,
         RichError::new(AssembleError::OffsetTooLarge, instruction_span.clone())
             .with_narrow_span(address_span.clone())
-            .with_note("can only branch by -128..128 KiB at a time")
-    })
+            .with_note("can only branch by -128..128 KiB at a time"),
+    ))
 }
 
 fn address_to_index(
-    address: Address,
-    pc: Address,
+    result_builder: &mut RichResultBuilder,
     instruction_span: &Span,
     address_span: &Span,
-) -> RichResult<u32> {
+    address: Address,
+    pc: Address,
+) -> Result<u32, Bailed> {
     // A jump index is essentially the index of the instruction to jump to in the current "block".
     // These "blocks" are 0x10000000 in size, so as long as the most significant nibble of `address`
     // and `pc` are the same, there will be a valid jump index.
@@ -629,17 +558,19 @@ fn address_to_index(
     //  jal              Foo
     //
     // Thus, `jal Foo` becomes 0x0c1a04a7.
-    let pc_plus_4 = pc.checked_add(4).ok_or_else(|| {
-        RichError::new(
-            AssembleError::ProgramCounterOverflow,
-            instruction_span.clone(),
-        )
-        .with_narrow_span(address_span.clone())
-    })?;
+    let Some(pc_plus_4) = pc.checked_add(4) else {
+        return result_builder.bail(
+            RichError::new(
+                AssembleError::ProgramCounterOverflow,
+                instruction_span.clone(),
+            )
+            .with_narrow_span(address_span.clone()),
+        );
+    };
     if (address ^ pc_plus_4) & 0xf0000000 == 0 {
         Ok((address & 0x0fffffff) >> 2)
     } else {
-        Err(
+        result_builder.bail(
             RichError::new(AssembleError::JumpTooLarge, instruction_span.clone())
                 .with_narrow_span(address_span.clone())
                 .with_note("jumps can only reach addresses within the current 256 MiB block")

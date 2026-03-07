@@ -1,4 +1,4 @@
-use seaside_core::types::{Size, UnsignedOffset};
+use seaside_core::prelude::*;
 
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
 pub struct Location {

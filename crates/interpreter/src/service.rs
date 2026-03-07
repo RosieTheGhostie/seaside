@@ -2,13 +2,12 @@ use std::collections::HashMap;
 
 use anyhow::Result;
 use seaside_core::{
-    Services,
+    ServiceCode, Services,
     consts::services::{
         Service,
         mars::{self, Mars},
         spim::{self, Spim},
     },
-    types::ServiceCode,
 };
 
 use crate::{Exception, Interpreter, InterpreterState};

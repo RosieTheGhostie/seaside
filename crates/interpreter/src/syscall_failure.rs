@@ -1,4 +1,4 @@
-use seaside_core::types::ServiceCode;
+use seaside_core::ServiceCode;
 use thiserror::Error;
 
 /// The kind of failure that occurred when executing a system service.

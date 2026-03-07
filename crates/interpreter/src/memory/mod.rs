@@ -6,7 +6,7 @@ pub use instruction_memory::InstructionMemory;
 
 mod regions;
 
-use seaside_core::{Endian, prelude::*, types::Size};
+use seaside_core::{Endian, prelude::*};
 use seaside_executable::{
     MemoryMap, Segment, Segments,
     memory_map::{self, SegmentInfo},

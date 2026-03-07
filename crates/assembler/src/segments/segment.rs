@@ -1,9 +1,5 @@
-use seaside_core::{
-    Endian,
-    prelude::*,
-    types::{Size, UnsignedOffset},
-};
-use seaside_rich_error::{Label, RichError, RichResult, Span};
+use seaside_core::{Endian, prelude::*};
+use seaside_rich_error::{Label, RichError, Span};
 
 use crate::{
     directives::StringDirective, error::AssembleError, parser::Value, string_builder::StringBuilder,
@@ -33,7 +29,7 @@ impl SegmentBuildInfo {
         self.bytes
     }
 
-    pub fn jump_ahead_to(&mut self, expr_span: Span, address: Address) -> RichResult<()> {
+    pub fn jump_ahead_to(&mut self, expr_span: Span, address: Address) -> Result<(), RichError> {
         if let Some(n) = address.checked_sub(self.next) {
             self.jump_ahead_by(n);
             Ok(())
@@ -53,7 +49,11 @@ impl SegmentBuildInfo {
         self.bytes.append(bytes);
     }
 
-    pub fn append_i8(&mut self, expr_span: Span, values: Vec<(Value, Span)>) -> RichResult<()> {
+    pub fn append_i8(
+        &mut self,
+        expr_span: Span,
+        values: Vec<(Value, Span)>,
+    ) -> Result<(), RichError> {
         const I8_MIN: i64 = i8::MIN as _;
         const I8_MAX: i64 = i8::MAX as _;
 
@@ -77,7 +77,7 @@ impl SegmentBuildInfo {
         expr_span: Span,
         values: Vec<(Value, Span)>,
         endian: Endian,
-    ) -> RichResult<()> {
+    ) -> Result<(), RichError> {
         const I16_MIN: i64 = i16::MIN as _;
         const I16_MAX: i64 = i64::MAX as _;
 
@@ -108,7 +108,7 @@ impl SegmentBuildInfo {
         expr_span: Span,
         values: Vec<(Value, Span)>,
         endian: Endian,
-    ) -> RichResult<()> {
+    ) -> Result<(), RichError> {
         const I32_MIN: i64 = i32::MIN as _;
         const I32_MAX: i64 = i32::MAX as _;
 
@@ -139,7 +139,7 @@ impl SegmentBuildInfo {
         expr_span: Span,
         values: Vec<(Value, Span)>,
         endian: Endian,
-    ) -> RichResult<()> {
+    ) -> Result<(), RichError> {
         const F32_MIN: f64 = f32::MIN as _;
         const F32_MAX: f64 = f32::MAX as _;
 
@@ -172,7 +172,7 @@ impl SegmentBuildInfo {
         expr_span: Span,
         values: Vec<(Value, Span)>,
         endian: Endian,
-    ) -> RichResult<()> {
+    ) -> Result<(), RichError> {
         let n_bytes = values.len() << 3;
         self.next += n_bytes as UnsignedOffset;
         self.bytes.reserve(n_bytes);
@@ -225,7 +225,7 @@ impl SegmentBuildInfo {
         directive: StringDirective,
         value: &str,
         span: Span,
-    ) -> RichResult<()> {
+    ) -> Result<(), RichError> {
         for c in StringBuilder::new(value, span) {
             let c = c?;
             let mut buffer = [0_u8; 4];

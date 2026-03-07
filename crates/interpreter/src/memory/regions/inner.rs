@@ -1,9 +1,6 @@
 use core::ops::Range;
 
-use seaside_core::{
-    prelude::*,
-    types::{Size, UnsignedOffset, address::is_aligned},
-};
+use seaside_core::{address::is_aligned, prelude::*};
 
 use super::{
     ReadableRegion, Region, SliceableRegion, SliceableRegionMut, WriteableRegion,

@@ -1,38 +1,42 @@
 pub mod error_code;
 pub mod label;
 pub mod note;
+pub mod result;
 pub mod span;
 
 pub use error_code::{ErrorCode, ToErrorCode};
 pub use label::Label;
 pub use note::Note;
+pub use result::{RichResult, RichResultBuilder};
 pub use span::Span;
 
 use std::{borrow::Cow, path::Path};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct RichError {
+    pub severity: ErrorSeverity,
     pub code: ErrorCode,
-    pub message: String,
+    pub message: Box<str>,
     pub broad_span: Span,
     pub label: Option<Label>,
     pub notes: Vec<Note>,
 }
 
-pub type RichResult<T> = Result<T, RichError>;
+pub type ErrorSeverity = ariadne::ReportKind<'static>;
 
 impl RichError {
     pub fn new<E>(err: E, broad_span: Span) -> Self
     where
         E: ToErrorCode + ToString,
     {
-        Self {
-            code: err.code(),
-            message: err.to_string(),
-            broad_span,
-            label: None,
-            notes: Vec::new(),
-        }
+        Self::_new(ErrorSeverity::Error, err, broad_span)
+    }
+
+    pub fn new_warning<E>(err: E, broad_span: Span) -> Self
+    where
+        E: ToErrorCode + ToString,
+    {
+        Self::_new(ErrorSeverity::Warning, err, broad_span)
     }
 
     pub fn with_note<S>(mut self, message: S) -> Self
@@ -75,13 +79,11 @@ impl RichError {
             None => Cow::Owned("<source>".to_string()),
         };
 
-        let mut builder = ariadne::Report::build(
-            ariadne::ReportKind::Error,
-            (source_name.clone(), self.broad_span),
-        )
-        .with_config(ariadne::Config::new())
-        .with_code(self.code)
-        .with_message(self.message);
+        let mut builder =
+            ariadne::Report::build(self.severity, (source_name.clone(), self.broad_span))
+                .with_config(ariadne::Config::new())
+                .with_code(self.code)
+                .with_message(self.message);
 
         for note in self.notes {
             note.add_to(&mut builder);
@@ -94,5 +96,19 @@ impl RichError {
         builder
             .finish()
             .eprint((source_name, ariadne::Source::from(source)))
+    }
+
+    fn _new<E>(severity: ErrorSeverity, err: E, broad_span: Span) -> Self
+    where
+        E: ToErrorCode + ToString,
+    {
+        Self {
+            severity,
+            code: err.code(),
+            message: err.to_string().into_boxed_str(),
+            broad_span,
+            label: None,
+            notes: Vec::new(),
+        }
     }
 }

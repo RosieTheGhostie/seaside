@@ -1,6 +1,6 @@
 use core::str::CharIndices;
 
-use seaside_rich_error::{RichError, RichResult, Span};
+use seaside_rich_error::{RichError, Span};
 
 use crate::error::AssembleError;
 
@@ -23,7 +23,7 @@ impl<'src> StringBuilder<'src> {
         self.peeked.take().or_else(|| self.raw.next())
     }
 
-    fn parse_escape_sequence(&mut self, start_index: usize) -> RichResult<char> {
+    fn parse_escape_sequence(&mut self, start_index: usize) -> Result<char, RichError> {
         match self.raw.next() {
             Some((_, '\'')) => Ok('\''),
             Some((_, '"')) => Ok('"'),
@@ -67,7 +67,7 @@ impl<'src> StringBuilder<'src> {
         n as _
     }
 
-    fn parse_hex_escape(&mut self, start_index: usize, length: usize) -> RichResult<char> {
+    fn parse_hex_escape(&mut self, start_index: usize, length: usize) -> Result<char, RichError> {
         let mut n: u32 = 0;
         let mut end_index = start_index + 2;
         for _ in 0..length {
@@ -95,7 +95,7 @@ impl<'src> StringBuilder<'src> {
 }
 
 impl Iterator for StringBuilder<'_> {
-    type Item = RichResult<char>;
+    type Item = Result<char, RichError>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let (next_index, next_raw_char) = self.next_char()?;

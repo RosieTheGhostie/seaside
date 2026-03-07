@@ -1,4 +1,4 @@
-use seaside_core::{prelude::*, types::Size};
+use seaside_core::prelude::*;
 
 use super::{
     DataRegion, Region,

@@ -1,6 +1,6 @@
 use core::fmt::{self, Display, Formatter};
 
-use seaside_core::{prelude::*, traits::SignExtend, types::Offset};
+use seaside_core::{prelude::*, traits::SignExtend};
 
 use super::{Component, Operation};
 

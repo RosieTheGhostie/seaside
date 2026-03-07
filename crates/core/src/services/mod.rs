@@ -3,7 +3,7 @@ mod deserialize;
 
 use std::collections::{HashMap, hash_map};
 
-use crate::{consts::services::Service, types::ServiceCode};
+use crate::{ServiceCode, consts::services::Service};
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]

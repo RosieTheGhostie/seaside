@@ -4,8 +4,8 @@
 //! [`RangeInclusive<Address>`](core::ops::RangeInclusive).
 
 use crate::{
+    Address,
     traits::{Contains, Overlapping},
-    types::Address,
 };
 
 /// An inclusive range of memory addresses.

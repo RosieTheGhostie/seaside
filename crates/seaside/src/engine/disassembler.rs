@@ -7,7 +7,7 @@ use std::path::Path;
 
 use anyhow::{Error, Result};
 use seaside_config::Config;
-use seaside_core::{ByteStream, EngineError, prelude::*, types::UnsignedOffset};
+use seaside_core::{ByteStream, EngineError, prelude::*};
 
 /// Prints the human-readable assembly form of `instruction`.
 ///

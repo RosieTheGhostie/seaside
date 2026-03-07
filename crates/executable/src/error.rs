@@ -1,6 +1,6 @@
 use std::io;
 
-use seaside_core::types::ServiceCode;
+use seaside_core::ServiceCode;
 use thiserror::Error as ThisError;
 use validator::ValidationErrors;
 

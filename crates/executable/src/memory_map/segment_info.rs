@@ -1,4 +1,4 @@
-use seaside_core::{AddressRange, types::Size};
+use seaside_core::{AddressRange, prelude::*};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]

@@ -2,7 +2,7 @@ use core::{ffi::CStr, time::Duration};
 use std::{fs, io::prelude::*, thread, time::SystemTime};
 
 use console::Term;
-use seaside_core::{prelude::*, types::SignedSize};
+use seaside_core::prelude::*;
 
 use crate::{
     Exception, Interpreter, InterpreterState, SyscallFailureKind,

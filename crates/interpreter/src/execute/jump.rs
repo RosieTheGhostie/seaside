@@ -1,4 +1,4 @@
-use seaside_core::{prelude::*, traits::SignExtend, types::Offset};
+use seaside_core::{prelude::*, traits::SignExtend};
 use seaside_disassembler::fields;
 
 use crate::{Exception, Interpreter, InterpreterState, register_file::IndexByRegister};

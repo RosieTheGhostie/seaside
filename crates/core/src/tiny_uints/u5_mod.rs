@@ -1,11 +1,12 @@
 use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Rem, Shl, Shr, Sub};
 use num_traits::Unsigned;
 
-use super::{r#impl, impl_ops};
+use super::{r#impl, impl_ops, u2, u3};
 
 /// The 5-bit unsigned integer type.
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[repr(transparent)]
 pub struct u5(InnerU5);
 
@@ -17,7 +18,7 @@ impl u5 {
     /// will succeed, even though the equivalent assertion for primitive integer types would fail:
     ///
     /// ```
-    /// # use seaside_core::types::u5;
+    /// # use seaside_core::u5;
     /// assert_ne!(size_of::<u5>() as u32 * u8::BITS, u5::BITS);
     /// ```
     pub const BITS: u32 = 5;
@@ -35,7 +36,7 @@ impl u5 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u5;
+    /// # use seaside_core::u5;
     /// for x in 0..32 {
     ///     assert!(u5::new(x).is_some_and(|y| y.as_u8() == x));
     /// }
@@ -65,7 +66,7 @@ impl u5 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u5;
+    /// # use seaside_core::u5;
     /// for x in 0..32 {
     ///     assert_eq!(unsafe { u5::new_unchecked(x) }.as_u8(), x);
     /// }
@@ -94,7 +95,7 @@ impl u5 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u5;
+    /// # use seaside_core::u5;
     /// // These all behave as normal because their inputs are small enough.
     /// assert_eq!(u5::new_wrapped(0).as_u8(), 0);
     /// assert_eq!(u5::new_wrapped(1).as_u8(), 1);
@@ -125,7 +126,7 @@ impl u5 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u5;
+    /// # use seaside_core::u5;
     /// assert_eq!(u5::from_bool(false).as_u8(), 0);
     /// assert_eq!(u5::from_bool(true).as_u8(), 1);
     /// ```
@@ -135,14 +136,115 @@ impl u5 {
         unsafe { Self::new_unchecked(b as _) }
     }
 
+    /// Gets the most significant bit of this integer.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use seaside_core::u5;
+    /// # const ZERO: u5 = u5::ZERO;
+    /// # const TWENTY: u5 = u5::new(20).unwrap();
+    /// assert_eq!(ZERO.most_significant_bit(), 0 as _);
+    /// assert_eq!(TWENTY.most_significant_bit(), 1 as _);
+    /// assert_eq!(u5::MAX.most_significant_bit(), 1 as _);
+    /// ```
+    pub const fn most_significant_bit(self) -> bool {
+        const SHIFT_AMOUNT: u32 = u5::BITS - 1;
+
+        self.as_u8() >> SHIFT_AMOUNT != 0
+    }
+
+    /// Gets the two most significant bits of this integer.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use seaside_core::{u2, u5};
+    /// # const TWENTY: u5 = u5::new(20).unwrap();
+    /// # const TWO: u2 = u2::new(2).unwrap();
+    /// assert_eq!(TWENTY.upper_two_bits(), TWO);
+    /// assert_eq!(u5::MAX.upper_two_bits(), u2::MAX);
+    /// ```
+    pub const fn upper_two_bits(self) -> u2 {
+        const SHIFT_AMOUNT: u32 = u5::BITS - u2::BITS;
+
+        // SAFETY: The resulting value will be at most two bits wide.
+        unsafe { u2::new_unchecked(self.as_u8() >> SHIFT_AMOUNT) }
+    }
+
+    /// Gets the three most significant bits of this integer.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use seaside_core::{u3, u5};
+    /// # const TWENTY: u5 = u5::new(20).unwrap();
+    /// # const FIVE: u3 = u3::new(5).unwrap();
+    /// assert_eq!(TWENTY.upper_three_bits(), FIVE);
+    /// assert_eq!(u5::MAX.upper_two_bits(), u3::MAX);
+    /// ```
+    pub const fn upper_three_bits(self) -> u3 {
+        const SHIFT_AMOUNT: u32 = u5::BITS - u3::BITS;
+
+        // SAFETY: The resulting value will be at most three bits wide.
+        unsafe { u3::new_unchecked(self.as_u8() >> SHIFT_AMOUNT) }
+    }
+
+    /// Gets the least significant bit of this integer.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use seaside_core::u5;
+    /// # const FIVE: u5 = u5::new(5).unwrap();
+    /// # const SIX: u5 = u5::new(6).unwrap();
+    /// assert_eq!(FIVE.least_significant_bit(), 1 as _);
+    /// assert_eq!(SIX.least_significant_bit(), 0 as _);
+    /// assert_eq!(u5::MAX.least_significant_bit(), 1 as _);
+    /// ```
+    #[doc(alias = "is_odd")]
+    pub const fn least_significant_bit(self) -> bool {
+        self.as_u8() != 0
+    }
+
+    /// Gets the two least significant bits of this integer.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use seaside_core::{u2, u5};
+    /// # const SIX: u5 = u5::new(6).unwrap();
+    /// # const TWO: u2 = u2::new(2).unwrap();
+    /// assert_eq!(SIX.lower_two_bits(), TWO);
+    /// assert_eq!(u5::MAX.lower_two_bits(), u2::MAX);
+    /// ```
+    pub const fn lower_two_bits(self) -> u2 {
+        u2::new_wrapped(self.as_u8())
+    }
+
+    /// Gets the three least significant bits of this integer.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use seaside_core::{u3, u5};
+    /// # const TWELVE: u5 = u5::new(12).unwrap();
+    /// # const FOUR: u3 = u3::new(4).unwrap();
+    /// assert_eq!(TWELVE.lower_three_bits(), FOUR);
+    /// assert_eq!(u5::MAX.lower_three_bits(), u3::MAX);
+    /// ```
+    pub const fn lower_three_bits(self) -> u3 {
+        u3::new_wrapped(self.as_u8())
+    }
+
     /// Checked integer addition. Computes `self + rhs`, returning [`None`] if overflow occurred.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u5;
-    /// # const ZERO: u5 = u5::new(0).unwrap();
-    /// # const ONE: u5 = u5::new(1).unwrap();
+    /// # use seaside_core::u5;
+    /// # const ZERO: u5 = u5::ZERO;
+    /// # const ONE: u5 = u5::ONE;
     /// # const TWO: u5 = u5::new(2).unwrap();
     /// # const FOUR: u5 = u5::new(4).unwrap();
     /// # const FIVE: u5 = u5::new(5).unwrap();
@@ -167,9 +269,9 @@ impl u5 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u5;
-    /// # const ZERO: u5 = u5::new(0).unwrap();
-    /// # const ONE: u5 = u5::new(1).unwrap();
+    /// # use seaside_core::u5;
+    /// # const ZERO: u5 = u5::ZERO;
+    /// # const ONE: u5 = u5::ONE;
     /// # const TWO: u5 = u5::new(2).unwrap();
     /// # const THREE: u5 = u5::new(3).unwrap();
     /// # const FOUR: u5 = u5::new(4).unwrap();
@@ -197,9 +299,9 @@ impl u5 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u5;
-    /// # const ZERO: u5 = u5::new(0).unwrap();
-    /// # const ONE: u5 = u5::new(1).unwrap();
+    /// # use seaside_core::u5;
+    /// # const ZERO: u5 = u5::ZERO;
+    /// # const ONE: u5 = u5::ONE;
     /// # const TWO: u5 = u5::new(2).unwrap();
     /// # const THREE: u5 = u5::new(3).unwrap();
     /// # const FOUR: u5 = u5::new(4).unwrap();
@@ -231,9 +333,9 @@ impl u5 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u5;
-    /// # const ZERO: u5 = u5::new(0).unwrap();
-    /// # const ONE: u5 = u5::new(1).unwrap();
+    /// # use seaside_core::u5;
+    /// # const ZERO: u5 = u5::ZERO;
+    /// # const ONE: u5 = u5::ONE;
     /// # const TWO: u5 = u5::new(2).unwrap();
     /// # const FIVE: u5 = u5::new(5).unwrap();
     /// # const SEVEN: u5 = u5::new(7).unwrap();
@@ -257,9 +359,9 @@ impl u5 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u5;
-    /// # const ZERO: u5 = u5::new(0).unwrap();
-    /// # const ONE: u5 = u5::new(1).unwrap();
+    /// # use seaside_core::u5;
+    /// # const ZERO: u5 = u5::ZERO;
+    /// # const ONE: u5 = u5::ONE;
     /// # const TWO: u5 = u5::new(2).unwrap();
     /// # const FIVE: u5 = u5::new(5).unwrap();
     /// # const SEVEN: u5 = u5::new(7).unwrap();
@@ -380,9 +482,9 @@ impl u5 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u5;
-    /// # const ZERO: u5 = u5::new(0).unwrap();
-    /// # const ONE: u5 = u5::new(1).unwrap();
+    /// # use seaside_core::u5;
+    /// # const ZERO: u5 = u5::ZERO;
+    /// # const ONE: u5 = u5::ONE;
     /// # const TWO: u5 = u5::new(2).unwrap();
     /// # const THREE: u5 = u5::new(3).unwrap();
     /// # const FOUR: u5 = u5::new(4).unwrap();
@@ -405,8 +507,8 @@ impl u5 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u5;
-    /// # const ZERO: u5 = u5::new(0).unwrap();
+    /// # use seaside_core::u5;
+    /// # const ZERO: u5 = u5::ZERO;
     /// # const FIFTEEN: u5 = u5::new(15).unwrap();
     /// # const SIXTEEN: u5 = u5::new(16).unwrap();
     /// # const TWENTY_FOUR: u5 = u5::new(24).unwrap();
@@ -432,9 +534,9 @@ impl u5 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u5;
-    /// # const ZERO: u5 = u5::new(0).unwrap();
-    /// # const ONE: u5 = u5::new(1).unwrap();
+    /// # use seaside_core::u5;
+    /// # const ZERO: u5 = u5::ZERO;
+    /// # const ONE: u5 = u5::ONE;
     /// # const TWO: u5 = u5::new(2).unwrap();
     /// # const FOUR: u5 = u5::new(4).unwrap();
     /// # const SIX: u5 = u5::new(6).unwrap();
@@ -461,9 +563,9 @@ impl u5 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u5;
-    /// # const ZERO: u5 = u5::new(0).unwrap();
-    /// # const ONE: u5 = u5::new(1).unwrap();
+    /// # use seaside_core::u5;
+    /// # const ZERO: u5 = u5::ZERO;
+    /// # const ONE: u5 = u5::ONE;
     /// # const TWO: u5 = u5::new(2).unwrap();
     /// # const THREE: u5 = u5::new(3).unwrap();
     /// # const FIVE: u5 = u5::new(5).unwrap();
@@ -496,8 +598,8 @@ impl u5 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u5;
-    /// # const ONE: u5 = u5::new(1).unwrap();
+    /// # use seaside_core::u5;
+    /// # const ONE: u5 = u5::ONE;
     /// # const TWO: u5 = u5::new(2).unwrap();
     /// # const THREE: u5 = u5::new(3).unwrap();
     /// assert_eq!(THREE.ilog(TWO), 1);
@@ -507,8 +609,8 @@ impl u5 {
     /// The following example will panic because `self` is zero.
     ///
     /// ```should_panic
-    /// # use seaside_core::types::u5;
-    /// # const ZERO: u5 = u5::new(0).unwrap();
+    /// # use seaside_core::u5;
+    /// # const ZERO: u5 = u5::ZERO;
     /// # const TWO: u5 = u5::new(2).unwrap();
     /// let ilog2_of_zero = ZERO.ilog(TWO);
     /// ```
@@ -516,15 +618,15 @@ impl u5 {
     /// The following examples will panic because `base` is less than 2.
     ///
     /// ```should_panic
-    /// # use seaside_core::types::u5;
-    /// # const ZERO: u5 = u5::new(0).unwrap();
-    /// # const ONE: u5 = u5::new(1).unwrap();
+    /// # use seaside_core::u5;
+    /// # const ZERO: u5 = u5::ZERO;
+    /// # const ONE: u5 = u5::ONE;
     /// let ilog0_of_one = ONE.ilog(ZERO);
     /// ```
     ///
     /// ```should_panic
-    /// # use seaside_core::types::u5;
-    /// # const ONE: u5 = u5::new(1).unwrap();
+    /// # use seaside_core::u5;
+    /// # const ONE: u5 = u5::ONE;
     /// let ilog1_of_one = ONE.ilog(ONE);
     /// ```
     ///
@@ -547,9 +649,9 @@ impl u5 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u5;
-    /// # const ZERO: u5 = u5::new(0).unwrap();
-    /// # const ONE: u5 = u5::new(1).unwrap();
+    /// # use seaside_core::u5;
+    /// # const ZERO: u5 = u5::ZERO;
+    /// # const ONE: u5 = u5::ONE;
     /// # const TWO: u5 = u5::new(2).unwrap();
     /// # const THREE: u5 = u5::new(3).unwrap();
     /// # const SIX: u5 = u5::new(6).unwrap();
@@ -577,8 +679,8 @@ impl u5 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u5;
-    /// # const ONE: u5 = u5::new(1).unwrap();
+    /// # use seaside_core::u5;
+    /// # const ONE: u5 = u5::ONE;
     /// # const TWO: u5 = u5::new(2).unwrap();
     /// # const THREE: u5 = u5::new(3).unwrap();
     /// # const FOUR: u5 = u5::new(4).unwrap();
@@ -595,8 +697,8 @@ impl u5 {
     /// The following example will panic because `self` is zero.
     ///
     /// ```should_panic
-    /// # use seaside_core::types::u5;
-    /// # const ZERO: u5 = u5::new(0).unwrap();
+    /// # use seaside_core::u5;
+    /// # const ZERO: u5 = u5::ZERO;
     /// let ilog2_of_zero = ZERO.ilog2();
     /// ```
     ///
@@ -615,9 +717,9 @@ impl u5 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u5;
-    /// # const ZERO: u5 = u5::new(0).unwrap();
-    /// # const ONE: u5 = u5::new(1).unwrap();
+    /// # use seaside_core::u5;
+    /// # const ZERO: u5 = u5::ZERO;
+    /// # const ONE: u5 = u5::ONE;
     /// # const TWO: u5 = u5::new(2).unwrap();
     /// # const THREE: u5 = u5::new(3).unwrap();
     /// # const FOUR: u5 = u5::new(4).unwrap();
@@ -649,8 +751,8 @@ impl u5 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u5;
-    /// # const ONE: u5 = u5::new(1).unwrap();
+    /// # use seaside_core::u5;
+    /// # const ONE: u5 = u5::ONE;
     /// # const TWO: u5 = u5::new(2).unwrap();
     /// # const NINE: u5 = u5::new(7).unwrap();
     /// # const TEN: u5 = u5::new(10).unwrap();
@@ -665,8 +767,8 @@ impl u5 {
     /// The following example will panic because `self` is zero.
     ///
     /// ```should_panic
-    /// # use seaside_core::types::u5;
-    /// # const ZERO: u5 = u5::new(0).unwrap();
+    /// # use seaside_core::u5;
+    /// # const ZERO: u5 = u5::ZERO;
     /// let ilog10_of_zero = ZERO.ilog10();
     /// ```
     ///
@@ -685,9 +787,9 @@ impl u5 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u5;
-    /// # const ZERO: u5 = u5::new(0).unwrap();
-    /// # const ONE: u5 = u5::new(1).unwrap();
+    /// # use seaside_core::u5;
+    /// # const ZERO: u5 = u5::ZERO;
+    /// # const ONE: u5 = u5::ONE;
     /// # const TWO: u5 = u5::new(2).unwrap();
     /// # const NINE: u5 = u5::new(7).unwrap();
     /// # const TEN: u5 = u5::new(10).unwrap();
@@ -714,6 +816,7 @@ r#impl!(Bounded for u5);
 r#impl!(Debug for u5);
 r#impl!(Display for u5);
 r#impl!(FromPrimitive for u5);
+r#impl!(FromStr for u5);
 r#impl!(Not for u5);
 r#impl!(Num for u5);
 r#impl!(NumCast for u5);
@@ -808,6 +911,11 @@ impl_ops! {
 /// compiler will recognize that most bytes cannot represent valid [`u5`]s and is therefore free to
 /// use them for other things.
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[cfg_attr(
+    feature = "serde",
+    derive(serde_repr::Deserialize_repr, serde_repr::Serialize_repr)
+)]
+#[repr(u8)]
 enum InnerU5 {
     /// Zero.
     #[default]

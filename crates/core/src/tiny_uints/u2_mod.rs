@@ -1,15 +1,16 @@
 use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Rem, Shl, Shr, Sub};
 use num_traits::Unsigned;
 
-use super::{r#impl, impl_ops};
+use super::{r#impl, impl_ops, u3, u5};
 
-/// The 3-bit unsigned integer type.
+/// The 2-bit unsigned integer type.
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[repr(transparent)]
-pub struct u3(InnerU3);
+pub struct u2(InnerU2);
 
-impl u3 {
+impl u2 {
     /// The size of this integer type in bits.
     ///
     /// Note that, unlike for primitive integer types, the size of this type (as reported by
@@ -17,30 +18,30 @@ impl u3 {
     /// will succeed, even though the equivalent assertion for primitive integer types would fail:
     ///
     /// ```
-    /// # use seaside_core::types::u3;
-    /// assert_ne!(size_of::<u3>() as u32 * u8::BITS, u3::BITS);
+    /// # use seaside_core::u2;
+    /// assert_ne!(size_of::<u2>() as u32 * u8::BITS, u2::BITS);
     /// ```
-    pub const BITS: u32 = 3;
+    pub const BITS: u32 = 2;
 
     /// The smallest value that can be represented by this integer type.
-    pub const MIN: Self = Self::new(InnerU3::MIN_AS_U8).expect("inner type has incorrect minimum");
+    pub const MIN: Self = Self::new(InnerU2::MIN_AS_U8).expect("inner type has incorrect minimum");
 
     /// The largest value that can be represented by this integer type.
-    pub const MAX: Self = Self::new(InnerU3::MAX_AS_U8).expect("inner type has incorrect maximum");
+    pub const MAX: Self = Self::new(InnerU2::MAX_AS_U8).expect("inner type has incorrect maximum");
 
-    /// Attempts to construct a new [`u3`] from the smallest primitive integer type wider than it.
+    /// Attempts to construct a new [`u2`] from the smallest primitive integer type wider than it.
     ///
-    /// This will fail if the input is too large for a [`u3`] to represent.
+    /// This will fail if the input is too large for a [`u2`] to represent.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u3;
-    /// for x in 0..8 {
-    ///     assert!(u3::new(x).is_some_and(|y| y.as_u8() == x));
-    /// }
-    ///
-    /// assert!(u3::new(8).is_none());
+    /// # use seaside_core::u2;
+    /// assert!(u2::new(0).is_some_and(|x| x.as_u8() == 0));
+    /// assert!(u2::new(1).is_some_and(|x| x.as_u8() == 1));
+    /// assert!(u2::new(2).is_some_and(|x| x.as_u8() == 2));
+    /// assert!(u2::new(3).is_some_and(|x| x.as_u8() == 3));
+    /// assert!(u2::new(4).is_none());
     /// ```
     ///
     /// # See Also
@@ -49,34 +50,35 @@ impl u3 {
     /// - [`new_wrapped`](Self::new_wrapped)
     #[inline(always)]
     pub const fn new(x: u8) -> Option<Self> {
-        match InnerU3::new(x) {
+        match InnerU2::new(x) {
             Some(inner) => Some(Self(inner)),
             None => None,
         }
     }
 
-    /// Constructs a new [`u3`] from the smallest primitive integer type wider than it.
+    /// Constructs a new [`u2`] from the smallest primitive integer type wider than it.
     ///
     /// # Safety
     ///
-    /// The caller is responsible for ensuring that the input fits inside a [`u3`]. Failure to do so
+    /// The caller is responsible for ensuring that the input fits inside a [`u2`]. Failure to do so
     /// may result in undefined behavior.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u3;
-    /// for x in 0..8 {
-    ///     assert_eq!(unsafe { u3::new_unchecked(x) }.as_u8(), x);
-    /// }
+    /// # use seaside_core::u2;
+    /// assert_eq!(unsafe { u2::new_unchecked(0) }.as_u8(), 0);
+    /// assert_eq!(unsafe { u2::new_unchecked(1) }.as_u8(), 1);
+    /// assert_eq!(unsafe { u2::new_unchecked(2) }.as_u8(), 2);
+    /// assert_eq!(unsafe { u2::new_unchecked(3) }.as_u8(), 3);
     /// ```
     ///
-    /// The following example would result in undefined behavior because the number 8 is 4 bits
+    /// The following example would result in undefined behavior because the number 4 is 3 bits
     /// wide.
     ///
     /// ```ignore
     /// // Don't do this.
-    /// let x = unsafe { u3::new_unchecked(8) };
+    /// let x = unsafe { u2::new_unchecked(4) };
     /// ```
     ///
     /// # See Also
@@ -85,27 +87,27 @@ impl u3 {
     /// - [`new_wrapped`](Self::new_wrapped)
     #[inline(always)]
     pub const unsafe fn new_unchecked(x: u8) -> Self {
-        Self(unsafe { InnerU3::new_unchecked(x) })
+        Self(unsafe { InnerU2::new_unchecked(x) })
     }
 
-    /// Constructs a new [`u3`] from the smallest primitive integer type wider than it, wrapping at
-    /// the boundaries of a [`u3`] in the case of overflow.
+    /// Constructs a new [`u2`] from the smallest primitive integer type wider than it, wrapping at
+    /// the boundaries of a [`u2`] in the case of overflow.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u3;
+    /// # use seaside_core::u2;
     /// // These all behave as normal because their inputs are small enough.
-    /// assert_eq!(u3::new_wrapped(0).as_u8(), 0);
-    /// assert_eq!(u3::new_wrapped(1).as_u8(), 1);
-    /// assert_eq!(u3::new_wrapped(6).as_u8(), 6);
-    /// assert_eq!(u3::new_wrapped(7).as_u8(), 7);
+    /// assert_eq!(u2::new_wrapped(0).as_u8(), 0);
+    /// assert_eq!(u2::new_wrapped(1).as_u8(), 1);
+    /// assert_eq!(u2::new_wrapped(2).as_u8(), 2);
+    /// assert_eq!(u2::new_wrapped(3).as_u8(), 3);
     ///
     /// // These all result in wrapping because their inputs are too large for this type.
-    /// assert_eq!(u3::new_wrapped(8).as_u8(), 0);
-    /// assert_eq!(u3::new_wrapped(9).as_u8(), 1);
-    /// assert_eq!(u3::new_wrapped(14).as_u8(), 6);
-    /// assert_eq!(u3::new_wrapped(15).as_u8(), 7);
+    /// assert_eq!(u2::new_wrapped(4).as_u8(), 0);
+    /// assert_eq!(u2::new_wrapped(5).as_u8(), 1);
+    /// assert_eq!(u2::new_wrapped(6).as_u8(), 2);
+    /// assert_eq!(u2::new_wrapped(7).as_u8(), 3);
     /// ```
     ///
     /// # See Also
@@ -117,22 +119,93 @@ impl u3 {
         Self::MAX.and_u8(x)
     }
 
-    /// Constructs a new [`u3`] from a [boolean](bool) value.
+    /// Constructs a new [`u2`] from a [boolean](bool) value.
     ///
-    /// This is semantically equivalent to `b as u3` (if [`u3`] were a primitive/pointer type,
+    /// This is semantically equivalent to `b as u2` (if [`u2`] were a primitive/pointer type,
     /// anyway).
     ///
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u3;
-    /// assert_eq!(u3::from_bool(false).as_u8(), 0);
-    /// assert_eq!(u3::from_bool(true).as_u8(), 1);
+    /// # use seaside_core::u2;
+    /// assert_eq!(u2::from_bool(false).as_u8(), 0);
+    /// assert_eq!(u2::from_bool(true).as_u8(), 1);
     /// ```
     #[inline(always)]
     pub const fn from_bool(b: bool) -> Self {
-        // SAFETY: A `bool` is one bit wide, so it will always fit inside a `u3`.
+        // SAFETY: A `bool` is one bit wide, so it will always fit inside a `u2`.
         unsafe { Self::new_unchecked(b as _) }
+    }
+
+    /// Casts this integer to a [`u3`].
+    #[inline(always)]
+    pub const fn as_u3(self) -> u3 {
+        // SAFETY: All valid `u2`s are valid `u3`s.
+        unsafe { u3::new_unchecked(self.as_u8()) }
+    }
+
+    /// Casts this integer to a [`u5`].
+    #[inline(always)]
+    pub const fn as_u5(self) -> u5 {
+        // SAFETY: All valid `u2`s are valid `u5`s.
+        unsafe { u5::new_unchecked(self.as_u8()) }
+    }
+
+    /// Constructs a [`u3`] that has the same upper two bits as this integer.
+    #[inline(always)]
+    pub const fn as_upper_bits_of_u3(self) -> u3 {
+        const SHIFT_AMOUNT: u32 = u3::BITS - u2::BITS;
+
+        unsafe { u3::new_unchecked(self.as_u8() << SHIFT_AMOUNT) }
+    }
+
+    /// Constructs a [`u5`] that has the same upper two bits as this integer.
+    #[inline(always)]
+    pub const fn as_upper_bits_of_u5(self) -> u5 {
+        const SHIFT_AMOUNT: u32 = u5::BITS - u2::BITS;
+
+        unsafe { u5::new_unchecked(self.as_u8() << SHIFT_AMOUNT) }
+    }
+
+    /// Gets the most significant bit of this integer.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use seaside_core::u2;
+    /// # const ZERO: u2 = u2::ZERO;
+    /// # const ONE: u2 = u2::ONE;
+    /// # const TWO: u2 = u2::new(2).unwrap();
+    /// # const THREE: u2 = u2::new(3).unwrap();
+    /// assert_eq!(ZERO.most_significant_bit(), 0 as _);
+    /// assert_eq!(ONE.most_significant_bit(), 0 as _);
+    /// assert_eq!(TWO.most_significant_bit(), 1 as _);
+    /// assert_eq!(THREE.most_significant_bit(), 1 as _);
+    /// ```
+    pub const fn most_significant_bit(self) -> bool {
+        const SHIFT_AMOUNT: u32 = u2::BITS - 1;
+
+        self.as_u8() >> SHIFT_AMOUNT != 0
+    }
+
+    /// Gets the least significant bit of this integer.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use seaside_core::u2;
+    /// # const ZERO: u2 = u2::ZERO;
+    /// # const ONE: u2 = u2::ONE;
+    /// # const TWO: u2 = u2::new(2).unwrap();
+    /// # const THREE: u2 = u2::new(3).unwrap();
+    /// assert_eq!(ZERO.least_significant_bit(), 0 as _);
+    /// assert_eq!(ONE.least_significant_bit(), 1 as _);
+    /// assert_eq!(TWO.least_significant_bit(), 0 as _);
+    /// assert_eq!(THREE.least_significant_bit(), 1 as _);
+    /// ```
+    #[doc(alias = "is_odd")]
+    pub const fn least_significant_bit(self) -> bool {
+        self.as_u8() != 0
     }
 
     /// Checked integer addition. Computes `self + rhs`, returning [`None`] if overflow occurred.
@@ -140,22 +213,20 @@ impl u3 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u3;
-    /// # const ZERO: u3 = u3::new(0).unwrap();
-    /// # const ONE: u3 = u3::new(1).unwrap();
-    /// # const TWO: u3 = u3::new(2).unwrap();
-    /// # const FOUR: u3 = u3::new(4).unwrap();
-    /// # const FIVE: u3 = u3::new(5).unwrap();
-    /// # const SEVEN: u3 = u3::new(7).unwrap();
+    /// # use seaside_core::u2;
+    /// # const ZERO: u2 = u2::ZERO;
+    /// # const ONE: u2 = u2::ONE;
+    /// # const TWO: u2 = u2::new(2).unwrap();
+    /// # const THREE: u2 = u2::new(3).unwrap();
     /// assert_eq!(ZERO.checked_add(ZERO), Some(ZERO));
     /// assert_eq!(TWO.checked_add(ZERO), Some(TWO));
-    /// assert_eq!(FIVE.checked_add(TWO), Some(SEVEN));
-    /// assert_eq!(FOUR.checked_add(FIVE), None);
-    /// assert_eq!(SEVEN.checked_add(ONE), None);
+    /// assert_eq!(TWO.checked_add(ONE), Some(THREE));
+    /// assert_eq!(TWO.checked_add(TWO), None);
+    /// assert_eq!(THREE.checked_add(ONE), None);
     /// ```
     #[inline(always)]
     pub const fn checked_add(self, rhs: Self) -> Option<Self> {
-        // SAFETY: `u3::MAX + u3::MAX == 14`, and `14 <= u8::MAX`.
+        // SAFETY: `u2::MAX + u2::MAX == 6`, and `6 <= u8::MAX`.
         let sum_u8 = unsafe { self.as_u8().unchecked_add(rhs.as_u8()) };
         Self::new(sum_u8)
     }
@@ -165,17 +236,15 @@ impl u3 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u3;
-    /// # const ZERO: u3 = u3::new(0).unwrap();
-    /// # const ONE: u3 = u3::new(1).unwrap();
-    /// # const TWO: u3 = u3::new(2).unwrap();
-    /// # const THREE: u3 = u3::new(3).unwrap();
-    /// # const FOUR: u3 = u3::new(4).unwrap();
-    /// # const FIVE: u3 = u3::new(5).unwrap();
+    /// # use seaside_core::u2;
+    /// # const ZERO: u2 = u2::ZERO;
+    /// # const ONE: u2 = u2::ONE;
+    /// # const TWO: u2 = u2::new(2).unwrap();
+    /// # const THREE: u2 = u2::new(3).unwrap();
     /// assert_eq!(ZERO.checked_sub(ZERO), Some(ZERO));
     /// assert_eq!(TWO.checked_sub(ZERO), Some(TWO));
-    /// assert_eq!(FIVE.checked_sub(ONE), Some(FOUR));
-    /// assert_eq!(THREE.checked_sub(THREE), Some(ZERO));
+    /// assert_eq!(TWO.checked_sub(ONE), Some(ONE));
+    /// assert_eq!(TWO.checked_sub(TWO), Some(ZERO));
     /// assert_eq!(ONE.checked_sub(THREE), None);
     /// ```
     #[inline(always)]
@@ -195,23 +264,20 @@ impl u3 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u3;
-    /// # const ZERO: u3 = u3::new(0).unwrap();
-    /// # const ONE: u3 = u3::new(1).unwrap();
-    /// # const TWO: u3 = u3::new(2).unwrap();
-    /// # const THREE: u3 = u3::new(3).unwrap();
-    /// # const FOUR: u3 = u3::new(4).unwrap();
-    /// # const FIVE: u3 = u3::new(5).unwrap();
-    /// # const SEVEN: u3 = u3::new(7).unwrap();
+    /// # use seaside_core::u2;
+    /// # const ZERO: u2 = u2::ZERO;
+    /// # const ONE: u2 = u2::ONE;
+    /// # const TWO: u2 = u2::new(2).unwrap();
+    /// # const THREE: u2 = u2::new(3).unwrap();
     /// assert_eq!(ZERO.checked_mul(ZERO), Some(ZERO));
     /// assert_eq!(ONE.checked_mul(TWO), Some(TWO));
     /// assert_eq!(THREE.checked_mul(ONE), Some(THREE));
-    /// assert_eq!(TWO.checked_mul(FOUR), None);
-    /// assert_eq!(FIVE.checked_mul(SEVEN), None);
+    /// assert_eq!(TWO.checked_mul(TWO), None);
+    /// assert_eq!(THREE.checked_mul(TWO), None);
     /// ```
     #[inline(always)]
     pub const fn checked_mul(self, rhs: Self) -> Option<Self> {
-        // SAFETY: `u3::MAX * u3::MAX == 49`, and `49 <= u8::MAX`.
+        // SAFETY: `u2::MAX * u2::MAX == 9`, and `9 <= u8::MAX`.
         let product_u8 = unsafe { self.as_u8().unchecked_mul(rhs.as_u8()) };
         Self::new(product_u8)
     }
@@ -221,15 +287,14 @@ impl u3 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u3;
-    /// # const ZERO: u3 = u3::new(0).unwrap();
-    /// # const ONE: u3 = u3::new(1).unwrap();
-    /// # const TWO: u3 = u3::new(2).unwrap();
-    /// # const FIVE: u3 = u3::new(5).unwrap();
-    /// # const SEVEN: u3 = u3::new(7).unwrap();
+    /// # use seaside_core::u2;
+    /// # const ZERO: u2 = u2::ZERO;
+    /// # const ONE: u2 = u2::ONE;
+    /// # const TWO: u2 = u2::new(2).unwrap();
+    /// # const THREE: u2 = u2::new(3).unwrap();
     /// assert_eq!(TWO.checked_div(ONE), Some(TWO));
     /// assert_eq!(TWO.checked_div(TWO), Some(ONE));
-    /// assert_eq!(SEVEN.checked_div(FIVE), Some(ONE));
+    /// assert_eq!(THREE.checked_div(TWO), Some(ONE));
     /// assert_eq!(ZERO.checked_div(ZERO), None);
     /// assert_eq!(ONE.checked_div(ZERO), None);
     /// ```
@@ -247,15 +312,14 @@ impl u3 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u3;
-    /// # const ZERO: u3 = u3::new(0).unwrap();
-    /// # const ONE: u3 = u3::new(1).unwrap();
-    /// # const TWO: u3 = u3::new(2).unwrap();
-    /// # const FIVE: u3 = u3::new(5).unwrap();
-    /// # const SEVEN: u3 = u3::new(7).unwrap();
+    /// # use seaside_core::u2;
+    /// # const ZERO: u2 = u2::ZERO;
+    /// # const ONE: u2 = u2::ONE;
+    /// # const TWO: u2 = u2::new(2).unwrap();
+    /// # const THREE: u2 = u2::new(3).unwrap();
     /// assert_eq!(TWO.checked_rem(ONE), Some(ZERO));
     /// assert_eq!(TWO.checked_rem(TWO), Some(ZERO));
-    /// assert_eq!(SEVEN.checked_rem(FIVE), Some(TWO));
+    /// assert_eq!(THREE.checked_rem(TWO), Some(ONE));
     /// assert_eq!(ZERO.checked_rem(ZERO), None);
     /// assert_eq!(ONE.checked_rem(ZERO), None);
     /// ```
@@ -370,21 +434,19 @@ impl u3 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u3;
-    /// # const ZERO: u3 = u3::new(0).unwrap();
-    /// # const ONE: u3 = u3::new(1).unwrap();
-    /// # const TWO: u3 = u3::new(2).unwrap();
-    /// # const THREE: u3 = u3::new(3).unwrap();
-    /// # const FOUR: u3 = u3::new(4).unwrap();
-    /// assert_eq!(ZERO.leading_zeros(), 3);
-    /// assert_eq!(ONE.leading_zeros(), 2);
-    /// assert_eq!(TWO.leading_zeros(), 1);
-    /// assert_eq!(THREE.leading_zeros(), 1);
-    /// assert_eq!(FOUR.leading_zeros(), 0);
+    /// # use seaside_core::u2;
+    /// # const ZERO: u2 = u2::ZERO;
+    /// # const ONE: u2 = u2::ONE;
+    /// # const TWO: u2 = u2::new(2).unwrap();
+    /// # const THREE: u2 = u2::new(3).unwrap();
+    /// assert_eq!(ZERO.leading_zeros(), 2);
+    /// assert_eq!(ONE.leading_zeros(), 1);
+    /// assert_eq!(TWO.leading_zeros(), 0);
+    /// assert_eq!(THREE.leading_zeros(), 0);
     /// ```
     #[inline(always)]
     pub const fn leading_zeros(self) -> u32 {
-        const LEFTOVER_BITS: u32 = u8::BITS - u3::BITS;
+        const LEFTOVER_BITS: u32 = u8::BITS - u2::BITS;
 
         self.as_u8().leading_zeros() - LEFTOVER_BITS
     }
@@ -394,25 +456,21 @@ impl u3 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u3;
-    /// # const ZERO: u3 = u3::new(0).unwrap();
-    /// # const THREE: u3 = u3::new(3).unwrap();
-    /// # const FOUR: u3 = u3::new(4).unwrap();
-    /// # const FIVE: u3 = u3::new(5).unwrap();
-    /// # const SIX: u3 = u3::new(6).unwrap();
-    /// # const SEVEN: u3 = u3::new(7).unwrap();
+    /// # use seaside_core::u2;
+    /// # const ZERO: u2 = u2::ZERO;
+    /// # const ONE: u2 = u2::ONE;
+    /// # const TWO: u2 = u2::new(2).unwrap();
+    /// # const THREE: u2 = u2::new(3).unwrap();
     /// assert_eq!(ZERO.leading_ones(), 0);
-    /// assert_eq!(THREE.leading_ones(), 0);
-    /// assert_eq!(FOUR.leading_ones(), 1);
-    /// assert_eq!(FIVE.leading_ones(), 1);
-    /// assert_eq!(SIX.leading_ones(), 2);
-    /// assert_eq!(SEVEN.leading_ones(), 3);
+    /// assert_eq!(ONE.leading_ones(), 0);
+    /// assert_eq!(TWO.leading_ones(), 1);
+    /// assert_eq!(THREE.leading_ones(), 2);
     /// ```
     #[inline(always)]
     pub const fn leading_ones(self) -> u32 {
-        // You could certainly implement this mathematically, but given how few `u3`s there are, it
+        // You could certainly implement this mathematically, but given how few `u2`s there are, it
         // is way simpler to just use a LUT.
-        const ANSWERS: [u32; 8] = [0, 0, 0, 0, 1, 1, 2, 3];
+        const ANSWERS: [u32; 4] = [0, 0, 1, 2];
 
         ANSWERS[self.0 as usize]
     }
@@ -422,17 +480,15 @@ impl u3 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u3;
-    /// # const ZERO: u3 = u3::new(0).unwrap();
-    /// # const ONE: u3 = u3::new(1).unwrap();
-    /// # const TWO: u3 = u3::new(2).unwrap();
-    /// # const FOUR: u3 = u3::new(4).unwrap();
-    /// # const SIX: u3 = u3::new(6).unwrap();
-    /// assert_eq!(ZERO.trailing_zeros(), 3);
+    /// # use seaside_core::u2;
+    /// # const ZERO: u2 = u2::ZERO;
+    /// # const ONE: u2 = u2::ONE;
+    /// # const TWO: u2 = u2::new(2).unwrap();
+    /// # const THREE: u2 = u2::new(3).unwrap();
+    /// assert_eq!(ZERO.trailing_zeros(), 2);
     /// assert_eq!(ONE.trailing_zeros(), 0);
     /// assert_eq!(TWO.trailing_zeros(), 1);
-    /// assert_eq!(FOUR.trailing_zeros(), 2);
-    /// assert_eq!(SIX.trailing_zeros(), 1);
+    /// assert_eq!(THREE.trailing_zeros(), 0);
     /// ```
     #[inline(always)]
     pub const fn trailing_zeros(self) -> u32 {
@@ -448,19 +504,15 @@ impl u3 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u3;
-    /// # const ZERO: u3 = u3::new(0).unwrap();
-    /// # const ONE: u3 = u3::new(1).unwrap();
-    /// # const TWO: u3 = u3::new(2).unwrap();
-    /// # const THREE: u3 = u3::new(3).unwrap();
-    /// # const FIVE: u3 = u3::new(5).unwrap();
-    /// # const SEVEN: u3 = u3::new(7).unwrap();
+    /// # use seaside_core::u2;
+    /// # const ZERO: u2 = u2::ZERO;
+    /// # const ONE: u2 = u2::ONE;
+    /// # const TWO: u2 = u2::new(2).unwrap();
+    /// # const THREE: u2 = u2::new(3).unwrap();
     /// assert_eq!(ZERO.trailing_ones(), 0);
     /// assert_eq!(ONE.trailing_ones(), 1);
     /// assert_eq!(TWO.trailing_ones(), 0);
     /// assert_eq!(THREE.trailing_ones(), 2);
-    /// assert_eq!(FIVE.trailing_ones(), 1);
-    /// assert_eq!(SEVEN.trailing_ones(), 3);
     /// ```
     #[inline(always)]
     pub const fn trailing_ones(self) -> u32 {
@@ -481,10 +533,10 @@ impl u3 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u3;
-    /// # const ONE: u3 = u3::new(1).unwrap();
-    /// # const TWO: u3 = u3::new(2).unwrap();
-    /// # const THREE: u3 = u3::new(3).unwrap();
+    /// # use seaside_core::u2;
+    /// # const ONE: u2 = u2::ONE;
+    /// # const TWO: u2 = u2::new(2).unwrap();
+    /// # const THREE: u2 = u2::new(3).unwrap();
     /// assert_eq!(THREE.ilog(TWO), 1);
     /// assert_eq!(ONE.ilog(THREE), 0);
     /// ```
@@ -492,24 +544,24 @@ impl u3 {
     /// The following example will panic because `self` is zero.
     ///
     /// ```should_panic
-    /// # use seaside_core::types::u3;
-    /// # const ZERO: u3 = u3::new(0).unwrap();
-    /// # const TWO: u3 = u3::new(2).unwrap();
+    /// # use seaside_core::u2;
+    /// # const ZERO: u2 = u2::ZERO;
+    /// # const TWO: u2 = u2::new(2).unwrap();
     /// let ilog2_of_zero = ZERO.ilog(TWO);
     /// ```
     ///
     /// The following examples will panic because `base` is less than 2.
     ///
     /// ```should_panic
-    /// # use seaside_core::types::u3;
-    /// # const ZERO: u3 = u3::new(0).unwrap();
-    /// # const ONE: u3 = u3::new(1).unwrap();
+    /// # use seaside_core::u2;
+    /// # const ZERO: u2 = u2::ZERO;
+    /// # const ONE: u2 = u2::ONE;
     /// let ilog0_of_one = ONE.ilog(ZERO);
     /// ```
     ///
     /// ```should_panic
-    /// # use seaside_core::types::u3;
-    /// # const ONE: u3 = u3::new(1).unwrap();
+    /// # use seaside_core::u2;
+    /// # const ONE: u2 = u2::ONE;
     /// let ilog1_of_one = ONE.ilog(ONE);
     /// ```
     ///
@@ -534,17 +586,16 @@ impl u3 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u3;
-    /// # const ZERO: u3 = u3::new(0).unwrap();
-    /// # const ONE: u3 = u3::new(1).unwrap();
-    /// # const TWO: u3 = u3::new(2).unwrap();
-    /// # const THREE: u3 = u3::new(3).unwrap();
-    /// # const SIX: u3 = u3::new(6).unwrap();
+    /// # use seaside_core::u2;
+    /// # const ZERO: u2 = u2::ZERO;
+    /// # const ONE: u2 = u2::ONE;
+    /// # const TWO: u2 = u2::new(2).unwrap();
+    /// # const THREE: u2 = u2::new(3).unwrap();
     /// assert_eq!(THREE.checked_ilog(TWO), Some(1));
     /// assert_eq!(ONE.checked_ilog(THREE), Some(0));
     /// assert_eq!(ZERO.checked_ilog(TWO), None);     // self == 0
     /// assert_eq!(ONE.checked_ilog(ZERO), None);     // base < 2
-    /// assert_eq!(SIX.checked_ilog(ONE), None);      // base < 2
+    /// assert_eq!(ONE.checked_ilog(ONE), None);      // base < 2
     /// ```
     ///
     /// # See Also
@@ -564,22 +615,20 @@ impl u3 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u3;
-    /// # const ONE: u3 = u3::new(1).unwrap();
-    /// # const TWO: u3 = u3::new(2).unwrap();
-    /// # const THREE: u3 = u3::new(3).unwrap();
-    /// # const FOUR: u3 = u3::new(4).unwrap();
+    /// # use seaside_core::u2;
+    /// # const ONE: u2 = u2::ONE;
+    /// # const TWO: u2 = u2::new(2).unwrap();
+    /// # const THREE: u2 = u2::new(3).unwrap();
     /// assert_eq!(ONE.ilog2(), 0);
     /// assert_eq!(TWO.ilog2(), 1);
     /// assert_eq!(THREE.ilog2(), 1);
-    /// assert_eq!(FOUR.ilog2(), 2);
     /// ```
     ///
     /// The following example will panic because `self` is zero.
     ///
     /// ```should_panic
-    /// # use seaside_core::types::u3;
-    /// # const ZERO: u3 = u3::new(0).unwrap();
+    /// # use seaside_core::u2;
+    /// # const ZERO: u2 = u2::ZERO;
     /// let ilog2_of_zero = ZERO.ilog2();
     /// ```
     ///
@@ -588,7 +637,8 @@ impl u3 {
     /// - [`checked_ilog2`](Self::checked_ilog2)
     #[inline(always)]
     pub const fn ilog2(self) -> u32 {
-        self.as_u8().ilog2()
+        self.checked_ilog2()
+            .expect(super::panic_messages::NON_POSITIVE_LOGARITHM_ARGUMENT)
     }
 
     /// Returns the base 2 logarithm of the number, rounded down.
@@ -598,17 +648,15 @@ impl u3 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u3;
-    /// # const ZERO: u3 = u3::new(0).unwrap();
-    /// # const ONE: u3 = u3::new(1).unwrap();
-    /// # const TWO: u3 = u3::new(2).unwrap();
-    /// # const THREE: u3 = u3::new(3).unwrap();
-    /// # const FOUR: u3 = u3::new(4).unwrap();
+    /// # use seaside_core::u2;
+    /// # const ZERO: u2 = u2::ZERO;
+    /// # const ONE: u2 = u2::ONE;
+    /// # const TWO: u2 = u2::new(2).unwrap();
+    /// # const THREE: u2 = u2::new(3).unwrap();
     /// assert_eq!(ZERO.checked_ilog2(), None);
     /// assert_eq!(ONE.checked_ilog2(), Some(0));
     /// assert_eq!(TWO.checked_ilog2(), Some(1));
     /// assert_eq!(THREE.checked_ilog2(), Some(1));
-    /// assert_eq!(FOUR.checked_ilog2(), Some(2));
     /// ```
     ///
     /// # See Also
@@ -616,7 +664,9 @@ impl u3 {
     /// - [`ilog2`](Self::ilog2)
     #[inline(always)]
     pub const fn checked_ilog2(self) -> Option<u32> {
-        self.as_u8().checked_ilog2()
+        const ANSWERS: [Option<u32>; 4] = [None, Some(0), Some(1), Some(1)];
+
+        ANSWERS[self.0 as usize]
     }
 
     /// Returns the base 10 logarithm of the number, rounded down.
@@ -628,22 +678,20 @@ impl u3 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u3;
-    /// # const ONE: u3 = u3::new(1).unwrap();
-    /// # const TWO: u3 = u3::new(2).unwrap();
-    /// # const THREE: u3 = u3::new(3).unwrap();
-    /// # const SEVEN: u3 = u3::new(7).unwrap();
+    /// # use seaside_core::u2;
+    /// # const ONE: u2 = u2::ONE;
+    /// # const TWO: u2 = u2::new(2).unwrap();
+    /// # const THREE: u2 = u2::new(3).unwrap();
     /// assert_eq!(ONE.ilog10(), 0);
     /// assert_eq!(TWO.ilog10(), 0);
     /// assert_eq!(THREE.ilog10(), 0);
-    /// assert_eq!(SEVEN.ilog10(), 0);
     /// ```
     ///
     /// The following example will panic because `self` is zero.
     ///
     /// ```should_panic
-    /// # use seaside_core::types::u3;
-    /// # const ZERO: u3 = u3::new(0).unwrap();
+    /// # use seaside_core::u2;
+    /// # const ZERO: u2 = u2::ZERO;
     /// let ilog10_of_zero = ZERO.ilog10();
     /// ```
     ///
@@ -663,17 +711,15 @@ impl u3 {
     /// # Examples
     ///
     /// ```
-    /// # use seaside_core::types::u3;
-    /// # const ZERO: u3 = u3::new(0).unwrap();
-    /// # const ONE: u3 = u3::new(1).unwrap();
-    /// # const TWO: u3 = u3::new(2).unwrap();
-    /// # const THREE: u3 = u3::new(3).unwrap();
-    /// # const SEVEN: u3 = u3::new(7).unwrap();
+    /// # use seaside_core::u2;
+    /// # const ZERO: u2 = u2::ZERO;
+    /// # const ONE: u2 = u2::ONE;
+    /// # const TWO: u2 = u2::new(2).unwrap();
+    /// # const THREE: u2 = u2::new(3).unwrap();
     /// assert_eq!(ZERO.checked_ilog10(), None);
     /// assert_eq!(ONE.checked_ilog10(), Some(0));
     /// assert_eq!(TWO.checked_ilog10(), Some(0));
     /// assert_eq!(THREE.checked_ilog10(), Some(0));
-    /// assert_eq!(SEVEN.checked_ilog10(), Some(0));
     /// ```
     ///
     /// # See Also
@@ -681,23 +727,26 @@ impl u3 {
     /// - [`ilog10`](Self::ilog10)
     #[inline(always)]
     pub const fn checked_ilog10(self) -> Option<u32> {
-        if self.as_u8() > 0 { Some(0) } else { None }
+        const ANSWERS: [Option<u32>; 4] = [None, Some(0), Some(0), Some(0)];
+
+        ANSWERS[self.0 as usize]
     }
 }
 
-r#impl!(AsPrimitive for u3);
-r#impl!(Bounded for u3);
-r#impl!(Debug for u3);
-r#impl!(Display for u3);
-r#impl!(FromPrimitive for u3);
-r#impl!(Not for u3);
-r#impl!(Num for u3);
-r#impl!(NumCast for u3);
-r#impl!(ToPrimitive for u3);
-impl Unsigned for u3 {}
+r#impl!(AsPrimitive for u2);
+r#impl!(Bounded for u2);
+r#impl!(Debug for u2);
+r#impl!(Display for u2);
+r#impl!(FromPrimitive for u2);
+r#impl!(FromStr for u2);
+r#impl!(Not for u2);
+r#impl!(Num for u2);
+r#impl!(NumCast for u2);
+r#impl!(ToPrimitive for u2);
+impl Unsigned for u2 {}
 
 impl_ops! {
-    #![type = u3]
+    #![type = u2]
 
     #[assign(trait = AddAssign, fn = add_assign)]
     impl Add {
@@ -778,13 +827,18 @@ impl_ops! {
     }
 }
 
-/// The internal representation of a [`u3`].
+/// The internal representation of a [`u2`].
 ///
 /// This is implemented as an `enum` primarily to assist in memory layout optimizations, as the
-/// compiler will recognize that most bytes cannot represent valid [`u3`]s and is therefore free to
+/// compiler will recognize that most bytes cannot represent valid [`u2`]s and is therefore free to
 /// use them for other things.
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
-enum InnerU3 {
+#[cfg_attr(
+    feature = "serde",
+    derive(serde_repr::Deserialize_repr, serde_repr::Serialize_repr)
+)]
+#[repr(u8)]
+enum InnerU2 {
     /// Zero.
     #[default]
     _0 = 0,
@@ -797,31 +851,19 @@ enum InnerU3 {
 
     /// Three.
     _3 = 3,
-
-    /// Four.
-    _4 = 4,
-
-    /// Five.
-    _5 = 5,
-
-    /// Six.
-    _6 = 6,
-
-    /// Seven.
-    _7 = 7,
 }
 
-impl InnerU3 {
-    /// The minimum value of an [`InnerU3`], represented as a [`u8`] for convenience.
+impl InnerU2 {
+    /// The minimum value of an [`InnerU2`], represented as a [`u8`] for convenience.
     pub const MIN_AS_U8: u8 = 0;
 
-    /// The maximum value of an [`InnerU3`], represented as a [`u8`] for convenience.
-    pub const MAX_AS_U8: u8 = (1 << u3::BITS) - 1;
+    /// The maximum value of an [`InnerU2`], represented as a [`u8`] for convenience.
+    pub const MAX_AS_U8: u8 = (1 << u2::BITS) - 1;
 
-    /// Attempts to construct a new [`InnerU3`] from the smallest primitive integer type wider than
+    /// Attempts to construct a new [`InnerU2`] from the smallest primitive integer type wider than
     /// it.
     ///
-    /// This will fail if the input is too large for an [`InnerU3`] to represent.
+    /// This will fail if the input is too large for an [`InnerU2`] to represent.
     ///
     /// # See Also
     ///
@@ -836,11 +878,11 @@ impl InnerU3 {
         }
     }
 
-    /// Constructs a new [`InnerU3`] from the smallest primitive integer type wider than it.
+    /// Constructs a new [`InnerU2`] from the smallest primitive integer type wider than it.
     ///
     /// # Safety
     ///
-    /// The caller is responsible for ensuring that the input fits inside an [`InnerU3`]. Failure to
+    /// The caller is responsible for ensuring that the input fits inside an [`InnerU2`]. Failure to
     /// do so may result in undefined behavior.
     ///
     /// # See Also
@@ -851,7 +893,7 @@ impl InnerU3 {
         unsafe { core::mem::transmute::<u8, Self>(x) }
     }
 
-    /// Checks if `x` can be losslessly represented as an [`InnerU3`].
+    /// Checks if `x` can be losslessly represented as an [`InnerU2`].
     #[inline(always)]
     const fn can_represent(x: u8) -> bool {
         // A more general implementation would need to check against the lower bound as well, but

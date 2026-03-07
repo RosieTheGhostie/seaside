@@ -7,7 +7,7 @@ use num_traits::FromPrimitive;
 use strum::EnumIter;
 use take_exact::TakeExact;
 
-use super::{IndexedRegister, ParseError};
+use super::{RegisterIndex, ParseError};
 
 #[derive(Clone, Copy, Debug, EnumIter, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[repr(u8)]
@@ -123,7 +123,7 @@ impl CpuRegister {
     }
 
     pub fn parse_indexed(s: &str) -> Result<Self, ParseError> {
-        if let Ok(indexed) = IndexedRegister::from_str(s) {
+        if let Ok(indexed) = RegisterIndex::from_str(s) {
             Ok(indexed.to_cpu())
         } else {
             s.parse()

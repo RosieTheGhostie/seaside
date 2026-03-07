@@ -1,4 +1,4 @@
-use super::size::Size;
+use crate::size::Size;
 
 /// A memory address.
 pub type Address = u32;
@@ -14,7 +14,7 @@ pub type Address = u32;
 /// # Examples
 ///
 /// ```
-/// # use seaside_core::types::address::is_aligned;
+/// # use seaside_core::address::is_aligned;
 /// // 0x12121212 == 00010010 00010010 00010010 00010010
 /// assert!(is_aligned(0x12121212, 2));
 /// assert!(!is_aligned(0x12121212, 4));

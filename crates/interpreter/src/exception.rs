@@ -1,4 +1,4 @@
-use seaside_core::{prelude::*, types::ServiceCode};
+use seaside_core::{ServiceCode, prelude::*};
 use thiserror::Error;
 
 use crate::SyscallFailureKind;

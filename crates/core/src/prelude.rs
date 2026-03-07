@@ -1,9 +1,6 @@
 pub use crate::{
+    Address, Instruction, Offset, UnsignedOffset,
     consts::codes::Opcode,
-    types::{
-        Address, Instruction,
-        register::{
-            ConditionCode, Coprocessor0Register, CpuRegister, FpuRegister, IndexedRegister,
-        },
-    },
+    register::{ConditionCode, Coprocessor0Register, CpuRegister, FpuRegister, RegisterIndex},
+    size::{SignedSize, Size},
 };

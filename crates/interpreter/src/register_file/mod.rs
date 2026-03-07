@@ -131,11 +131,11 @@ impl TryIndexByRegister<FpuRegister, i64> for RegisterFile {
 
 impl RegisterFile {
     pub fn read_fpu_flag(&self, cc: ConditionCode) -> bool {
-        (self.fpu_flags >> cc as u8) & 1 == 1
+        (self.fpu_flags >> cc.as_u8()) & 1 == 1
     }
 
     pub fn write_fpu_flag(&mut self, cc: ConditionCode, value: bool) {
-        let mask = 1 << cc as u8;
+        let mask = 1 << cc.as_u8();
         let value = if value { mask } else { 0 };
         self.fpu_flags &= !mask;
         self.fpu_flags |= value;

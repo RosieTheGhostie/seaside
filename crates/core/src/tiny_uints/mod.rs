@@ -39,6 +39,26 @@ mod parse_int_errors {
     // pub const INVALID_DIGIT: ParseIntError = const_unwrap_err!(u8::from_str_radix("a", 10));
 }
 
+use num_traits::AsPrimitive;
+
+impl AsPrimitive<u3> for u2 {
+    fn as_(self) -> u3 {
+        self.as_u3()
+    }
+}
+
+impl AsPrimitive<u5> for u2 {
+    fn as_(self) -> u5 {
+        self.as_u5()
+    }
+}
+
+impl AsPrimitive<u5> for u3 {
+    fn as_(self) -> u5 {
+        self.as_u5()
+    }
+}
+
 macro_rules! impl_ops {
     {} => {};
     {
@@ -298,8 +318,7 @@ macro_rules! r#impl {
 
             #[inline(always)]
             fn try_from(value: u8) -> Result<Self, Self::Error> {
-                Self::new(value)
-                    .ok_or($crate::types::tiny_uints::panic_messages::CONVERT_WITH_OVERFLOW)
+                Self::new(value).ok_or($crate::tiny_uints::panic_messages::CONVERT_WITH_OVERFLOW)
             }
         }
 
@@ -309,7 +328,7 @@ macro_rules! r#impl {
             #[inline(always)]
             fn try_from(value: u16) -> Result<Self, Self::Error> {
                 <Self as ::num_traits::FromPrimitive>::from_u16(value)
-                    .ok_or($crate::types::tiny_uints::panic_messages::CONVERT_WITH_OVERFLOW)
+                    .ok_or($crate::tiny_uints::panic_messages::CONVERT_WITH_OVERFLOW)
             }
         }
 
@@ -319,7 +338,7 @@ macro_rules! r#impl {
             #[inline(always)]
             fn try_from(value: u32) -> Result<Self, Self::Error> {
                 <Self as ::num_traits::FromPrimitive>::from_u32(value)
-                    .ok_or($crate::types::tiny_uints::panic_messages::CONVERT_WITH_OVERFLOW)
+                    .ok_or($crate::tiny_uints::panic_messages::CONVERT_WITH_OVERFLOW)
             }
         }
 
@@ -329,7 +348,7 @@ macro_rules! r#impl {
             #[inline(always)]
             fn try_from(value: u64) -> Result<Self, Self::Error> {
                 <Self as ::num_traits::FromPrimitive>::from_u64(value)
-                    .ok_or($crate::types::tiny_uints::panic_messages::CONVERT_WITH_OVERFLOW)
+                    .ok_or($crate::tiny_uints::panic_messages::CONVERT_WITH_OVERFLOW)
             }
         }
 
@@ -339,7 +358,7 @@ macro_rules! r#impl {
             #[inline(always)]
             fn try_from(value: u128) -> Result<Self, Self::Error> {
                 <Self as ::num_traits::FromPrimitive>::from_u128(value)
-                    .ok_or($crate::types::tiny_uints::panic_messages::CONVERT_WITH_OVERFLOW)
+                    .ok_or($crate::tiny_uints::panic_messages::CONVERT_WITH_OVERFLOW)
             }
         }
 
@@ -349,7 +368,7 @@ macro_rules! r#impl {
             #[inline(always)]
             fn try_from(value: usize) -> Result<Self, Self::Error> {
                 <Self as ::num_traits::FromPrimitive>::from_usize(value)
-                    .ok_or($crate::types::tiny_uints::panic_messages::CONVERT_WITH_OVERFLOW)
+                    .ok_or($crate::tiny_uints::panic_messages::CONVERT_WITH_OVERFLOW)
             }
         }
 
@@ -359,7 +378,7 @@ macro_rules! r#impl {
             #[inline(always)]
             fn try_from(value: i8) -> Result<Self, Self::Error> {
                 <Self as ::num_traits::FromPrimitive>::from_i8(value)
-                    .ok_or($crate::types::tiny_uints::panic_messages::CONVERT_WITH_OVERFLOW)
+                    .ok_or($crate::tiny_uints::panic_messages::CONVERT_WITH_OVERFLOW)
             }
         }
 
@@ -369,7 +388,7 @@ macro_rules! r#impl {
             #[inline(always)]
             fn try_from(value: i16) -> Result<Self, Self::Error> {
                 <Self as ::num_traits::FromPrimitive>::from_i16(value)
-                    .ok_or($crate::types::tiny_uints::panic_messages::CONVERT_WITH_OVERFLOW)
+                    .ok_or($crate::tiny_uints::panic_messages::CONVERT_WITH_OVERFLOW)
             }
         }
 
@@ -379,7 +398,7 @@ macro_rules! r#impl {
             #[inline(always)]
             fn try_from(value: i32) -> Result<Self, Self::Error> {
                 <Self as ::num_traits::FromPrimitive>::from_i32(value)
-                    .ok_or($crate::types::tiny_uints::panic_messages::CONVERT_WITH_OVERFLOW)
+                    .ok_or($crate::tiny_uints::panic_messages::CONVERT_WITH_OVERFLOW)
             }
         }
 
@@ -389,7 +408,7 @@ macro_rules! r#impl {
             #[inline(always)]
             fn try_from(value: i64) -> Result<Self, Self::Error> {
                 <Self as ::num_traits::FromPrimitive>::from_i64(value)
-                    .ok_or($crate::types::tiny_uints::panic_messages::CONVERT_WITH_OVERFLOW)
+                    .ok_or($crate::tiny_uints::panic_messages::CONVERT_WITH_OVERFLOW)
             }
         }
 
@@ -399,7 +418,7 @@ macro_rules! r#impl {
             #[inline(always)]
             fn try_from(value: i128) -> Result<Self, Self::Error> {
                 <Self as ::num_traits::FromPrimitive>::from_i128(value)
-                    .ok_or($crate::types::tiny_uints::panic_messages::CONVERT_WITH_OVERFLOW)
+                    .ok_or($crate::tiny_uints::panic_messages::CONVERT_WITH_OVERFLOW)
             }
         }
 
@@ -409,7 +428,7 @@ macro_rules! r#impl {
             #[inline(always)]
             fn try_from(value: isize) -> Result<Self, Self::Error> {
                 <Self as ::num_traits::FromPrimitive>::from_isize(value)
-                    .ok_or($crate::types::tiny_uints::panic_messages::CONVERT_WITH_OVERFLOW)
+                    .ok_or($crate::tiny_uints::panic_messages::CONVERT_WITH_OVERFLOW)
             }
         }
 
@@ -508,6 +527,16 @@ macro_rules! r#impl {
             }
         }
     };
+    (FromStr for $t:ty) => {
+        impl ::core::str::FromStr for $t {
+            type Err = ::core::num::ParseIntError;
+
+            fn from_str(s: &str) -> Result<Self, Self::Err> {
+                Self::new(u8::from_str(s)?)
+                    .ok_or($crate::tiny_uints::parse_int_errors::POS_OVERFLOW)
+            }
+        }
+    };
     (Not for $t:ty) => {
         impl ::core::ops::Not for $t {
             type Output = Self;
@@ -518,12 +547,20 @@ macro_rules! r#impl {
         }
     };
     (Num for $t:ty) => {
+        impl $t {
+            // Zero.
+            pub const ZERO: Self = Self::new(0).unwrap();
+
+            // One.
+            pub const ONE: Self = Self::new(1).unwrap();
+        }
+
         impl ::num_traits::ConstOne for $t {
-            const ONE: $t = <$t>::new(1).unwrap();
+            const ONE: $t = <$t>::ONE;
         }
 
         impl ::num_traits::ConstZero for $t {
-            const ZERO: $t = <$t>::new(0).unwrap();
+            const ZERO: $t = <$t>::ZERO;
         }
 
         impl ::num_traits::Num for $t {
@@ -531,7 +568,7 @@ macro_rules! r#impl {
 
             fn from_str_radix(str: &str, radix: u32) -> Result<Self, Self::FromStrRadixErr> {
                 Self::new(u8::from_str_radix(str, radix)?)
-                    .ok_or($crate::types::tiny_uints::parse_int_errors::POS_OVERFLOW)
+                    .ok_or($crate::tiny_uints::parse_int_errors::POS_OVERFLOW)
             }
         }
 

@@ -1,5 +1,5 @@
 use num_traits::FromPrimitive;
-use seaside_core::{Endian, prelude::*, traits::SignExtend, types::Offset};
+use seaside_core::{Endian, prelude::*, traits::SignExtend};
 use seaside_disassembler::fields;
 
 use crate::{

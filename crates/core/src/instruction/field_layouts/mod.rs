@@ -1,0 +1,9 @@
+pub mod coprocessor_0;
+pub mod coprocessor_1;
+pub mod coprocessor_1x;
+pub mod coprocessor_2;
+pub mod immediate;
+pub mod jump;
+pub mod register_immediate;
+pub mod special;
+pub mod special_2;

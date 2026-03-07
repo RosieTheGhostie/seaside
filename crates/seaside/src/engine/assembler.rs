@@ -17,28 +17,31 @@ use seaside_assembler::{
 };
 use seaside_config::Config;
 use seaside_core::EngineError;
-use seaside_rich_error::Span;
+use seaside_rich_error::{RichError, Span};
 
 /// Assembles `source` into a format usable by the seaside interpreter.
 ///
-/// If `output_directory` is [`None`], it defaults to the current working directory.
+/// If `output_path` is [`None`], it defaults to the source path with the extension changed to
+/// "seax".
 pub fn assemble<P>(config: Config, source_path: P, output_path: Option<PathBuf>) -> Result<()>
 where
     P: AsRef<Path> + Debug,
 {
     let start_time = Instant::now();
 
-    let output_path = output_path.unwrap_or_else(|| source_path.as_ref().with_extension("seax"));
-    let source = std::fs::read_to_string(&source_path)?;
-    let exprs = parse(&source_path, &source)?;
+    let source_path = source_path.as_ref();
+    let output_path = output_path.unwrap_or_else(|| source_path.with_extension("seax"));
+    let source = std::fs::read_to_string(source_path)?;
+    let exprs = parse(source_path, &source)?;
     match Assembler::new(&config, exprs).build() {
-        Ok(build) => {
+        Ok((build, warnings)) => {
+            report_all(warnings, source_path, &source);
             let executable = build.export();
             let output_file = std::fs::File::create(output_path)?;
             executable.to_writer(output_file)?;
         }
-        Err(err) => {
-            let _ = err.report(&source, source_path);
+        Err(errors) => {
+            report_all(errors, source_path, &source);
             return Err(Error::new(EngineError::AssemblyFailure));
         }
     }
@@ -50,25 +53,21 @@ where
 }
 
 /// Parses `source` into a sequence of [expressions](Expr).
-fn parse<P>(source_path: P, source: &str) -> Result<VecDeque<(Expr<'_>, Span)>>
-where
-    P: AsRef<Path>,
-{
-    let mut exprs = VecDeque::new();
-    let mut n_errors: usize = 0;
-    for expr_or_err in Parser::new(source) {
-        match expr_or_err {
-            Ok(spanned_expr) => exprs.push_back(spanned_expr),
-            Err(err) => {
-                n_errors += 1;
-                let _ = err.report(source, &source_path);
-            }
+fn parse<'src>(source_path: &Path, source: &'src str) -> Result<VecDeque<(Expr<'src>, Span)>> {
+    match Parser::new(source).parse_all() {
+        Ok((exprs, warnings)) => {
+            report_all(warnings, source_path, source);
+            Ok(exprs)
+        }
+        Err(errors) => {
+            report_all(errors, source_path, source);
+            Err(Error::new(EngineError::ParsingFailure))
         }
     }
+}
 
-    if n_errors == 0 {
-        Ok(exprs)
-    } else {
-        Err(Error::new(EngineError::ParsingFailure))
+fn report_all(errors: impl IntoIterator<Item = RichError>, source_path: &Path, source: &str) {
+    for err in errors.into_iter() {
+        let _ = err.report(source, source_path);
     }
 }

@@ -1,0 +1,337 @@
+- operator: abs
+  operands:
+    - $CPU (destination)
+    - $CPU (source)
+  translation: # TODO
+- operator: add
+  operands:
+    - $CPU (destination)
+    - $CPU (source)
+    - IMM<i16>
+  translation: addi @0, @1, @2
+- operator: add
+  operands:
+    - $CPU (destination)
+    - $CPU (source)
+    - IMM<i32>
+  translation: lui $at, %hi(@2)
+    ori $at, $at, %lo(@2)
+    add @0, @1, $at
+- operator: addi
+  operands:
+    - $CPU (destination)
+    - $CPU (source)
+    - IMM<i32>
+  translation: lui $at, %hi(@2)
+    ori $at, $at, %lo(@2)
+    add @0, @1, $at
+- operator: addiu
+  operands:
+    - $CPU (destination)
+    - $CPU (source)
+    - IMM<i32>
+  translation: lui $at, %hi(@2)
+    ori $at, $at, %lo(@2)
+    addu @0, @1, $at
+- operator: addu
+  operands:
+    - $CPU (destination)
+    - $CPU (source)
+    - IMM<i32>
+  translation: lui $at, %hi(@2)
+    ori $at, $at, %lo(@2)
+    addu @0, @1, $at
+- operator: and
+  operands:
+    - $CPU (destination)
+    - $CPU (source)
+    - IMM<u16>
+  translation: andi @0, @1, @2
+- operator: and
+  operands:
+    - $CPU (destination)
+    - IMM<u16>
+  translation: andi @0, @0, @1
+- operator: andi
+  operands:
+    - $CPU (destination)
+    - $CPU (source)
+    - IMM<i32>
+  translation: lui $at, %hi(@2)
+    ori $at, $at, %lo(@2)
+    and @0, @1, $at
+- operator: andi
+  operands:
+    - $CPU (destination)
+    - IMM<u16>
+  translation: andi @0, @0, @1
+- operator: andi
+  operands:
+    - $CPU (destination)
+    - IMM<i32>
+  translation: lui $at, %hi(@1)
+    ori $at, $at, %lo(@1)
+    and @0, @0, $at
+- operator: b
+  operands:
+    - LABEL
+  translation: j @0
+- operator: beq
+  operands:
+    - $CPU (source)
+    - IMM<i16>
+    - LABEL
+  translation: # TODO
+- operator: beq
+  operands:
+    - $CPU (source)
+    - IMM<i32>
+    - LABEL
+  translation: # TODO
+- operator: beqz
+  operands:
+    - $CPU (source)
+    - LABEL
+  translation: # TODO
+- operator: bge
+  operands:
+    - $CPU (source)
+    - $CPU (source)
+    - LABEL
+  translation: # TODO
+- operator: bge
+  operands:
+    - $CPU (source)
+    - IMM<i16>
+    - LABEL
+  translation: # TODO
+- operator: bge
+  operands:
+    - $CPU (source)
+    - IMM<i32>
+    - LABEL
+  translation: # TODO
+- operator: bgeu
+  operands:
+    - $CPU (source)
+    - $CPU (source)
+    - LABEL
+  translation: # TODO
+- operator: bgeu
+  operands:
+    - $CPU (source)
+    - IMM<i16>
+    - LABEL
+  translation: # TODO
+- operator: bgeu
+  operands:
+    - $CPU (source)
+    - IMM<i32>
+    - LABEL
+  translation: # TODO
+- operator: bgt
+  operands:
+    - $CPU (source)
+    - $CPU (source)
+    - LABEL
+  translation: # TODO
+- operator: bgt
+  operands:
+    - $CPU (source)
+    - IMM<i16>
+    - LABEL
+  translation: # TODO
+- operator: bgt
+  operands:
+    - $CPU (source)
+    - IMM<i32>
+    - LABEL
+  translation: # TODO
+- operator: bgtu
+  operands:
+    - $CPU (source)
+    - $CPU (source)
+    - LABEL
+  translation: # TODO
+- operator: bgtu
+  operands:
+    - $CPU (source)
+    - IMM<i16>
+    - LABEL
+  translation: # TODO
+- operator: bgtu
+  operands:
+    - $CPU (source)
+    - IMM<i32>
+    - LABEL
+  translation: # TODO
+- operator: ble
+  operands:
+    - $CPU (source)
+    - $CPU (source)
+    - LABEL
+  translation: # TODO
+- operator: ble
+  operands:
+    - $CPU (source)
+    - IMM<i16>
+    - LABEL
+  translation: # TODO
+- operator: ble
+  operands:
+    - $CPU (source)
+    - IMM<i32>
+    - LABEL
+  translation: # TODO
+- operator: bleu
+  operands:
+    - $CPU (source)
+    - $CPU (source)
+    - LABEL
+  translation: # TODO
+- operator: bleu
+  operands:
+    - $CPU (source)
+    - IMM<i16>
+    - LABEL
+  translation: # TODO
+- operator: bleu
+  operands:
+    - $CPU (source)
+    - IMM<i32>
+    - LABEL
+  translation: # TODO
+- operator: blt
+  operands:
+    - $CPU (source)
+    - $CPU (source)
+    - LABEL
+  translation: # TODO
+- operator: blt
+  operands:
+    - $CPU (source)
+    - IMM<i16>
+    - LABEL
+  translation: # TODO
+- operator: blt
+  operands:
+    - $CPU (source)
+    - IMM<i32>
+    - LABEL
+  translation: # TODO
+- operator: bltu
+  operands:
+    - $CPU (source)
+    - $CPU (source)
+    - LABEL
+  translation: # TODO
+- operator: bltu
+  operands:
+    - $CPU (source)
+    - IMM<i16>
+    - LABEL
+  translation: # TODO
+- operator: bltu
+  operands:
+    - $CPU (source)
+    - IMM<i32>
+    - LABEL
+  translation: # TODO
+- operator: bne
+  operands:
+    - $CPU (source)
+    - IMM<i16>
+    - LABEL
+  translation: # TODO
+- operator: bne
+  operands:
+    - $CPU (source)
+    - IMM<i32>
+    - LABEL
+  translation: # TODO
+- operator: bnez
+  operands:
+    - $CPU (source)
+    - LABEL
+  translation: # TODO
+- operator: div
+  operands:
+    - $CPU (destination)
+    - $CPU (source)
+    - $CPU (source)
+  translation: # TODO
+- operator: div
+  operands:
+    - $CPU (destination)
+    - $CPU (source)
+    - IMM<i16>
+  translation: # TODO
+- operator: div
+  operands:
+    - $CPU (destination)
+    - $CPU (source)
+    - IMM<i32>
+  translation: # TODO
+- operator: divu
+  operands:
+    - $CPU (destination)
+    - $CPU (source)
+    - $CPU (source)
+  translation: # TODO
+- operator: divu
+  operands:
+    - $CPU (destination)
+    - $CPU (source)
+    - IMM<i16>
+  translation: # TODO
+- operator: divu
+  operands:
+    - $CPU (destination)
+    - $CPU (source)
+    - IMM<i32>
+  translation: # TODO
+- operator: l.d
+  operands:
+    - $FPU (destination; even index)
+    - ($CPU)
+  translation: # TODO
+- operator: l.d
+  operands:
+    - $FPU (destination; even index)
+    - IMM<i16>
+  translation: # TODO
+- operator: l.d
+  operands:
+    - $FPU (destination; even index)
+    - IMM<i32>
+  translation: # TODO
+- operator: l.d
+  operands:
+    - $FPU (destination; even index)
+    - IMM<i32>
+    - ($CPU)
+  translation: # TODO
+- operator: l.d
+  operands:
+    - $FPU (destination; even index)
+    - LABEL
+  translation: # TODO
+- operator: l.d
+  operands:
+    - $FPU (destination; even index)
+    - LABEL
+    - ($CPU)
+  translation: # TODO
+- operator: l.d
+  operands:
+    - $FPU (destination; even index)
+    - LABEL
+    - +IMM<I32>
+  translation: # TODO
+- operator: l.d
+  operands:
+    - $FPU (destination; even index)
+    - LABEL
+    - +IMM<I32>
+    - ($CPU)
+  translation: # TODO

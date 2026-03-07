@@ -1,9 +1,6 @@
 use core::ops::Range;
 
-use seaside_core::{
-    prelude::*,
-    types::{Offset, Size},
-};
+use seaside_core::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -32,8 +29,8 @@ pub enum DisplayMode {
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum Location {
-    Cpu(IndexedRegister),
-    Coprocessor0(IndexedRegister),
-    Fpu(IndexedRegister),
+    Cpu(RegisterIndex),
+    Coprocessor0(RegisterIndex),
+    Fpu(RegisterIndex),
     Stack(Offset),
 }
