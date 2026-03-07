@@ -13,7 +13,7 @@ use const_format::formatcp;
 use logos::{Lexer, Logos, SpannedIter};
 use seaside_core::prelude::*;
 use seaside_rich_error::{
-    Label, RichError, RichResult, RichResultBuilder, Span, ToErrorCode,
+    ErrorGroup, Label, RichError, RichResult, RichResultBuilder, Span,
     result::Bailed,
     span::{combine_spans, consume_span},
 };
@@ -130,7 +130,7 @@ impl<'src> Parser<'src> {
     /// Constructs a new [`RichError`] from an ordinary error.
     fn new_error<E>(&self, err: E) -> RichError
     where
-        E: ToErrorCode + ToString,
+        E: ErrorGroup + ToString,
     {
         RichError::new(err, self.expr_span.clone())
     }

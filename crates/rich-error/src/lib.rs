@@ -4,7 +4,7 @@ pub mod note;
 pub mod result;
 pub mod span;
 
-pub use error_code::{ErrorCode, ToErrorCode};
+pub use error_code::{ErrorCode, ErrorGroup};
 pub use label::Label;
 pub use note::Note;
 pub use result::{RichResult, RichResultBuilder};
@@ -27,14 +27,14 @@ pub type ErrorSeverity = ariadne::ReportKind<'static>;
 impl RichError {
     pub fn new<E>(err: E, broad_span: Span) -> Self
     where
-        E: ToErrorCode + ToString,
+        E: ErrorGroup + ToString,
     {
         Self::_new(ErrorSeverity::Error, err, broad_span)
     }
 
     pub fn new_warning<E>(err: E, broad_span: Span) -> Self
     where
-        E: ToErrorCode + ToString,
+        E: ErrorGroup + ToString,
     {
         Self::_new(ErrorSeverity::Warning, err, broad_span)
     }
@@ -100,7 +100,7 @@ impl RichError {
 
     fn _new<E>(severity: ErrorSeverity, err: E, broad_span: Span) -> Self
     where
-        E: ToErrorCode + ToString,
+        E: ErrorGroup + ToString,
     {
         Self {
             severity,

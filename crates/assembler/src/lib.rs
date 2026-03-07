@@ -4,21 +4,29 @@ pub mod instruction;
 pub mod parser;
 pub mod token;
 
+mod build;
+mod options;
 mod segments;
 mod string_builder;
 
 use std::collections::{HashMap, VecDeque};
 
-use seaside_config::{Config, features::AssemblerOptions};
-use seaside_core::{Endian, Services, consts::StaticSegment, instruction::Packable, prelude::*};
-use seaside_executable::{Executable, MemoryMap};
+use seaside_config::Config;
+use seaside_core::{Endian, consts::StaticSegment, instruction::Packable, prelude::*};
 use seaside_rich_error::{RichError, RichResult, RichResultBuilder, Span, map_err, result::Bailed};
 
+use build::Build;
 use directives::ValueDirective;
 use error::AssembleError;
 use instruction::{ProcessedInstruction, UnresolvedInstruction, process_instruction};
+use options::OptionsStack;
 use parser::Expr;
 use segments::{SegmentBuildInfo, Segments};
+
+use crate::{
+    directives::{SegmentDirective, StringDirective},
+    parser::{Operand, Value},
+};
 
 pub struct Assembler<'src, 'config> {
     /// A deque of [spanned](Span) [expressions](Expr).
@@ -38,6 +46,7 @@ pub struct Assembler<'src, 'config> {
     unresolved: VecDeque<(Address, (UnresolvedInstruction<'src>, Span))>,
 
     result_builder: RichResultBuilder,
+    options: OptionsStack,
 
     config: &'config Config,
 }
@@ -51,6 +60,7 @@ impl<'src, 'config> Assembler<'src, 'config> {
             unresolved: VecDeque::new(),
             symbol_table: HashMap::new(),
             result_builder: RichResultBuilder::new(),
+            options: OptionsStack::new(),
             config,
         }
     }
@@ -84,118 +94,190 @@ impl<'src, 'config> Assembler<'src, 'config> {
 
         match expr {
             Expr::SegmentHeader { directive, address } => {
-                self.current_segment = directive;
-                if let Some(address) = address {
-                    self.this_segment_mut()
-                        .jump_ahead_to(span, address)
-                        .map_err(map_err!(err -> self.result_builder))?;
-                }
+                self.build_segment_header(span, directive, address)
             }
-            Expr::AlignCommand { alignment } => {
-                if self.current_segment.is_data_segment() {
-                    self.this_segment_mut().align(alignment);
-                } else {
-                    return self.result_builder.bail(
-                        RichError::new(AssembleError::WrongSegment, span)
-                            .with_note(".align only supported in data segments"),
-                    );
-                }
-            }
-            Expr::SpaceCommand { n_bytes } => {
-                if self.current_segment.is_data_segment() {
-                    self.this_segment_mut().jump_ahead_by(n_bytes);
-                } else {
-                    return self.result_builder.bail(
-                        RichError::new(AssembleError::WrongSegment, span)
-                            .with_note(".space only supported in data segments"),
-                    );
-                }
-            }
-            Expr::IncludeCommand { .. } | Expr::GlobalCommand { .. } => {
-                return self.result_builder.bail(
-                    RichError::new(AssembleError::UnsupportedDirective, span)
-                        .with_note("multiple file support not yet planned"),
-                );
-            }
-            Expr::EqvMacro { .. } => {
-                return self.result_builder.bail(
-                    RichError::new(AssembleError::UnsupportedDirective, span)
-                        .with_note("support for .eqv planned for seaside v1.4.0"),
-                );
-            }
-            Expr::SetCommand { .. } => {
-                return self.result_builder.bail(
-                    RichError::new(AssembleError::UnsupportedDirective, span)
-                        .with_note("support for .set planned for seaside v1.4.0"),
-                );
-            }
+            Expr::AlignCommand { alignment } => self.build_align_command(span, alignment),
+            Expr::SpaceCommand { n_bytes } => self.build_space_command(span, n_bytes),
+            Expr::IncludeCommand { file_path } => self.build_include_command(span, file_path),
+            Expr::GlobalCommand { labels } => self.build_global_command(span, labels),
+            Expr::EqvMacro { name, expr } => self.build_eqv_macro(span, name, expr),
+            Expr::SetCommand { command } => self.build_set_command(span, command),
             Expr::ValueArray { directive, values } => {
-                if !self.current_segment.is_data_segment() {
-                    return self.result_builder.bail(
-                        RichError::new(AssembleError::WrongSegment, span)
-                            .with_note("value arrays only supported in data segments"),
-                    );
-                }
-
-                let endian = self.config.endian;
-                let this_segment = self.this_segment_mut();
-                match directive {
-                    ValueDirective::Byte => this_segment.append_i8(span, values),
-                    ValueDirective::Half => this_segment.append_i16(span, values, endian),
-                    ValueDirective::Word => this_segment.append_i32(span, values, endian),
-                    ValueDirective::Float => this_segment.append_f32(span, values, endian),
-                    ValueDirective::Double => this_segment.append_f64(span, values, endian),
-                }
-                .map_err(map_err!(err -> self.result_builder))?;
+                self.build_value_array(span, directive, values)
             }
-            Expr::String { directive, value } => {
-                if !self.current_segment.is_data_segment() {
-                    return self.result_builder.bail(
-                        RichError::new(AssembleError::WrongSegment, span)
-                            .with_note("strings only supported in data segments"),
-                    );
-                }
-
-                self.this_segment_mut()
-                    .build_string(directive, value, span)
-                    .map_err(map_err!(err -> self.result_builder))?;
-            }
-            Expr::LabelDef { ident } => self.add_symbol(span, ident)?,
+            Expr::String { directive, value } => self.build_string(span, directive, value),
+            Expr::LabelDef { ident } => self.add_symbol(span, ident),
             Expr::Instruction { operator, operands } => {
-                if !self.current_segment.is_text_segment() {
-                    return self.result_builder.bail(
-                        RichError::new(AssembleError::WrongSegment, span)
-                            .with_note(Self::INSTRUCTION_IN_DATA_SEGMENT),
-                    );
-                }
+                self.build_instruction(span, operator, operands)
+            }
+        }
+        .map(|()| true)
+    }
 
-                let pc = self.next_address();
-                let mut bytes = match process_instruction(
-                    &mut self.result_builder,
-                    operator,
-                    operands,
-                    &span,
-                    pc,
-                )? {
-                    ProcessedInstruction::Resolved(instruction) => {
-                        let machine_code = instruction.pack();
-                        match self.config.endian {
-                            Endian::Little => machine_code.to_le_bytes(),
-                            Endian::Big => machine_code.to_be_bytes(),
-                        }
-                    }
-                    ProcessedInstruction::Unresolved(unresolved) => {
-                        self.unresolved.push_back((pc, (unresolved, span)));
-                        self.this_segment_mut().jump_ahead_by(4);
-                        return Ok(true);
-                    }
-                }
-                .to_vec();
-                self.this_segment_mut().append(&mut bytes);
+    fn build_segment_header(
+        &mut self,
+        span: Span,
+        directive: SegmentDirective,
+        address: Option<Address>,
+    ) -> Result<(), Bailed> {
+        self.current_segment = directive;
+        if let Some(address) = address {
+            self.this_segment_mut()
+                .jump_ahead_to(span, address)
+                .map_err(map_err!(err -> self.result_builder))
+        } else {
+            Ok(())
+        }
+    }
+
+    fn build_align_command(&mut self, span: Span, alignment: u8) -> Result<(), Bailed> {
+        if !self.current_segment.is_data_segment() {
+            return self.result_builder.bail(
+                RichError::new(AssembleError::WrongSegment, span)
+                    .with_note(".align only supported in data segments"),
+            );
+        }
+
+        self.this_segment_mut().align(alignment);
+        Ok(())
+    }
+
+    fn build_space_command(&mut self, span: Span, n_bytes: Size) -> Result<(), Bailed> {
+        if !self.current_segment.is_data_segment() {
+            return self.result_builder.bail(
+                RichError::new(AssembleError::WrongSegment, span)
+                    .with_note(".space only supported in data segments"),
+            );
+        }
+
+        self.this_segment_mut().jump_ahead_by(n_bytes);
+        Ok(())
+    }
+
+    fn build_include_command(&mut self, span: Span, _file_path: &'src str) -> Result<(), Bailed> {
+        self.result_builder.bail(
+            RichError::new(AssembleError::UnsupportedDirective, span)
+                .with_note("multiple file support not yet planned"),
+        )
+    }
+
+    fn build_global_command(
+        &mut self,
+        span: Span,
+        _labels: Vec<(&'src str, Span)>,
+    ) -> Result<(), Bailed> {
+        self.result_builder.bail(
+            RichError::new(AssembleError::UnsupportedDirective, span)
+                .with_note("multiple file support not yet planned"),
+        )
+    }
+
+    fn build_eqv_macro(
+        &mut self,
+        span: Span,
+        _name: &'src str,
+        _expr: Box<Expr<'src>>,
+    ) -> Result<(), Bailed> {
+        self.result_builder.bail(
+            RichError::new(AssembleError::UnsupportedDirective, span)
+                .with_note("support for .eqv planned for seaside v2.0.0"),
+        )
+    }
+
+    fn build_set_command(&mut self, span: Span, command: &'src str) -> Result<(), Bailed> {
+        match command {
+            "push" => self.options.push(),
+            "pop" => self.options.pop(),
+            "at" => self.options.active.explicit_asm_temp = false,
+            "noat" => self.options.active.explicit_asm_temp = true,
+            _ => self
+                .result_builder
+                .bail(RichError::new_warning(AssembleError::ExplicitAsmTemp, span))?,
+        }
+
+        Ok(())
+    }
+
+    fn build_value_array(
+        &mut self,
+        span: Span,
+        directive: ValueDirective,
+        values: Vec<(Value, Span)>,
+    ) -> Result<(), Bailed> {
+        if !self.current_segment.is_data_segment() {
+            return self.result_builder.bail(
+                RichError::new(AssembleError::WrongSegment, span)
+                    .with_note("value arrays only supported in data segments"),
+            );
+        }
+
+        let endian = self.config.endian;
+        let this_segment = self.this_segment_mut();
+        match directive {
+            ValueDirective::Byte => this_segment.append_i8(span, values),
+            ValueDirective::Half => this_segment.append_i16(span, values, endian),
+            ValueDirective::Word => this_segment.append_i32(span, values, endian),
+            ValueDirective::Float => this_segment.append_f32(span, values, endian),
+            ValueDirective::Double => this_segment.append_f64(span, values, endian),
+        }
+        .map_err(map_err!(err -> self.result_builder))
+    }
+
+    fn build_string(
+        &mut self,
+        span: Span,
+        directive: StringDirective,
+        value: &'src str,
+    ) -> Result<(), Bailed> {
+        if !self.current_segment.is_data_segment() {
+            return self.result_builder.bail(
+                RichError::new(AssembleError::WrongSegment, span)
+                    .with_note("strings only supported in data segments"),
+            );
+        }
+
+        self.this_segment_mut()
+            .build_string(directive, value, span)
+            .map_err(map_err!(err -> self.result_builder))
+    }
+
+    fn build_instruction(
+        &mut self,
+        span: Span,
+        operator: &'src str,
+        operands: Vec<(Operand<'src>, Span)>,
+    ) -> Result<(), Bailed> {
+        if !self.current_segment.is_text_segment() {
+            return self.result_builder.bail(
+                RichError::new(AssembleError::WrongSegment, span)
+                    .with_note(Self::INSTRUCTION_IN_DATA_SEGMENT),
+            );
+        }
+
+        let pc = self.next_address();
+        match process_instruction(
+            &mut self.result_builder,
+            &self.options.active,
+            operator,
+            operands,
+            &span,
+            pc,
+        )? {
+            ProcessedInstruction::Resolved(instruction) => {
+                let machine_code = instruction.pack();
+                let bytes = match self.config.endian {
+                    Endian::Little => machine_code.to_le_bytes(),
+                    Endian::Big => machine_code.to_be_bytes(),
+                };
+                self.this_segment_mut().append(&mut bytes.to_vec());
+            }
+            ProcessedInstruction::Unresolved(unresolved) => {
+                self.unresolved.push_back((pc, (unresolved, span)));
+                self.this_segment_mut().jump_ahead_by(4);
             }
         }
 
-        Ok(true)
+        Ok(())
     }
 
     fn resolve_all(&mut self) {
@@ -254,61 +336,5 @@ impl<'src, 'config> Assembler<'src, 'config> {
                 expr_span,
             ))
         }
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct Build<'config> {
-    segments: Segments,
-    endian: Endian,
-    options: &'config AssemblerOptions,
-    memory_map: &'config MemoryMap,
-    services: &'config Services,
-}
-
-impl<'config> Build<'config> {
-    pub(crate) const fn new(segments: Segments, config: &'config Config) -> Self {
-        Self {
-            segments,
-            endian: config.endian,
-            options: &config.features.assembler,
-            memory_map: &config.memory_map,
-            services: &config.features.services,
-        }
-    }
-
-    pub fn export(self) -> Executable {
-        use seaside_executable::{Body, Header};
-
-        let mut body = Body::new(self.executable_flags(), *self.memory_map);
-
-        body.services = self.services.clone();
-        self.segments
-            .export_into_executable_segments(&mut body.segments);
-
-        Executable::new(Header::default(), body)
-    }
-
-    fn executable_flags(&self) -> seaside_executable::Flags {
-        use seaside_executable::Flags;
-
-        let mut flags = Flags::empty();
-        if self.endian == Endian::Big {
-            flags |= Flags::BIG_ENDIAN;
-        }
-
-        if self.options.self_modifying_code {
-            flags |= Flags::SELF_MODIFYING_CODE;
-        }
-
-        if self.options.delay_slot {
-            flags |= Flags::DELAY_SLOT;
-        }
-
-        if self.options.freeable_heap_allocations {
-            flags |= Flags::FREEABLE_HEAP_ALLOCATIONS;
-        }
-
-        flags
     }
 }

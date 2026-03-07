@@ -1,6 +1,6 @@
 use core::num::{ParseFloatError, ParseIntError};
 
-use seaside_rich_error::{ErrorCode, ToErrorCode};
+use seaside_rich_error::{ErrorCode, ErrorGroup, error_code::ErrorGroupPrefix};
 use thiserror::Error;
 
 #[derive(Clone, Copy, Debug, Eq, Error, Hash, PartialEq)]
@@ -33,6 +33,7 @@ impl From<ParseFloatError> for LexError {
 impl From<ParseIntError> for LexError {
     fn from(err: ParseIntError) -> Self {
         use core::num::IntErrorKind::*;
+
         Self::InvalidInteger(match err.kind() {
             Empty => "no integer was provided (you shouldn't see this)",
             InvalidDigit => "invalid digit provided (you shouldn't see this)",
@@ -44,13 +45,16 @@ impl From<ParseIntError> for LexError {
     }
 }
 
-impl ToErrorCode for LexError {
+impl ErrorGroup for LexError {
+    const PREFIX: ErrorGroupPrefix = *b"LEX";
+
     fn code(&self) -> ErrorCode {
         use LexError::*;
-        match self {
+
+        ErrorCode::new_for::<Self>(match self {
             Unspecified(_) => 0,
             InvalidInteger(_) => 1,
             InvalidFloat => 2,
-        }
+        })
     }
 }

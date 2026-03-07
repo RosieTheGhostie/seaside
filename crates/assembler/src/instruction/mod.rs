@@ -4,7 +4,7 @@ mod process;
 use seaside_core::{UnpackedInstruction, prelude::*};
 use seaside_rich_error::{RichError, RichResultBuilder, Span, map_err, result::Bailed};
 
-use crate::{error::AssembleError, parser::Operand};
+use crate::{error::AssembleError, options::Options, parser::Operand};
 use macros::*;
 use process::{Destination, Processor};
 
@@ -16,18 +16,21 @@ pub enum ProcessedInstruction<'src> {
 
 pub fn process_instruction<'src>(
     result_builder: &mut RichResultBuilder,
+    options: &Options,
     operator: &'src str,
     operands: Vec<(Operand<'src>, Span)>,
     expr_span: &Span,
     pc: Address,
 ) -> Result<ProcessedInstruction<'src>, Bailed> {
+    let operator_span = Span {
+        start: expr_span.start,
+        end: expr_span.start + operator.len(),
+    };
+
     let Some(mut template) = UnpackedInstruction::parse_from_operator(operator) else {
         return result_builder.bail(
             RichError::new(AssembleError::UnknownOperator, expr_span.clone())
-                .with_narrow_span(Span {
-                    start: expr_span.start,
-                    end: expr_span.start + operator.len(),
-                })
+                .with_narrow_span(operator_span)
                 .with_help(
                     "if you are trying to use a pseudo-operator, those aren't supported yet",
                 ),
@@ -37,8 +40,10 @@ pub fn process_instruction<'src>(
     let mut operands_iter = operands.iter();
     let mut processor = Processor::new(
         result_builder,
-        &mut operands_iter as &mut dyn Iterator<Item = _>,
+        options,
         expr_span,
+        operator_span,
+        &mut operands_iter as &mut dyn Iterator<Item = _>,
     );
     match &mut template {
         special![{fields} ShiftLeftLogical, ShiftRightLogical, ShiftRightArithmetic] => {

@@ -1,4 +1,4 @@
-use seaside_rich_error::{ErrorCode, ToErrorCode};
+use seaside_rich_error::{ErrorCode, ErrorGroup, error_code::ErrorGroupPrefix};
 use thiserror::Error;
 
 use super::LexError;
@@ -34,15 +34,17 @@ pub enum ParseError {
     ValueOutsideRange,
 }
 
-impl ToErrorCode for ParseError {
+impl ErrorGroup for ParseError {
+    const PREFIX: ErrorGroupPrefix = *b"PRS";
+
     fn code(&self) -> ErrorCode {
         use ParseError::*;
-        match self {
-            Lex(err) => err.code(),
-            PrematureEof => 101,
-            UnexpectedToken => 102,
-            UnknownDirective => 103,
-            ValueOutsideRange => 104,
-        }
+        ErrorCode::new_for::<Self>(match self {
+            Lex(err) => return err.code(),
+            PrematureEof => 0,
+            UnexpectedToken => 1,
+            UnknownDirective => 2,
+            ValueOutsideRange => 3,
+        })
     }
 }

@@ -8,12 +8,15 @@ use seaside_core::{
 };
 use seaside_rich_error::{Label, RichError, RichResultBuilder, Span, result::Bailed};
 
-use crate::{error::AssembleError, parser::Operand};
+use crate::{error::AssembleError, options::Options, parser::Operand};
 
 pub struct Processor<'a, 'src> {
     pub(super) result_builder: &'a mut RichResultBuilder,
-    operands_iter: &'a mut dyn Iterator<Item = &'a (Operand<'src>, Span)>,
+    options: &'a Options,
+
     pub(super) expr_span: &'a Span,
+    operator_span: Span,
+    operands_iter: &'a mut dyn Iterator<Item = &'a (Operand<'src>, Span)>,
     peeked: Vec<&'a (Operand<'src>, Span)>,
 }
 
@@ -22,13 +25,17 @@ impl<'a, 'src> Processor<'a, 'src> {
 
     pub const fn new(
         result_builder: &'a mut RichResultBuilder,
-        operands_iter: &'a mut dyn Iterator<Item = &'a (Operand<'src>, Span)>,
+        options: &'a Options,
         expr_span: &'a Span,
+        operator_span: Span,
+        operands_iter: &'a mut dyn Iterator<Item = &'a (Operand<'src>, Span)>,
     ) -> Self {
         Self {
             result_builder,
-            operands_iter,
+            options,
             expr_span,
+            operator_span,
+            operands_iter,
             peeked: Vec::new(),
         }
     }
@@ -65,6 +72,7 @@ impl<'a, 'src> Processor<'a, 'src> {
         if let Operand::Register(register) = operand
             && let Ok(register) = CpuRegister::parse_indexed(register)
         {
+            self.warn_asm_temp(register, operand_span);
             Ok(register)
         } else {
             self.result_builder
@@ -89,6 +97,7 @@ impl<'a, 'src> Processor<'a, 'src> {
         if let Operand::WrappedRegister(register) = operand
             && let Ok(register) = CpuRegister::parse_indexed(register)
         {
+            self.warn_asm_temp(register, operand_span);
             Ok(register)
         } else {
             self.result_builder
@@ -124,6 +133,15 @@ impl<'a, 'src> Processor<'a, 'src> {
         } else {
             self.result_builder
                 .bail(self.wrong_type_error(operand_a_span, MESSAGE))
+        }
+    }
+
+    fn warn_asm_temp(&mut self, register: CpuRegister, span: &Span) {
+        if register == CpuRegister::AsmTemp && !self.options.explicit_asm_temp {
+            self.result_builder.add_error(
+                RichError::new_warning(AssembleError::ExplicitAsmTemp, self.expr_span.clone())
+                    .with_narrow_span(span.clone()),
+            )
         }
     }
 
@@ -395,6 +413,7 @@ impl<'a, 'src> Processor<'a, 'src> {
 
     fn not_enough_operands_error(&self) -> RichError {
         RichError::new(AssembleError::NotEnoughOperands, self.expr_span.clone())
+            .with_narrow_span(self.operator_span.clone())
     }
 }
 
