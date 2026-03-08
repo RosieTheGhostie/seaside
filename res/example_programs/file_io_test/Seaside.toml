@@ -1,0 +1,50 @@
+endian = "little"
+
+[features.assembler]
+self_modifying_code = false
+delay_slot = false
+freeable_heap_allocations = false
+pseudo_instructions = false
+
+[features.services]
+4 = "spim.print.string"
+13 = "spim.file.open"
+14 = "spim.file.read"
+15 = "spim.file.write"
+16 = "spim.file.close"
+17 = "spim.system.exit2"
+
+[memory_map]
+user_space = [0x00000000, 0x7fffffff]
+kernel_space = [0x80000000, 0xffffffff]
+
+[memory_map.segments]
+
+[memory_map.segments.text]
+range = [0x00400000, 0x0ffffffc]
+allocate = 288                   # 72 instructions
+
+[memory_map.segments.ktext]
+range = [0x80000000, 0x8fffffff]
+allocate = 0
+
+[memory_map.segments.extern]
+range = [0x10000000, 0x1000ffff]
+allocate = 0
+
+[memory_map.segments.data]
+range = [0x10010000, 0x1003ffff]
+allocate = 0xa0                  # 160 B
+
+[memory_map.segments.kdata]
+range = [0x90000000, 0xfffeffff]
+allocate = 0
+
+[memory_map.segments.stack_and_heap]
+range = [0x10040000, 0x7fffffff]
+allocate_stack = 0x400000        # 4 MiB
+allocate_heap = 0
+
+[memory_map.segments.mmio]
+range = [0xffff0000, 0xffffffff]
+allocate = 0

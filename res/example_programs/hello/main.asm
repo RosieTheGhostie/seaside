@@ -14,13 +14,15 @@ main:
   main.prologue:
   main.prologue.end:
 
-  addiu $v0, $0, 4     #-+ spim.print.string(kHello);
-  lui $at, 0x1001      # |
-  ori $a0, $at, 0x0000 # |
-  syscall              #_/
+  # spim.print.string(kHello);
+  addiu $v0, $0, 4
+  lui $at, 0x1001
+  ori $a0, $at, 0x0000
+  syscall
 
   main.epilogue:
-    addiu $v0, $0, 10  #-+ spim.system.exit();
-    syscall            #_/
+    # spim.system.exit();
+    addiu $v0, $0, 10
+    syscall
   main.epilogue.end:
 main.end:

@@ -100,7 +100,7 @@ impl<'src, 'config> Assembler<'src, 'config> {
             Expr::SpaceCommand { n_bytes } => self.build_space_command(span, n_bytes),
             Expr::IncludeCommand { file_path } => self.build_include_command(span, file_path),
             Expr::GlobalCommand { labels } => self.build_global_command(span, labels),
-            Expr::EqvMacro { name, expr } => self.build_eqv_macro(span, name, expr),
+            Expr::EqvMacro { name, expr } => self.build_eqv_macro(span, name, *expr),
             Expr::SetCommand { command } => self.build_set_command(span, command),
             Expr::ValueArray { directive, values } => {
                 self.build_value_array(span, directive, values)
@@ -176,7 +176,7 @@ impl<'src, 'config> Assembler<'src, 'config> {
         &mut self,
         span: Span,
         _name: &'src str,
-        _expr: Box<Expr<'src>>,
+        _expr: Expr<'src>,
     ) -> Result<(), Bailed> {
         self.result_builder.bail(
             RichError::new(AssembleError::UnsupportedDirective, span)
