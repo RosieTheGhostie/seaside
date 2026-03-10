@@ -148,9 +148,8 @@ impl<'src> Parser<'src> {
     /// Adds a new [`RichError`] to the [result builder](Self::result_builder) for when the end of
     /// the file is reached too soon.
     ///
-    /// This has very similar semantics to
-    /// [`add_unexpected_token_error`](Self::add_unexpected_token_error), as it also reads from the
-    /// [`expected`](Self::expected) field.
+    /// This has very similar semantics to [`unexpected_token_error`](Self::unexpected_token_error),
+    /// as it also reads from the [`expected`](Self::expected) field.
     fn premature_eof_error(&self) -> RichError {
         let span = self.expr_span.end..self.expr_span.end;
         self.new_error(ParseError::PrematureEof)
@@ -173,9 +172,8 @@ impl<'src> Parser<'src> {
         self.result_builder.bail(error)
     }
 
-    /// Adds the spanned [token](Token) provided to the `peeked` queue, then adds a
-    /// [`RichError`] via the [`add_unexpected_token_error`](Self::add_unexpected_token_error)
-    /// method.
+    /// Adds the spanned [token](Token) provided to the `peeked` queue, then adds a [`RichError`]
+    /// via the [`unexpected_token_error`](Self::unexpected_token_error) method.
     ///
     /// This is useful when the [token](Token) in question is potentially meaningful as parsing
     /// continues, but is still invalid in the current context.
@@ -455,11 +453,15 @@ impl<'src> Parser<'src> {
     /// Attempts to parse a [wrapped register](Operand::WrappedRegister).
     ///
     /// The opening parenthesis [token](Token) is assumed to have been processed already.
-    fn parse_wrapped_register(&mut self) -> Result<(Operand<'src>, Span), Bailed> {
+    fn parse_wrapped_register(
+        &mut self,
+        mut subexpr_span: Span,
+    ) -> Result<(Operand<'src>, Span), Bailed> {
         self.expected = expected::REGISTER;
         let name = match self.next_token() {
             Some((Token::Register(name), span)) => {
-                self.consume_span(span.clone());
+                consume_span(&mut subexpr_span, span.clone());
+                self.consume_span(span);
                 name
             }
             Some(spanned_token) => return self.peek_and_bail(spanned_token),
@@ -469,8 +471,10 @@ impl<'src> Parser<'src> {
         self.expected = expected::R_PAREN;
         match self.next_token() {
             Some((Token::Ctrl(')'), span)) => {
+                consume_span(&mut subexpr_span, span.clone());
                 self.consume_span(span);
-                Ok((Operand::WrappedRegister(name), self.expr_span.clone()))
+
+                Ok((Operand::WrappedRegister(name), subexpr_span))
             }
             Some(spanned_token) => self.peek_and_bail(spanned_token),
             None => self.bail(self.premature_eof_error()),
@@ -574,8 +578,8 @@ impl<'src> Parser<'src> {
                     comma_status = CommaStatus::Need;
                 }
                 Some((Token::Ctrl('('), span)) => {
-                    self.consume_span(span);
-                    let (operand, span) = self.parse_wrapped_register()?;
+                    self.consume_span(span.clone());
+                    let (operand, span) = self.parse_wrapped_register(span)?;
                     operands.push((operand, span.clone()));
                     self.consume_span(span);
                     comma_status = CommaStatus::Need;

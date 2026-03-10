@@ -140,7 +140,8 @@ impl<'a, 'src> Processor<'a, 'src> {
         if register == CpuRegister::AsmTemp && !self.options.explicit_asm_temp {
             self.result_builder.add_error(
                 RichError::new_warning(AssembleError::ExplicitAsmTemp, self.expr_span.clone())
-                    .with_narrow_span(span.clone()),
+                    .with_narrow_span(span.clone())
+                    .with_help("if this is intentional, use `.set noat` to disable this warning"),
             )
         }
     }
