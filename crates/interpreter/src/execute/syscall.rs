@@ -294,13 +294,13 @@ impl InterpreterState {
         Ok(())
     }
 
-    #[allow(dead_code, reason = "not yet implemented")]
     pub fn midi_out(&mut self) -> Result<(), Exception> {
-        let _pitch: u32 = self.registers.read(CpuRegister::Arg0);
-        let _millis: u32 = self.registers.read(CpuRegister::Arg1);
-        let _instrument: u32 = self.registers.read(CpuRegister::Arg2);
-        let _volume: u32 = self.registers.read(CpuRegister::Arg3);
-        todo!("generate a sound");
+        // let pitch: u32 = self.registers.read(CpuRegister::Arg0);
+        // let millis: u32 = self.registers.read(CpuRegister::Arg1);
+        // let instrument: u32 = self.registers.read(CpuRegister::Arg2);
+        // let volume: u32 = self.registers.read(CpuRegister::Arg3);
+
+        self.unimplemented_service()
     }
 
     pub fn sleep(&mut self) -> Result<(), Exception> {
@@ -310,13 +310,13 @@ impl InterpreterState {
         Ok(())
     }
 
-    #[allow(dead_code, reason = "not yet implemented")]
     pub fn midi_out_sync(&mut self) -> Result<(), Exception> {
-        let _pitch: u32 = self.registers.read(CpuRegister::Arg0);
-        let _millis: u32 = self.registers.read(CpuRegister::Arg1);
-        let _instrument: u32 = self.registers.read(CpuRegister::Arg2);
-        let _volume: u32 = self.registers.read(CpuRegister::Arg3);
-        todo!("generate a sound");
+        // let pitch: u32 = self.registers.read(CpuRegister::Arg0);
+        // let millis: u32 = self.registers.read(CpuRegister::Arg1);
+        // let instrument: u32 = self.registers.read(CpuRegister::Arg2);
+        // let volume: u32 = self.registers.read(CpuRegister::Arg3);
+
+        self.unimplemented_service()
     }
 
     pub fn print_hex(&mut self) -> Result<(), Exception> {
@@ -403,112 +403,119 @@ impl InterpreterState {
         self.registers.try_write(FpuRegister::F0, x)
     }
 
-    #[allow(dead_code, reason = "not yet implemented")]
     pub fn confirm_dialog(&mut self) -> Result<(), Exception> {
-        let buffer_address = self.registers.read(CpuRegister::Arg0);
-        let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
-            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
-            .to_str()
-            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
-        todo!("show the dialog and return the result");
+        // let buffer_address = self.registers.read(CpuRegister::Arg0);
+        // let message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
+        //     .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
+        //     .to_str()
+        //     .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
+
+        self.unimplemented_service()
     }
 
-    #[allow(dead_code, reason = "not yet implemented")]
     pub fn input_dialog_int(&mut self) -> Result<(), Exception> {
-        let buffer_address = self.registers.read(CpuRegister::Arg0);
-        let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
-            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
-            .to_str()
-            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
-        todo!("show the dialog and return the result");
+        // let buffer_address = self.registers.read(CpuRegister::Arg0);
+        // let message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
+        //     .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
+        //     .to_str()
+        //     .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
+
+        self.unimplemented_service()
     }
 
-    #[allow(dead_code, reason = "not yet implemented")]
     pub fn input_dialog_float(&mut self) -> Result<(), Exception> {
-        let buffer_address = self.registers.read(CpuRegister::Arg0);
-        let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
-            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
-            .to_str()
-            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
-        todo!("show the dialog and return the result");
+        // let buffer_address = self.registers.read(CpuRegister::Arg0);
+        // let message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
+        //     .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
+        //     .to_str()
+        //     .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
+
+        self.unimplemented_service()
     }
 
-    #[allow(dead_code, reason = "not yet implemented")]
     pub fn input_dialog_double(&mut self) -> Result<(), Exception> {
-        let buffer_address = self.registers.read(CpuRegister::Arg0);
-        let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
-            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
-            .to_str()
-            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
-        todo!("show the dialog and return the result");
+        // let buffer_address = self.registers.read(CpuRegister::Arg0);
+        // let message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
+        //     .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
+        //     .to_str()
+        //     .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
+
+        self.unimplemented_service()
     }
 
-    #[allow(dead_code, reason = "not yet implemented")]
     pub fn input_dialog_string(&mut self) -> Result<(), Exception> {
-        let buffer_address = self.registers.read(CpuRegister::Arg0);
-        let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
-            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
-            .to_str()
-            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
-        todo!("show the dialog and return the result");
+        // let buffer_address = self.registers.read(CpuRegister::Arg0);
+        // let message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
+        //     .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
+        //     .to_str()
+        //     .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
+
+        self.unimplemented_service()
     }
 
-    #[allow(dead_code, reason = "not yet implemented")]
     pub fn message_dialog(&mut self) -> Result<(), Exception> {
-        let buffer_address = self.registers.read(CpuRegister::Arg0);
-        let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
-            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
-            .to_str()
-            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
-        let _message_type: u32 = self.registers.read(CpuRegister::Arg1);
-        todo!("show the dialog");
+        // let buffer_address = self.registers.read(CpuRegister::Arg0);
+        // let message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
+        //     .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
+        //     .to_str()
+        //     .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
+        // let message_type: u32 = self.registers.read(CpuRegister::Arg1);
+
+        self.unimplemented_service()
     }
 
-    #[allow(dead_code, reason = "not yet implemented")]
     pub fn message_dialog_int(&mut self) -> Result<(), Exception> {
-        let buffer_address = self.registers.read(CpuRegister::Arg0);
-        let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
-            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
-            .to_str()
-            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
-        let _x: u32 = self.registers.read(CpuRegister::Arg1);
-        todo!("show the dialog");
+        // let buffer_address = self.registers.read(CpuRegister::Arg0);
+        // let message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
+        //     .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
+        //     .to_str()
+        //     .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
+        // let x: u32 = self.registers.read(CpuRegister::Arg1);
+
+        self.unimplemented_service()
     }
 
-    #[allow(dead_code, reason = "not yet implemented")]
     pub fn message_dialog_float(&mut self) -> Result<(), Exception> {
-        let buffer_address = self.registers.read(CpuRegister::Arg0);
-        let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
-            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
-            .to_str()
-            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
-        let _x: f32 = self.registers.read(FpuRegister::F12);
-        todo!("show the dialog");
+        // let buffer_address = self.registers.read(CpuRegister::Arg0);
+        // let message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
+        //     .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
+        //     .to_str()
+        //     .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
+        // let x: f32 = self.registers.read(FpuRegister::F12);
+
+        self.unimplemented_service()
     }
 
-    #[allow(dead_code, reason = "not yet implemented")]
     pub fn message_dialog_double(&mut self) -> Result<(), Exception> {
-        let buffer_address = self.registers.read(CpuRegister::Arg0);
-        let _message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
-            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
-            .to_str()
-            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
-        let _x: f64 = self.registers.try_read(FpuRegister::F12)?;
-        todo!("show the dialog");
+        // let buffer_address = self.registers.read(CpuRegister::Arg0);
+        // let message = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address)?)
+        //     .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
+        //     .to_str()
+        //     .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
+        // let x: f64 = self.registers.try_read(FpuRegister::F12)?;
+
+        self.unimplemented_service()
     }
 
-    #[allow(dead_code, reason = "not yet implemented")]
     pub fn message_dialog_string(&mut self) -> Result<(), Exception> {
-        let buffer_address_0 = self.registers.read(CpuRegister::Arg0);
-        let _message_0 = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address_0)?)
-            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
-            .to_str()
-            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
-        let buffer_address_1 = self.registers.read(CpuRegister::Arg1);
-        let _message_1 = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address_1)?)
-            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
-            .to_str()
-            .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
-        todo!("show the dialog");
+        // let buffer_address_0 = self.registers.read(CpuRegister::Arg0);
+        // let message_0 = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address_0)?)
+        //     .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
+        //     .to_str()
+        //     .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
+        // let buffer_address_1 = self.registers.read(CpuRegister::Arg1);
+        // let message_1 = CStr::from_bytes_until_nul(self.memory.get_slice(buffer_address_1)?)
+        //     .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::NulNotFound))?
+        //     .to_str()
+        //     .map_err(|_| Exception::SyscallFailure(SyscallFailureKind::InvalidUtf8))?;
+
+        self.unimplemented_service()
+    }
+
+    fn unimplemented_service(&self) -> Result<(), Exception> {
+        let service_code = self.registers.read(CpuRegister::Val0);
+        Err(Exception::SyscallFailure(
+            SyscallFailureKind::ServiceUnimplemented(service_code),
+        ))
     }
 }
