@@ -7,12 +7,25 @@ use crate::error::LexError;
 
 /// A single "atom" in a MIPS Assembly program.
 #[derive(Clone, Debug, Display, Logos, PartialEq)]
-#[logos(skip(r"[ \t\f]+|#.*", allow_greedy = true))]
 #[logos(error = LexError)]
 pub enum Token<'src> {
     /// An error in the lexing stage of assembly.
     #[strum(to_string = "Error({0})")]
     Error(LexError),
+
+    /// One or more whitespace characters, not including [newline](Token::NewLine)s.
+    ///
+    /// This token is largely irrelevant to the assembler.
+    #[regex(r"[ \t\f]+")]
+    #[strum(to_string = " ")]
+    Whitespace,
+
+    /// A comment.
+    ///
+    /// This token is largely irrelevant to the assembler.
+    #[regex(r"#.*", allow_greedy = true)]
+    #[strum(to_string = "# ...")]
+    Comment,
 
     // --- Basic Symbols ---
     /// One or more newline characters.
@@ -74,6 +87,13 @@ pub enum Token<'src> {
     #[regex(r"[a-zA-Z_](?:\.?[a-zA-Z_0-9])*")]
     #[strum(to_string = "{0}")]
     Ident(&'src str),
+}
+
+impl Token<'_> {
+    /// Checks whether or not this token might have some meaning to the assembler.
+    pub const fn maybe_meaningful(&self) -> bool {
+        !matches!(self, Self::Whitespace | Self::Comment)
+    }
 }
 
 impl<'src> From<Result<Token<'src>, LexError>> for Token<'src> {

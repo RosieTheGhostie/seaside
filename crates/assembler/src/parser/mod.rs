@@ -109,7 +109,10 @@ impl<'src> Parser<'src> {
             Some((token, span))
         } else {
             self.tokens
-                .next()
+                .find(|(result, _)| match result {
+                    Ok(token) => token.maybe_meaningful(),
+                    Err(_) => true,
+                })
                 .map(|(result, span)| (result.into(), span))
         }
     }
@@ -624,8 +627,8 @@ impl<'src> Iterator for Parser<'src> {
             expected::NEWLINE,
         );
         match token {
-            // A newline on its own isn't meaningful, so we can just skip it.
-            Token::NewLine => self.next(),
+            // None of these are meaningful on their own, so we can just skip them.
+            Token::Whitespace | Token::Comment | Token::NewLine => self.next(),
 
             Token::Directive(name @ ("text" | "ktext" | "extern" | "data" | "kdata")) => {
                 Some(self.parse_segment_header(name))
